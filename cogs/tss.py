@@ -30,7 +30,7 @@ class TSS(commands.Cog):
 
     @tss_cmd.command(name='test')  # ignore this, was using it to test async subprocesses lol
     async def cock(self, ctx):
-        cmd = await asyncio.create_subprocess_exec('ls', stdout=asyncio.subprocess.PIPE)
+        cmd = await asyncio.create_subprocess_exec('tsschecker', stdout=asyncio.subprocess.PIPE)
 
         await ctx.send('started process')
 

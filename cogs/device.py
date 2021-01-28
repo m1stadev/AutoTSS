@@ -1,4 +1,6 @@
 from discord.ext import commands
+import aiohttp
+import asyncio
 import discord
 import sqlite3
 
@@ -6,6 +8,20 @@ import sqlite3
 class Device(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    async def check_identifier(self, identifier):
+        try:  # this is stupid
+            identifier = f"{identifier.split('p')[0]}P{identifier.split('p')[1]}"
+        except IndexError:
+            return
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.ipsw.me/v2.1/firmwares.json/condensed') as resp:
+                json = await resp.json()
+                if identifier not in json['devices']:
+                    return
+
+        return identifier
 
     @commands.group(name='device', invoke_without_command=True)
     async def device_cmd(self, ctx):
@@ -21,16 +37,13 @@ class Device(commands.Cog):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
-        cursor.execute('SELECT devices from autotss WHERE userid = ?', (ctx.message.author.id,))
-        result = cursor.fetchone()
-        if result is None:
-            insert_user = ('INSERT INTO autotss(userid, devices) VALUES(?,?)')
-            val = (ctx.message.author.id, list())
-            cursor.execute(insert_user, val)
+        cursor.execute('SELECT device_num from autotss WHERE userid = ?', (ctx.message.author.id,))
+        result = cursor.fetchall()
 
-        device = {}
+        device = {'num': len(result) + 1, 'userid': ctx.message.author.id}
 
         embed = discord.Embed(title='Add Device')
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 
         for x in range(4):
@@ -47,86 +60,147 @@ class Device(commands.Cog):
                 title = 'Hardware Model'
                 description = "Enter your device's Hardware Model (e.g. n51ap)"
 
-            embed = discord.Embed(title=title, description=description)
+            embed = discord.Embed(title=title, description=f'{description}\nType `cancel` to cancel.')
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
             answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-         
+
+            if answer.content == 'cancel':
+                embed = discord.Embed(title='Add Device', description='Cancelled.')
+                await message.edit(embed=embed)
+                await answer.delete()
+                return
+
             if x == 0:
                 device['name'] = answer.content
             elif x == 1:
-                device['identifier'] = answer.content
+                device['identifier'] = answer.content.lower()
             elif x == 2:
-                device['ecid'] = answer.content
+                device['ecid'] = answer.content.lower()
             else:
-                device['boardconfig'] = answer.content
+                device['boardconfig'] = answer.content.lower()
 
             await answer.delete()
 
-        await message.delete()
+        embed = discord.Embed(title='Add Device', description='Verifying input...')
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        await message.edit(embed=embed)
 
-        cursor.execute('SELECT devices from autotss')
-        result = cursor.fetchone()[0].strip('][').split(', ')
-        for x in result:
-            if any(i['ecid'] == device['ecid'] for i in x):
-                await ctx.send("hey dipshit, this device has either been added by you or someone else already. that's tuff, bro.")
-                return
+        await asyncio.sleep(1.5)  # unnecessary sleeps, anyone?
 
-        cursor.execute('SELECT devices from autotss WHERE userid = ?', (ctx.message.author.id,))
-        result = cursor.fetchone()[0].strip('][').split(', ')
+        identifier = await self.check_identifier(device['identifier'])
 
-        await ctx.send(result)
+        if identifier is False:
+            embed = discord.Embed(title='Error', description=f"Device `{device['identifier']}` does not exist.")
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
 
-        if result[0] == '':
-            result.pop(0)
+        cursor.execute('SELECT ecid from autotss')
+        result = cursor.fetchall()
+        if any(x[0] == device['ecid'] for x in result):
+            embed = discord.Embed(title='Error', description="This device's ECID is already in my database.")
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
 
-        if any(x['name'] == device['name'] for x in result):
-            await message.edit('hey dipshit, you already added this device. what the hell??')
+        cursor.execute('SELECT name from autotss WHERE userid = ?', (ctx.message.author.id,))
+        result = cursor.fetchall()
+
+        if any(x[0] == device['name'] for x in result):
+            embed = discord.Embed(title='Error', description="You've already added a device with this name. Please run this command again, and choose another name for this device.")
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
             return
 
         result.append(device)
-        cursor.execute('UPDATE autotss SET devices = ? WHERE userid = ?', (str(result), ctx.message.author.id))
+        insert_device = ("INSERT INTO autotss(device_num, userid, name, identifier, ecid, boardconfig) VALUES(?,?,?,?,?,?)")
+        val = (device['num'], device['userid'], device['name'], identifier, device['ecid'], device['boardconfig'])
+        cursor.execute(insert_device, val)
 
         db.commit()
         db.close()
 
+        embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        await message.edit(embed=embed)
+
     @device_cmd.command(name='remove')
     async def remove_device(self, ctx):
-        await ctx.send("stfu i haven't implemented this yet")
+        db = sqlite3.connect('Data/autotss.db')
+        cursor = db.cursor()
+
+        await ctx.message.delete()
+
+        cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.message.author.id,))
+        result = cursor.fetchall()
+
+        if len(result) == 0:
+            embed = discord.Embed(name='Error', value='You have no devices added.', inline=False)
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
+        embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
+
+        for x in result:
+            embed.add_field(name=x[0], value=f"Name: `{x[2]}`\nDevice Identifier: `{x[3]}`\nHardware Model: `{x[5]}`", inline=False)
+
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        message = await ctx.send(embed=embed)
+        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+
+        if answer.content == 'cancel':
+            await answer.delete()
+            await message.delete()
+            return
+
+        try:
+            num = int(answer.content)
+        except ValueError:
+            embed = discord.Embed(title='Error', description='Invalid input given.')
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
+
+        cursor.execute('SELECT * from autotss WHERE device_num = ? AND userid = ?', (num, ctx.message.author.id))
+        result = cursor.fetchall()
+
+        embed = discord.Embed(title='Add Device', description=f"Device `{result[0][2]}` removed successfully!")
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        await message.edit(embed=embed)
+        await answer.delete()
+
+        cursor.execute('DELETE from autotss WHERE device_num = ? AND userid = ?', (num, ctx.message.author.id))
+
+        db.commit()
+        db.close()
 
     @device_cmd.command(name='list')
     async def list_devices(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
-        cursor.execute('SELECT devices from autotss WHERE userid = ?', (ctx.message.author.id,))
-        result = cursor.fetchone()
-        if result is None:
-            insert_user = ("INSERT INTO autotss(userid, devices) VALUES(?,?)")
-            val = (ctx.message.author.id, list())
-            cursor.execute(insert_user, val)
-            db.commit()
+        await ctx.message.delete()
 
-        cursor.execute('SELECT devices from autotss WHERE userid = ?', (ctx.message.author.id,))
-        result = cursor.fetchone()[0].strip('][').split(', ')
-
-        db.close()
+        cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.message.author.id,))
+        result = cursor.fetchall()
 
         embed = discord.Embed(title='Devices')
 
-        if result[0] == '':
-            result.pop(0)
-
-        await ctx.send(str(result))
-
-        if len(result) == 1:
-            embed.add_field(name='Note:', value='You have no devices added', inline=False)
+        if len(result) == 0:
+            embed.add_field(name='Error', value='You have no devices added.', inline=False)
+            embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            return
         else:
             for x in result:
-                await ctx.send(str(x))
-                embed.add_field(name=x['name'], value=f"Device Identifier: {x['identifier']}\nHardware Model: {x['boardconfig']}", inline=False)
-        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+                embed.add_field(name=f'Name: {x[2]}', value=f"Device Identifier: `{x[3]}`\nECID: `{x[4]}`\nHardware Model: `{x[5]}`", inline=False)
+        embed.set_footer(text=f'{ctx.message.author.name} | This message will automatically be deleted in 15 seconds.', icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        message = await ctx.send(embed=embed)
+
+        await asyncio.sleep(15)
+        await message.delete()
 
 
 def setup(bot):

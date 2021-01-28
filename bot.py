@@ -36,8 +36,12 @@ async def on_ready():
     cursor = db.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS autotss(
+        device_num INTEGER,
         userid INTEGER,
-        devices TEXT
+        name TEXT,
+        identifier TEXT,
+        ecid TEXT,
+        boardconfig TEXT
         )
         ''')
     cursor.execute('''

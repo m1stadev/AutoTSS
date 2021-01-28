@@ -53,16 +53,16 @@ async def on_ready():
     db.commit()
     db.close()
 
-    await client.change_presence(activity=discord.Game(name=f'Ping me for help! | Prefix: b.'))
+    await client.change_presence(activity=discord.Game(name='Ping me for help! | Prefix: b.'))
     print('AutoTSS is now online.')
 
 
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        embed = discord.Embed(title='**Error 404:** Not Found',
+        embed = discord.Embed(title='Error',
                               description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands you can use.")
-        embed.set_footer(text=f'{ctx.message.author.name}',
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
     else:

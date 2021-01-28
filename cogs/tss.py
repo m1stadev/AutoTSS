@@ -21,7 +21,7 @@ class TSS(commands.Cog):
         await ctx.send(embed=embed)
 
     @tss_cmd.command(name='save')
-    async def save_single_device_blobs(self, ctx, device):
+    async def save_single_device_blobs(self, ctx):
         await ctx.send("stfu i haven't implemented this yet")
 
     @tss_cmd.command(name='saveall')

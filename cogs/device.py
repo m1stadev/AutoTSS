@@ -9,19 +9,40 @@ class Device(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def check_identifier(self, identifier):
-        try:  # this is stupid
+    async def check_identifier(self, identifier):  # this is a stupid check
+        try:
             identifier = f"{identifier.split('p')[0]}P{identifier.split('p')[1]}"
         except IndexError:
-            return
+            return False
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.ipsw.me/v2.1/firmwares.json/condensed') as resp:
                 json = await resp.json()
                 if identifier not in json['devices']:
-                    return
+                    return False
 
         return identifier
+
+    async def check_boardconfig(self, identifier, boardconfig):
+        if boardconfig[-2:] != 'ap':
+            return False
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.ipsw.me/v2.1/firmwares.json/condensed') as resp:
+                json = await resp.json()
+
+        if not json['devices'][identifier]['BoardConfig'].startswith(boardconfig[:3]):
+            return False
+
+        return True
+
+    async def check_ecid(self, ecid):
+        try:
+            int(ecid, 16)
+        except:
+            return False
+
+        return True
 
     @commands.group(name='device', invoke_without_command=True)
     async def device_cmd(self, ctx):
@@ -101,10 +122,28 @@ class Device(commands.Cog):
         await asyncio.sleep(1.5)  # unnecessary sleeps, anyone?
 
         identifier = await self.check_identifier(device['identifier'])
+        boardconfig = await self.check_boardconfig(device['boardconfig'])
+        ecid = await self.check_ecid(device['ecid'])
 
         if identifier is False:
             embed = discord.Embed(
                 title='Error', description=f"Device `{device['identifier']}` does not exist.")
+            embed.set_footer(text=ctx.message.author.name,
+                             icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
+
+        if boardconfig is False:
+            embed = discord.Embed(
+                title='Error', description=f"Device `{device['identifier']}`'s boardconfig `{device['boardconfig']}` does not exist.")
+            embed.set_footer(text=ctx.message.author.name,
+                             icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
+
+        if ecid is False:
+            embed = discord.Embed(
+                title='Error', description=f"Device `{device['identifier']}`'s ECID `{device['ecid']}` is not valid.")
             embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)

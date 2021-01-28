@@ -28,10 +28,10 @@ class Device(commands.Cog):
             return False
 
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://api.ipsw.me/v2.1/firmwares.json/condensed') as resp:
+            async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
                 json = await resp.json()
 
-        if not json['devices'][identifier]['BoardConfig'].startswith(boardconfig[:3]):
+        if not json['boardconfig'].startswith(boardconfig[:3]):
             return False
 
         return True
@@ -119,11 +119,7 @@ class Device(commands.Cog):
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)
 
-        await asyncio.sleep(1.5)  # unnecessary sleeps, anyone?
-
         identifier = await self.check_identifier(device['identifier'])
-        boardconfig = await self.check_boardconfig(device['boardconfig'])
-        ecid = await self.check_ecid(device['ecid'])
 
         if identifier is False:
             embed = discord.Embed(
@@ -133,6 +129,10 @@ class Device(commands.Cog):
             await message.edit(embed=embed)
             return
 
+        device['identifier'] = identifier
+
+        boardconfig = await self.check_boardconfig(device['identifier'], device['boardconfig'])
+
         if boardconfig is False:
             embed = discord.Embed(
                 title='Error', description=f"Device `{device['identifier']}`'s boardconfig `{device['boardconfig']}` does not exist.")
@@ -140,6 +140,8 @@ class Device(commands.Cog):
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
+
+        ecid = await self.check_ecid(device['ecid'])
 
         if ecid is False:
             embed = discord.Embed(
@@ -173,9 +175,9 @@ class Device(commands.Cog):
 
         result.append(device)
         insert_device = (
-            "INSERT INTO autotss(device_num, userid, name, identifier, ecid, boardconfig) VALUES(?,?,?,?,?,?)")
+            "INSERT INTO autotss(device_num, userid, name, identifier, ecid, boardconfig, blobs) VALUES(?,?,?,?,?,?,?)")
         val = (device['num'], device['userid'], device['name'],
-               identifier, device['ecid'], device['boardconfig'])
+               device['identifier'], device['ecid'], device['boardconfig'], str(list()))
         cursor.execute(insert_device, val)
 
         db.commit()

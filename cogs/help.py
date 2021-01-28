@@ -36,9 +36,9 @@ class Help(commands.Cog):
         embed.add_field(name='Save blobs for all of your devices',
                         value=f'`{ctx.prefix}tss saveall`', inline=False)
         embed.add_field(name='Save blobs for one of your devices',
-                        value=f'`{ctx.prefix}tss save <device>`', inline=False)
+                        value=f'`{ctx.prefix}tss save`', inline=False)
         embed.add_field(name='List all of the blobs saved for your devices',
-                        value=f'`{ctx.prefix}tss listall`', inline=False)
+                        value=f'`{ctx.prefix}tss list`', inline=False)
         embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)

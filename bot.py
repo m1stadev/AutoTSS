@@ -41,7 +41,8 @@ async def on_ready():
         name TEXT,
         identifier TEXT,
         ecid TEXT,
-        boardconfig TEXT
+        boardconfig TEXT,
+        blobs TEXT
         )
         ''')
     cursor.execute('''

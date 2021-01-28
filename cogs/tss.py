@@ -28,7 +28,7 @@ class TSS(commands.Cog):
     async def list_all_blobs(self, ctx):
         await ctx.send("stfu i haven't implemented this yet")
 
-    @tss_cmd.command(name='test')
+    @tss_cmd.command(name='test')  # ignore this, was using it to test async subprocesses lol
     async def cock(self, ctx):
         cmd = await asyncio.create_subprocess_exec('ls', stdout=asyncio.subprocess.PIPE)
 

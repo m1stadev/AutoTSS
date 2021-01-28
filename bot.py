@@ -6,7 +6,7 @@ import os
 import sqlite3
 import sys
 
-client = commands.Bot(command_prefix='b.', help_command=None, intents=intents)
+client = commands.Bot(command_prefix='b.', help_command=None)
 
 
 def list_cogs():
@@ -22,7 +22,7 @@ def list_cogs():
 
 def bot_token(token):
     try:
-        token_file = open(token, "r+")
+        token_file = open(token, 'r')
         return token_file.read()
     except FileNotFoundError:
         sys.exit("No bot token found in token.txt. Make sure you've created the file and put your token into it, or else this bot will not work.")
@@ -49,7 +49,7 @@ async def on_ready():
     db.commit()
     db.close()
 
-    await client.change_presence(activity=discord.Game(name=f'Ping me for help!'))
+    await client.change_presence(activity=discord.Game(name=f'Ping me for help! | Prefix: b.'))
     print('AutoTSS is now online.')
 
 

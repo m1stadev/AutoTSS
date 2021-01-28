@@ -60,8 +60,10 @@ async def on_ready():
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        embed = discord.Embed(title='**Error 404:** Not Found', description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands you can use.")
-        embed.set_footer(text=f'{ctx.message.author.name}', icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        embed = discord.Embed(title='**Error 404:** Not Found',
+                              description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands you can use.")
+        embed.set_footer(text=f'{ctx.message.author.name}',
+                         icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
     else:
         raise error

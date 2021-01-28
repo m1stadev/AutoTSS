@@ -167,7 +167,7 @@ class Device(commands.Cog):
         cursor.execute('SELECT * from autotss WHERE device_num = ? AND userid = ?', (num, ctx.message.author.id))
         result = cursor.fetchall()
 
-        embed = discord.Embed(title='Add Device', description=f"Device `{result[0][2]}` removed successfully!")
+        embed = discord.Embed(title='Remove Device', description=f"Device `{result[0][2]}` removed successfully!")
         embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)
         await answer.delete()
@@ -192,6 +192,7 @@ class Device(commands.Cog):
         if len(result) == 0:
             embed.add_field(name='Error', value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
             return
         else:
             for x in result:

@@ -66,7 +66,7 @@ class Help(commands.Cog):
                          icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
-    @help_command.command(name='misc')
+    @help_command.command(name='admin')
     @commands.guild_only()
     @commands.is_owner()
     async def admin_commands(self, ctx):

@@ -129,8 +129,9 @@ class Device(commands.Cog):
         identifier = await self.check_identifier(device['identifier'])
 
         if identifier is False:
-            embed = discord.Embed(
-                title='Error', description=f"Device Identifier `{device['identifier']}` does not exist.")
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error',
+                            value=f"Device Identifier `{device['identifier']}` does not exist.")
             embed.set_footer(text=ctx.message.author.nick,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
@@ -314,11 +315,13 @@ class Device(commands.Cog):
 
         cursor.execute('SELECT * from autotss WHERE userid = ?',
                        (ctx.message.author.id,))
-        result = cursor.fetchall()
+        devices = cursor.fetchall()
 
-        if len(result) == 0:
+        if len(devices) == 0:
             embed = discord.Embed(
-                title='Error', description='You have no devices added.', inline=False)
+                title=f"{ctx.message.author.nick}'s Devices", inline=False)
+            embed.add_field(name='Error',
+                            value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.message.author.nick,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)

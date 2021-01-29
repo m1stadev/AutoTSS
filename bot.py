@@ -4,6 +4,7 @@ from discord.ext import commands
 import discord
 import glob
 import sqlite3
+import subprocess
 import sys
 
 
@@ -13,6 +14,13 @@ def bot_token(token):
         return token_file.read()
     except FileNotFoundError:
         sys.exit("No bot token found in token.txt. Make sure you've created the file and put your token into it, or else this bot will not work.")
+
+
+def check_tsschecker():
+    tsschecker_check = subprocess.run('which tsschecker', stdout=subprocess.DEVNULL, shell=True)
+
+    if tsschecker_check.returncode != 0:
+        sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
 
 def get_prefix(client, message):
@@ -36,6 +44,8 @@ def get_prefix(client, message):
 
 
 if __name__ == '__main__':
+    check_tsschecker()
+
     client = commands.Bot(command_prefix=get_prefix, help_command=None)
 
     for cog in glob.glob('cogs/*.py'):

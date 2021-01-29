@@ -39,6 +39,14 @@ class Misc(commands.Cog):
 
         db.close()
 
+    @commands.command()
+    @commands.guild_only()
+    async def invite(self, ctx):
+        embed = discord.Embed(title='Invite',
+                              description='[Click here](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184).')
+        embed.set_footer(text=ctx.message.author.name,
+                         icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+
 
 def setup(bot):
     bot.add_cog(Misc(bot))

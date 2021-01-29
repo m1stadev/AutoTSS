@@ -13,7 +13,7 @@ class Help(commands.Cog):
                         value=f'`{ctx.prefix}help device`', inline=False)
         embed.add_field(name='TSS Commands',
                         value=f'`{ctx.prefix}help tss`', inline=False)
-        embed.set_footer(text=ctx.message.author.name,
+        embed.set_footer(text=ctx.message.author.nick,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
@@ -26,7 +26,7 @@ class Help(commands.Cog):
                         value=f'`{ctx.prefix}device remove`', inline=False)
         embed.add_field(name='List your devices',
                         value=f'`{ctx.prefix}device list`', inline=False)
-        embed.set_footer(text=ctx.message.author.name,
+        embed.set_footer(text=ctx.message.author.nick,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
@@ -39,7 +39,7 @@ class Help(commands.Cog):
                         value=f'`{ctx.prefix}tss save`', inline=False)
         embed.add_field(name='List all of the blobs saved for your devices',
                         value=f'`{ctx.prefix}tss list`', inline=False)
-        embed.set_footer(text=ctx.message.author.name,
+        embed.set_footer(text=ctx.message.author.nick,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 

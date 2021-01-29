@@ -6,7 +6,7 @@ import os
 import sqlite3
 import sys
 
-client = commands.Bot(command_prefix='b.', help_command=None)
+client = commands.Bot(command_prefix='b!', help_command=None)
 
 
 def list_cogs():
@@ -54,7 +54,7 @@ async def on_ready():
     db.commit()
     db.close()
 
-    await client.change_presence(activity=discord.Game(name='Ping me for help! | Prefix: b.'))
+    await client.change_presence(activity=discord.Game(name=f'Ping me for help! | Prefix: {client.command_prefix}'))
     print('AutoTSS is now online.')
 
 
@@ -63,7 +63,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         embed = discord.Embed(title='Error',
                               description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands you can use.")
-        embed.set_footer(text=ctx.message.author.name,
+        embed.set_footer(text=ctx.message.author.nick,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
     else:

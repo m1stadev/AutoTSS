@@ -13,13 +13,15 @@ class Events(commands.Cog):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
-        cursor.execute('SELECT prefix from prefix WHERE guild = ?', (guild.id,))
+        cursor.execute(
+            'SELECT prefix from prefix WHERE guild = ?', (guild.id,))
 
         if cursor.fetchone() is not None:
             cursor.execute('DELETE from prefix where guild = ?', (guild.id,))
         db.commit()
 
-        cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild.id, 'b!'))
+        cursor.execute(
+            'INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild.id, 'b!'))
         db.commit()
 
         if guild.system_channel:
@@ -28,9 +30,12 @@ class Events(commands.Cog):
             channel = self.bot.get_channel(guild.text_channels[0].id)
 
         embed = discord.Embed(title="Hi, I'm AutoTSS!")
-        embed.add_field(name='What can I do?', value='I can automatically save SHSH blobs for all of your iOS devices!', inline=False)
-        embed.add_field(name='Prefix', value='My prefix is `b!`. To see what I can do, run `b!help`!', inline=False)
-        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
+        embed.add_field(name='What can I do?',
+                        value='I can automatically save SHSH blobs for all of your iOS devices!', inline=False)
+        embed.add_field(
+            name='Prefix', value='My prefix is `b!`. To see what I can do, run `b!help`!', inline=False)
+        embed.set_thumbnail(
+            url=self.bot.user.avatar_url_as(static_format='png'))
 
         await channel.send(embed=embed)
 
@@ -50,23 +55,30 @@ class Events(commands.Cog):
         cursor = db.cursor()
 
         if message.channel.type is discord.ChannelType.private:
-            embed = discord.Embed(title='Error', description='I only work inside of servers. Invite me to a server and use me there!')
-            embed.set_footer(text=message.author.nick, icon_url=message.author.avatar_url_as(static_format='png'))
+            embed = discord.Embed(
+                title='Error', description='I only work inside of servers. Invite me to a server and use me there!')
+            embed.set_footer(text=message.author.nick, icon_url=message.author.avatar_url_as(
+                static_format='png'))
             await message.channel.send(embed=embed)
             return
 
-        cursor.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,))
+        cursor.execute(
+            'SELECT prefix from prefix WHERE guild = ?', (message.guild.id,))
 
         if cursor.fetchone() is None:
-            cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
+            cursor.execute(
+                'INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
             db.commit()
 
-        cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
+        cursor.execute(
+            'SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
         prefix = cursor.fetchone()[0]
 
         if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
-            embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
-            embed.set_footer(text=message.author.nick, icon_url=message.author.avatar_url_as(static_format='png'))
+            embed = discord.Embed(
+                title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
+            embed.set_footer(text=message.author.nick, icon_url=message.author.avatar_url_as(
+                static_format='png'))
             await message.channel.send(embed=embed)
 
         db.close()
@@ -110,9 +122,9 @@ class Events(commands.Cog):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             embed = discord.Embed(title='Error',
-                                description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands I can run.")
+                                  description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands I can run.")
             embed.set_footer(text=ctx.message.author.name,
-                            icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+                             icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
         else:
             raise error

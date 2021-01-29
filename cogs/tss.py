@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 import aiohttp
 import aiofiles
 import ast
@@ -13,6 +13,7 @@ import tempfile
 class TSS(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.save_all_blobs.start()
 
     async def upload_zip(self, file):
         async with aiofiles.open(file, 'rb') as f:
@@ -55,22 +56,70 @@ class TSS(commands.Cog):
 
         return True
 
+    @tasks.loop(seconds=1800)  # Change this value to modify the frequency at which blobs will be saved at
+    async def save_all_blobs(self):
+        await self.bot.wait_until_ready()
+        await asyncio.sleep(1)
+
+        db = sqlite3.connect('Data/autotss.db')
+        cursor = db.cursor()
+
+        cursor.execute('SELECT * from autotss')
+        devices = cursor.fetchall()
+
+        saved_blobs = int()
+        for x in range(len(devices)):
+
+            signed_buildids = await self.get_signed_buildids(devices[x])
+            saved_buildids = ast.literal_eval(devices[x][6])
+            for i in list(signed_buildids):
+                if i in saved_buildids:
+                    signed_buildids.pop(signed_buildids.index(i))
+
+            signed_versions = list()
+            for i in signed_buildids:
+                signed_versions.append(await self.buildid_to_version(devices[x], i))
+
+            for i in list(signed_buildids):
+                blob = await self.save_blob(devices[x], i)
+
+                if blob is False:
+                    signed_versions.pop(signed_buildids.index(i))
+                    signed_buildids.pop(signed_buildids.index(i))
+                else:
+                    saved_buildids.append(i)
+
+            cursor.execute(
+                'UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
+            db.commit()
+
+            saved_blobs += len(signed_buildids)
+
+        if saved_blobs == 0:
+            print('[AUTO] No blobs need to be saved.')
+        else:
+            print(f'[AUTO] Saved {saved_blobs} blobs.')
+
+        db.close()
+
     @commands.group(name='tss', invoke_without_command=True)
+    @commands.guild_only()
     async def tss_cmd(self, ctx):
         embed = discord.Embed(title='TSS Commands')
-        embed.add_field(name='Save blobs for all of your devices',
+        embed.add_field(name='Manually save blobs for all of your devices',
                         value=f'`{ctx.prefix}tss saveall`', inline=False)
-        embed.add_field(name='Save blobs for one of your devices',
+        embed.add_field(name='Manually save blobs for one of your devices',
                         value=f'`{ctx.prefix}tss save`', inline=False)
         embed.add_field(name='List all of the blobs saved for your devices',
                         value=f'`{ctx.prefix}tss list`', inline=False)
         embed.add_field(name='Download all of the blobs saved for your devices',
                         value=f'`{ctx.prefix}tss download`', inline=False)
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
     @tss_cmd.command(name='save')
+    @commands.guild_only()
     async def save_single_device_blobs(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
@@ -82,14 +131,14 @@ class TSS(commands.Cog):
         if len(devices) == 0:
             embed = discord.Embed(
                 title='Error', description='You have no devices added.', inline=False)
-            embed.set_footer(text=ctx.message.author.nick,
+            embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
 
         embed = discord.Embed(
             title='Save Blobs', description="Choose the number of the device you'd like to save blobs for.\nType `cancel` to cancel.")
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         for x in range(len(devices)):
@@ -113,7 +162,7 @@ class TSS(commands.Cog):
         except ValueError:
             embed = discord.Embed(
                 title='Error', description='Invalid input given.')
-            embed.set_footer(text=ctx.message.author.nick,
+            embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -127,7 +176,7 @@ class TSS(commands.Cog):
         if not 0 < num <= len(devices):
             embed = discord.Embed(
                 title='Error', description=f'Device `{num}` does not exist.')
-            embed.set_footer(text=ctx.message.author.nick,
+            embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -138,7 +187,7 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(
             title='Save Blobs', description=f'Saving blobs for `{device[2]}`...')
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)
 
@@ -158,7 +207,7 @@ class TSS(commands.Cog):
             if blob is False:
                 embed.add_field(
                     name='Error', value=f'Failed to save blobs for `iOS {signed_versions[signed_buildids.index(x)]} | {x}`.')
-                embed.set_footer(text=ctx.message.author.nick,
+                embed.set_footer(text=ctx.message.author.name,
                                  icon_url=ctx.message.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
 
@@ -182,13 +231,14 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(
             title='Save Blobs', description=description)
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)
         db.close()
 
     @tss_cmd.command(name='saveall')
+    @commands.guild_only()
     async def save_all_device_blobs(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
@@ -200,14 +250,14 @@ class TSS(commands.Cog):
         if len(devices) == 0:
             embed = discord.Embed(
                 title='Error', description='You have no devices added.', inline=False)
-            embed.set_footer(text=ctx.message.author.nick,
+            embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
 
         blob_embed = discord.Embed(
             title='Save Blobs', description='Saving blobs for all of your devices...')
-        blob_embed.set_footer(text=ctx.message.author.nick,
+        blob_embed.set_footer(text=ctx.message.author.name,
                               icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         message = await ctx.send(embed=blob_embed)
@@ -251,12 +301,13 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(
             title='Save Blobs', description=description)
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)
         db.close()
 
     @tss_cmd.command(name='list')
+    @commands.guild_only()
     async def list_all_blobs(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
@@ -271,9 +322,9 @@ class TSS(commands.Cog):
         for x in range(saved_devices):
             saved_blobs += len(ast.literal_eval(devices[x][6]))
 
-        embed = discord.Embed(title=f"{ctx.message.author.nick}'s Saved Blobs",
+        embed = discord.Embed(title=f"{ctx.message.author.name}'s Saved Blobs",
                               description=f'**{saved_blobs} blobs** saved for **{saved_devices} devices**.')
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         for x in range(saved_devices):
@@ -292,13 +343,14 @@ class TSS(commands.Cog):
         db.close()
 
     @tss_cmd.command(name='download')
+    @commands.guild_only()
     async def download_all_blobs(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
         embed = discord.Embed(title='Download Blobs',
                               description='Uploading blobs...')
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=ctx.message.author.name,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         message = await ctx.send(embed=embed)
@@ -314,7 +366,7 @@ class TSS(commands.Cog):
                 title='Download Blobs', inline=False)
             embed.add_field(name='Error',
                             value='You have no devices added.')
-            embed.set_footer(text=ctx.message.author.nick,
+            embed.set_footer(text=ctx.message.author.name,
                              icon_url=ctx.message.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -335,7 +387,7 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(title='Download Blobs',
                               description=f'[Click here]({url}).')
-        embed.set_footer(text=f'{ctx.message.author.nick} | This message will automatically be deleted in 10 seconds to protect your ECID.',
+        embed.set_footer(text=f'{ctx.message.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID.',
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)

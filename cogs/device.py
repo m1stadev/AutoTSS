@@ -100,7 +100,10 @@ class Device(commands.Cog):
                 embed = discord.Embed(title='Add Device',
                                       description='Cancelled.')
                 await message.edit(embed=embed)
-                await answer.delete()
+                try:
+                    await answer.delete()
+                except discord.errors.NotFound:
+                    pass
                 return
 
             if x == 0:
@@ -112,7 +115,10 @@ class Device(commands.Cog):
             else:
                 device['boardconfig'] = answer.content.lower()
 
-            await answer.delete()
+            try:
+                await answer.delete()
+            except discord.errors.NotFound:
+                pass
 
         embed = discord.Embed(title='Add Device',
                               description='Verifying input...')
@@ -199,7 +205,10 @@ class Device(commands.Cog):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
 
         cursor.execute('SELECT * from autotss WHERE userid = ?',
                        (ctx.message.author.id,))
@@ -226,8 +235,11 @@ class Device(commands.Cog):
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
         if answer.content == 'cancel':
-            await answer.delete()
-            await message.delete()
+            try:
+                await answer.delete()
+                await message.delete()
+            except discord.errors.NotFound:
+                pass
             return
 
         try:
@@ -283,7 +295,11 @@ class Device(commands.Cog):
 
             await message.edit(embed=embed)
 
-        await answer.delete()
+        try:
+            await answer.delete()
+        except discord.errors.NotFound:
+            pass
+
         db.close()
 
     @device_cmd.command(name='list')
@@ -291,7 +307,10 @@ class Device(commands.Cog):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
 
         cursor.execute('SELECT * from autotss WHERE userid = ?',
                        (ctx.message.author.id,))
@@ -316,7 +335,10 @@ class Device(commands.Cog):
 
         message = await ctx.send(embed=embed)
         await asyncio.sleep(15)
-        await message.delete()
+        try:
+            await message.delete()
+        except discord.errors.NotFound:
+            pass
 
 
 def setup(bot):

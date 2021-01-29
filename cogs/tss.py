@@ -87,8 +87,12 @@ class TSS(commands.Cog):
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
         if answer.content == 'cancel':
-            await answer.delete()
-            await message.delete()
+            try:
+                await answer.delete()
+                await message.delete()
+            except discord.errors.NotFound:
+                pass
+
             return
 
         try:
@@ -102,7 +106,10 @@ class TSS(commands.Cog):
             return
 
         num = int(answer.content)
-        await answer.delete()
+        try:
+            await answer.delete()
+        except discord.errors.NotFound:
+            pass
 
         if not 0 < num <= len(devices):
             embed = discord.Embed(

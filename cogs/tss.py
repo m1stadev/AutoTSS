@@ -47,7 +47,7 @@ class TSS(commands.Cog):
         save_path = f'Data/Blobs/{device[4]}/{version}/{buildid}'
         os.makedirs(save_path, exist_ok=True)
 
-        cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', device[4], '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, stdout=asyncio.subprocess.PIPE)
+        cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', f'0x{device[4]}', '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, stdout=asyncio.subprocess.PIPE)
 
         stdout, stderr = await cmd.communicate()
 

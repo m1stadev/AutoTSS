@@ -1,5 +1,6 @@
 from discord.ext import commands
 import aiohttp
+import ast
 import asyncio
 import discord
 import shutil
@@ -258,11 +259,13 @@ class Device(commands.Cog):
         device = cursor.fetchall()[0]
 
         embed = discord.Embed(
-            title='Remove Device', description=f'Are you **absolutely sure** you want to delete `{device[2]}`\n**`{len(ast.literal_eval(device[6]))}**` blobs that have been saved for this device will be deleted, and will not be able to be recovered.')
+            title='Remove Device', description=f'Are you **absolutely sure** you want to delete `{device[2]}`?\n**{len(ast.literal_eval(device[6]))}** blobs that have been saved for this device will be deleted, and will not be able to be recovered.')
         embed.add_field(
             name='Options', value='Type **Yes** to delete your device & blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.message.author.nick,
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+
+        await message.edit(embed=embed)
 
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
@@ -329,15 +332,15 @@ class Device(commands.Cog):
 
         embed = discord.Embed(title=f"{ctx.message.author.nick}'s Devices")
 
-        for x in result:
+        for x in range(len(devices)):
             embed.add_field(
-                name=f'Name: {x[2]}', value=f'Device Identifier: `{x[3]}`\nECID: `{x[4]}`\nHardware Model: `{x[5]}`', inline=False)
+                name=f'Name: {devices[x][2]}', value=f'Device Identifier: `{devices[x][3]}`\nECID: ||`{devices[x][4]}`||\nHardware Model: `{devices[x][5]}`', inline=False)
 
-        embed.set_footer(text=f'{ctx.message.author.nick} | This message will automatically be deleted in 15 seconds.',
+        embed.set_footer(text=f'{ctx.message.author.nick} | This message will automatically be deleted in 10 seconds to protect your ECID.',
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         message = await ctx.send(embed=embed)
-        await asyncio.sleep(15)
+        await asyncio.sleep(10)
         try:
             await message.delete()
         except discord.errors.NotFound:

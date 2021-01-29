@@ -4,10 +4,10 @@ import aiofiles
 import ast
 import asyncio
 import discord
-import glob
 import os
 import shutil
 import sqlite3
+import tempfile
 
 
 class TSS(commands.Cog):
@@ -17,7 +17,7 @@ class TSS(commands.Cog):
     async def upload_zip(self, file):
         async with aiofiles.open(file, 'rb') as f:
             async with aiohttp.ClientSession() as session:
-                async with session.put('https://up.psty.io/blobs.zip', data=f) as response:
+                async with session.put(f"https://up.psty.io/{file.split('/')[-1]}", data=f) as response:
                     resp = await response.text()
 
         return resp.splitlines()[-1].split(':', 1)[1][1:]
@@ -322,40 +322,26 @@ class TSS(commands.Cog):
         for x in range(len(devices)):
             ecids.append(devices[x][4])
 
-        if os.path.isdir('.tmp'):
-            shutil.rmtree('.tmp')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for x in ecids:
+                try:
+                    shutil.copytree(f'Data/Blobs/{x}', f'{tmpdir}/{x}')
+                except FileNotFoundError:
+                    pass
 
-        os.makedirs('.tmp/Blobs')
+            shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
 
-        for x in ecids:
-            try:
-                shutil.copytree(f'Data/Blobs/{x}', f'.tmp/Blobs/{x}')
-            except FileNotFoundError:
-                pass
-
-        if len(glob.glob('.tmp/Blobs')) == 0:
-            embed = discord.Embed(title='Download Blobs')
-            embed.add_field(name='Error',
-                            value='No blobs are saved for any of your devices.'
-            )
-            embed.set_footer(text=ctx.message.author.nick,
-                            icon_url=ctx.message.author.avatar_url_as(static_format='png'))
-
-            await message.edit(embed=embed)
-            return
-
-        shutil.make_archive('.tmp/blobs', 'zip', '.tmp/Blobs')
-
-        url = await self.upload_zip('.tmp/blobs.zip')
+            url = await self.upload_zip(f'{tmpdir}_blobs.zip')
 
         embed = discord.Embed(title='Download Blobs',
                               description=f'[Click here]({url}).')
-        embed.set_footer(text=ctx.message.author.nick,
+        embed.set_footer(text=f'{ctx.message.author.nick} | This message will automatically be deleted in 10 seconds to protect your ECID.',
                          icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)
 
-        shutil.rmtree('.tmp')
+        await asyncio.sleep(10)
+        await message.delete()
 
 
 def setup(bot):

@@ -40,8 +40,12 @@ class Misc(commands.Cog):
     async def invite(self, ctx):
         embed = discord.Embed(title='Invite',
                               description='[Click here](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184).')
+        embed.set_thumbnail(
+            url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.name,
                          icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

@@ -9,6 +9,7 @@ class Misc(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    @commands.has_permissions(administrator=True)
     async def prefix(self, ctx, *, prefix):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
@@ -16,25 +17,20 @@ class Misc(commands.Cog):
         if len(prefix) > 4:
             embed = discord.Embed(
                 title='Error', description='Prefixes are limited to 4 characters or less.')
-            embed.set_footer(text=ctx.message.author.name,
-                             icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.name,
+                             icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
 
-        if ctx.message.author.guild_permissions.administrator:
-            cursor.execute(
-                'UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
-            db.commit()
+        cursor.execute(
+            'UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
+        db.commit()
 
-            embed = discord.Embed(
-                title='Prefix', description=f'Prefix changed to `{prefix}`.')
+        embed = discord.Embed(
+            title='Prefix', description=f'Prefix changed to `{prefix}`.')
 
-        else:
-            embed = discord.Embed(
-                title='Error', description='You do not have permission to run this command!')
-
-        embed.set_footer(text=ctx.message.author.name,
-                         icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.name,
+                         icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
         db.close()
@@ -44,8 +40,8 @@ class Misc(commands.Cog):
     async def invite(self, ctx):
         embed = discord.Embed(title='Invite',
                               description='[Click here](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184).')
-        embed.set_footer(text=ctx.message.author.name,
-                         icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.name,
+                         icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 
 def setup(bot):

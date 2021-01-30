@@ -135,7 +135,7 @@ class Device(commands.Cog):
             except discord.errors.NotFound:
                 pass
 
-        embed = discord.Embed(title='Add Device', description='Would you like to save blobs with a custom apnonce?\n*This is required on A12+ devices.*')
+        embed = discord.Embed(title='Add Device', description='Would you like to save blobs with a custom apnonce?\n*This is required on A12+ devices due to nonce entanglement, more info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
         embed.add_field(name='Options', value='Type **Yes** to add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)

@@ -95,11 +95,6 @@ class Device(commands.Cog):
 
         device = {'num': len(devices) + 1, 'userid': ctx.author.id}
 
-        embed = discord.Embed(title='Add Device')
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-        message = await ctx.send(embed=embed)
-
         for x in range(4):
             if x == 0:
                 description = 'Enter a name for your device'
@@ -112,7 +107,11 @@ class Device(commands.Cog):
 
             embed = discord.Embed(title='Add Device', description=f'{description}\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await message.edit(embed=embed)
+
+            if x == 0:
+                message = await ctx.send(embed=embed)
+            else:
+                await message.edit(embed=embed)
 
             answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
             if answer.content == 'cancel':

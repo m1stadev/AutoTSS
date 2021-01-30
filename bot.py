@@ -30,16 +30,13 @@ def get_prefix(client, message):
     if message.channel.type is discord.ChannelType.private:
         return 'p!'
 
-    cursor.execute('SELECT prefix FROM prefix WHERE guild = ?',
-                   (message.guild.id,))
+    cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
 
     if cursor.fetchone() is None:
-        cursor.execute(
-            'INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
+        cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
         db.commit()
 
-    cursor.execute('SELECT prefix FROM prefix WHERE guild = ?',
-                   (message.guild.id,))
+    cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
     return cursor.fetchone()
 
 
@@ -56,9 +53,7 @@ if __name__ == '__main__':
     try:
         client.run(bot_token('token.txt'))
     except discord.LoginFailure:
-        sys.exit(
-            "[ERROR] Token invalid, make sure your token is the only text in 'token.txt'. Exiting.")
+        sys.exit("[ERROR] Token invalid, make sure your token is the only text in 'token.txt'. Exiting.")
 
     except discord.errors.PrivilegedIntentsRequired:
-        sys.exit(
-            "[ERROR] Privileged Intents are not enabled. Go to 'https://discord.com/developers/applications', and enable the Server Members Intent. Exiting.")
+        sys.exit("[ERROR] Privileged Intents are not enabled. Go to 'https://discord.com/developers/applications', and enable the Server Members Intent. Exiting.")

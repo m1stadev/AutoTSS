@@ -143,12 +143,23 @@ class Device(commands.Cog):
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
         if answer.content.lower() == 'yes':
-            embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.')
+            embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
             await message.edit(embed=embed)
 
             apnonce = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+            if apnonce.content.lower() == 'cancel':
+                embed = discord.Embed(title='Add Device', description='Cancelled.')
+                await message.edit(embed=embed)
+
+                try:
+                    await apnonce.delete()
+                    await answer.delete()
+                except discord.errors.NotFound:
+                    pass
+                    
+                return
+
             device['apnonce'] = apnonce.content.lower()
 
             try:
@@ -187,7 +198,7 @@ class Device(commands.Cog):
 
         if boardconfig is False:
             embed = discord.Embed(title='Add Device')
-            embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s boardconfig `{device['boardconfig']}` does not exist.", inline=False)
+            embed.add_field(name='Error', value=f"Device `{device['name']}`'s boardconfig `{device['boardconfig']}` does not exist.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -196,7 +207,7 @@ class Device(commands.Cog):
 
         if ecid is False:
             embed = discord.Embed(title='Add Device')
-            embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s ECID `{device['ecid']}` is not valid.", inline=False)
+            embed.add_field(name='Error', value=f"Device `{device['name']}`'s ECID `{device['ecid']}` is not valid.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -206,7 +217,7 @@ class Device(commands.Cog):
 
             if apnonce is False:
                 embed = discord.Embed(title='Add Device')
-                embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s apnonce `{device['apnonce']}` is not valid.", inline=False)
+                embed.add_field(name='Error', value=f"Device `{device['name']}`'s apnonce `{device['apnonce']}` is not valid.", inline=False)
                 embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
                 return

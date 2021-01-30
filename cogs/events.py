@@ -127,12 +127,6 @@ class Events(commands.Cog):
             )
             ''')
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS uptime(
-            start_time TEXT,
-            filler TEXT
-            )
-            ''')
-        cursor.execute('''
             CREATE TABLE IF NOT EXISTS prefix(
             guild INTEGER,
             prefix TEXT

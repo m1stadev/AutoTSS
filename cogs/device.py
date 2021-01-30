@@ -329,14 +329,9 @@ class Device(commands.Cog):
 
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
         if answer.content.lower() == 'yes':
-            embed = discord.Embed(title='Remove Device', description=f'Device `{device[2]}` removed.')
-            embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-            await message.edit(embed=embed)
-
             os.makedirs('Data/Deleted Blobs', exist_ok=True)
-            shutil.copytree(f'Data/Blobs/{device[x][4]}', f'Data/Deleted Blobs/{device[x][4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
-            shutil.rmtree(f'Data/Blobs/{device[x][4]}')
+            shutil.copytree(f'Data/Blobs/{device[4]}', f'Data/Deleted Blobs/{device[4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
+            shutil.rmtree(f'Data/Blobs/{device[4]}')
 
             cursor.execute('DELETE from autotss WHERE device_num = ? AND userid = ?', (num, ctx.author.id))
             db.commit()
@@ -347,6 +342,11 @@ class Device(commands.Cog):
             for x in range(len(devices)):
                 cursor.execute('UPDATE autotss SET device_num = ? WHERE device_num = ? AND userid = ?', (x + 1, devices[x][0], ctx.author.id))
                 db.commit()
+
+            embed = discord.Embed(title='Remove Device', description=f'Device `{device[2]}` removed.')
+            embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+            await message.edit(embed=embed)
 
         else:
             embed = discord.Embed(title='Remove Device', description='Cancelled.')

@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord
+import random
 import sqlite3
 
 
@@ -37,6 +38,26 @@ class Misc(commands.Cog):
         embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.guild_only()
+    async def ping(self, ctx):
+        num = random.randint(0, 1500)
+
+        if num == 69:  # nothing like some easter eggs, right?
+            title = 'Nice'
+        elif num == 1337:
+            title = 'L33t'
+        elif num == 420:
+            title = '420BlazeIt'
+        elif num == 666:
+            title = 'Whoa there Satan, calm down'
+        else:
+            title = 'Pong!'
+
+        embed = discord.Embed(title=title, description=f'Ping: `{round(self.bot.latency * 1000)}ms`')
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
     @commands.command()

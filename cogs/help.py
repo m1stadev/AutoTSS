@@ -51,6 +51,7 @@ class Help(commands.Cog):
         embed = discord.Embed(title='Miscellaneous Commands')
         embed.add_field(name='Change the command prefix for AutoTSS', value=f'`{ctx.prefix}prefix <prefix>`', inline=False)
         embed.add_field(name='Get the invite for this bot', value=f'`{ctx.prefix}invite`', inline=False)
+        embed.add_field(name='See the latency of this bot', value=f'`{ctx.prefix}ping`', inline=False)
         embed.add_field(name='Information about AutoTSS', value=f'`{ctx.prefix}info`', inline=False)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)

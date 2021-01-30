@@ -420,6 +420,7 @@ class TSS(commands.Cog):
 
     @tss_cmd.command(name='saveitall')
     @commands.guild_only()
+    @commands.is_owner()
     async def save_everything(self, ctx):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()

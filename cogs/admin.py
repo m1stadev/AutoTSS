@@ -145,7 +145,7 @@ class Admin(commands.Cog):
 
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
-        if answer.content.lower() == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
+        if answer.content.lower() == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             embed = discord.Embed(title='Edit', description='Cancelled.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)

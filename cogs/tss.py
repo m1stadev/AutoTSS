@@ -154,7 +154,7 @@ class TSS(commands.Cog):
         message = await ctx.send(embed=embed)
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
 
-        if answer.content == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
+        if answer.content == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             try:
                 await answer.delete()
                 await message.delete()

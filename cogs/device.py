@@ -174,7 +174,7 @@ class Device(commands.Cog):
             except discord.errors.NotFound:
                 pass
 
-        elif answer.content.lower() == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
+        elif answer.content.lower() == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             embed = discord.Embed(title='Add Device', description='Cancelled.')
 
             await message.edit(embed=embed)
@@ -292,7 +292,7 @@ class Device(commands.Cog):
         message = await ctx.send(embed=embed)
 
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        if answer.content == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
+        if answer.content == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             embed = discord.Embed(title='Remove Device', description='Cancelled.')
             await message.edit(embed=embed)
 

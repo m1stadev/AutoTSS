@@ -16,7 +16,7 @@ class Help(commands.Cog):
         embed.add_field(name='Device Commands', value=f'`{ctx.prefix}help device`', inline=False)
         embed.add_field(name='TSS Commands', value=f'`{ctx.prefix}help tss`', inline=False)
         embed.add_field(name='Miscellaneous Commands', value=f'`{ctx.prefix}help misc`', inline=False)
-        embed.add_field(name='Want information about AutoTSS?', value=f'`{ctx.prefix}info`', inline=False)
+        embed.add_field(name="If this is your first time using AutoTSS, run this for more information", value=f'`{ctx.prefix}info`', inline=False)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 

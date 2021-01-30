@@ -38,6 +38,10 @@ class Help(commands.Cog):
         embed.add_field(name='Manually save blobs for one of your devices', value=f'`{ctx.prefix}tss save`', inline=False)
         embed.add_field(name='List all of the blobs saved for your devices', value=f'`{ctx.prefix}tss list`', inline=False)
         embed.add_field(name='Download all of the blobs saved for your devices', value=f'`{ctx.prefix}tss download`', inline=False)
+        if await ctx.bot.is_owner(ctx.author):
+            embed.add_field(name='Download all blobs saved for all devices', value=f'`{ctx.prefix}tss downloadall`', inline=False)
+            embed.add_field(name='Save blobs for all devices', value=f'`{ctx.prefix}tss saveitall`', inline=False)
+
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 

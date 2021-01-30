@@ -1,6 +1,7 @@
 from discord.ext import commands
 import discord
 import os
+import shutil
 import sqlite3
 
 
@@ -47,6 +48,37 @@ class Events(commands.Cog):
         cursor.execute('DELETE from prefix where guild = ?', (guild.id,))
         db.commit()
 
+        db.close()
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):  # Don't bother saving blobs for a user if the user doesn't share any servers with the bot.
+        db = sqlite3.connect('Data/autotss.db')
+        cursor = db.cursor()
+
+        if self.bot.get_user(member.id) is not None:
+            pass
+
+        cursor.execute('SELECT * from autotss WHERE userid = ?',
+                       (member.id,))
+        devices = cursor.fetchall()
+
+        if len(devices) == 0:
+            return
+
+        os.makedirs('Data/Deleted Blobs', exist_ok=True)
+
+        for x in range(len(devices)):
+            if not os.path.isdir(f'Data/Blobs/{devices[x][4]}'):
+                continue
+
+            shutil.copytree(
+                f'Data/Blobs/{devices[x][4]}', f'Data/Deleted Blobs/{devices[x][4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
+            shutil.rmtree(f'Data/Blobs/{devices[x][4]}')
+
+        cursor.execute('DELETE * from autotss WHERE userid = ?',
+                       (member.id,))
+
+        db.commit()
         db.close()
 
     @commands.Cog.listener()
@@ -115,7 +147,7 @@ class Events(commands.Cog):
         db.commit()
         db.close()
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help!'))
+        await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
         print('AutoTSS is now online.')
 
     @commands.Cog.listener()

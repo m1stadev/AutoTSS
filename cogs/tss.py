@@ -114,6 +114,9 @@ class TSS(commands.Cog):
                         value=f'`{ctx.prefix}tss list`', inline=False)
         embed.add_field(name='Download all of the blobs saved for your devices',
                         value=f'`{ctx.prefix}tss download`', inline=False)
+        if await ctx.bot.is_owner(ctx.author):
+            embed.add_field(name='Download all blobs saved for all devices',
+                            value=f'`{ctx.prefix}tss downloadall`', inline=False)
         embed.set_footer(text=ctx.author.name,
                          icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
@@ -387,7 +390,62 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(title='Download Blobs',
                               description=f'[Click here]({url}).')
-        embed.set_footer(text=f'{ctx.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID.',
+        embed.set_footer(text=f'{ctx.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID(s).',
+                         icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+        await message.edit(embed=embed)
+
+        await asyncio.sleep(10)
+        await message.delete()
+
+    @tss_cmd.command(name='downloadall')
+    @commands.guild_only()
+    @commands.is_owner()
+    async def download_everything(self, ctx):
+        db = sqlite3.connect('Data/autotss.db')
+        cursor = db.cursor()
+
+        await ctx.message.delete()
+
+        embed = discord.Embed(title='Download All Blobs',
+                              description='Uploading all blobs...')
+        embed.set_footer(text=ctx.author.name,
+                         icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+        message = await ctx.author.send(embed=embed)
+
+        cursor.execute('SELECT * from autotss')
+        devices = cursor.fetchall()
+        db.close()
+        ecids = list()
+
+        if len(devices) == 0:
+            embed = discord.Embed(
+                title='Download All Blobs', inline=False)
+            embed.add_field(name='Error',
+                            value='There are no devices added to AutoTSS.')
+            embed.set_footer(text=ctx.author.name,
+                             icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+            return
+
+        for x in range(len(devices)):
+            ecids.append(devices[x][4])
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for x in ecids:
+                try:
+                    shutil.copytree(f'Data/Blobs/{x}', f'{tmpdir}/{x}')
+                except FileNotFoundError:
+                    pass
+
+            shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
+
+            url = await self.upload_zip(f'{tmpdir}_blobs.zip')
+
+        embed = discord.Embed(title='Download Blobs',
+                              description=f'[Click here]({url}).')
+        embed.set_footer(text=ctx.author.name,
                          icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)

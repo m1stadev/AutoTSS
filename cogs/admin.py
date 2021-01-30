@@ -140,7 +140,7 @@ class Admin(commands.Cog):
             except discord.ext.commands.ExtensionNotFound:
                 embed = discord.Embed(title='Reload')
                 embed.add_field(
-                    name='Error', value=f'Module `{module}` does not exist!', inline = False)
+                    name='Error', value=f'Module `{module}` does not exist!', inline=False)
                 embed.add_field(name='Available modules',
                                 value=await self.list_cogs(), inline=False)
 

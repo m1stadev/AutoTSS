@@ -1,8 +1,8 @@
 from discord.ext import commands
 import aiohttp
-import ast
 import asyncio
 import discord
+import os
 import shutil
 import sqlite3
 
@@ -66,9 +66,19 @@ class Device(commands.Cog):
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
+        max_devices = 10  # Change this to change the maximum allowed devices for each user
+
         cursor.execute(
             'SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
         devices = cursor.fetchall()
+
+        if len(devices) > max_devices:
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error', value=f'You cannot add over {max_devices} devices to AutoTSS.')
+            embed.set_footer(text=ctx.author.name,
+                             icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
 
         device = {'num': len(devices) + 1, 'userid': ctx.author.id}
 
@@ -262,7 +272,7 @@ class Device(commands.Cog):
         device = cursor.fetchall()[0]
 
         embed = discord.Embed(
-            title='Remove Device', description=f'Are you **absolutely sure** you want to delete `{device[2]}`?\n**{len(ast.literal_eval(device[6]))}** blobs that have been saved for this device will be deleted, and will not be able to be recovered.')
+            title='Remove Device', description=f'Are you **absolutely sure** you want to delete `{device[2]}`?')
         embed.add_field(
             name='Options', value='Type **Yes** to delete your device & blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.name,
@@ -280,7 +290,9 @@ class Device(commands.Cog):
 
             await message.edit(embed=embed)
 
-            shutil.rmtree(f'Data/Blobs/{device[4]}')
+            os.makedirs('Data/Deleted Blobs', exist_ok=True)
+            shutil.copytree(f'Data/Blobs/{device[x][4]}', f'Data/Deleted Blobs/{device[x][4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
+            shutil.rmtree(f'Data/Blobs/{device[x][4]}')
 
             cursor.execute(
                 'DELETE from autotss WHERE device_num = ? AND userid = ?', (num, ctx.author.id))
@@ -340,7 +352,7 @@ class Device(commands.Cog):
             embed.add_field(
                 name=f'Name: {devices[x][2]}', value=f'Device Identifier: `{devices[x][3]}`\nECID: ||`{devices[x][4]}`||\nHardware Model: `{devices[x][5]}`', inline=False)
 
-        embed.set_footer(text=f'{ctx.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID.',
+        embed.set_footer(text=f'{ctx.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID(s).',
                          icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         message = await ctx.send(embed=embed)

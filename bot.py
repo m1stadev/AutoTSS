@@ -46,7 +46,9 @@ def get_prefix(client, message):
 if __name__ == '__main__':
     check_tsschecker()
 
-    client = commands.Bot(command_prefix=get_prefix, help_command=None)
+    intents = discord.Intents.default()
+    intents.members = True
+    client = commands.Bot(command_prefix=get_prefix, help_command=None, intents=intents)
 
     for cog in glob.glob('cogs/*.py'):
         client.load_extension(cog.replace('/', '.')[:-3])
@@ -55,4 +57,8 @@ if __name__ == '__main__':
         client.run(bot_token('token.txt'))
     except discord.LoginFailure:
         sys.exit(
-            "Token invalid, make sure your token is the only text in 'token.txt'.")
+            "[ERROR] Token invalid, make sure your token is the only text in 'token.txt'. Exiting.")
+
+    except discord.errors.PrivilegedIntentsRequired:
+        sys.exit(
+            "[ERROR] Privileged Intents are not enabled. Go to 'https://discord.com/developers/applications', and enable the Server Members Intent. Exiting.")

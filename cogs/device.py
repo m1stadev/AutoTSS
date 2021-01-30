@@ -205,7 +205,7 @@ class Device(commands.Cog):
 
         if boardconfig is False:
             embed = discord.Embed(title='Add Device')
-            embed.add_field(name='Error', value=f"Device `{device['name']}`'s boardconfig `{device['boardconfig']}` does not exist.", inline=False)
+            embed.add_field(name='Error', value=f"Device `{device['name']}`'s hardware model `{device['boardconfig']}` does not exist.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return

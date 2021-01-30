@@ -26,7 +26,6 @@ class Admin(commands.Cog):
         embed.add_field(name='Reload', value=f'`{ctx.prefix}module reload <all/module>`', inline=False)
         embed.add_field(name='Unload', value=f'`{ctx.prefix}module unload <module>`', inline=False)
         embed.add_field(name='Edit', value=f'`{ctx.prefix}module edit <module>`', inline=False)
-        embed.add_field(name='Note', value='Use commas to separate multiple modules.', inline=False)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 

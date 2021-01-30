@@ -43,6 +43,8 @@ class Events(commands.Cog):
 
         await channel.send(embed=embed)
 
+        await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
+
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         db = sqlite3.connect('Data/autotss.db')
@@ -52,6 +54,8 @@ class Events(commands.Cog):
         db.commit()
 
         db.close()
+
+        await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):  # Don't bother saving blobs for a user if the user doesn't share any servers with the bot.

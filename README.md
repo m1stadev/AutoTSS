@@ -28,4 +28,4 @@ To locally host, follow these steps:
 AutoTSS can be invited into any Discord server using [this](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184/) link.
 
 ## Support
-For any questions/issues you have, join [my discord](https://discord.gg/fAngssA/).
+For any questions/issues you have, join my [discord](https://discord.gg/fAngssA/).

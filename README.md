@@ -1,8 +1,10 @@
-# AutoTSS-bot
-AutoTSS-bot is a bot based off of [AutoTSS](https://github.com/marijuanARM/AutoTSS), which automatically saves [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices.
+# AutoTSS
+AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices.
+
+*Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/marijuanARM/autotss-cli)!*
 
 ## Disclaimer
-- This should NOT be your only source for saving blobs. I am not at fault for any issues you may experience with AutoTSS.
+- This should NOT be your main reliance for saving blobs. I am not at fault for any issues you may experience with AutoTSS.
 
 ## Features
 - Automatic blob saving

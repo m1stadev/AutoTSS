@@ -126,7 +126,10 @@ class Device(commands.Cog):
             elif x == 1:
                 device['identifier'] = answer.content.lower()
             elif x == 2:
-                device['ecid'] = answer.content.lower()
+                if answer.content.lower().startswith('0x'):
+                    device['ecid'] = answer.content.lower()[2:]
+                else:
+                    device['ecid'] = answer.content.lower()
             else:
                 device['boardconfig'] = answer.content.lower()
 

@@ -89,13 +89,6 @@ class Events(commands.Cog):
         cursor = db.cursor()
 
         if message.channel.type is discord.ChannelType.private:
-            embed = discord.Embed(title='Error', description='I only work inside of servers. Invite me to a server and use me there!')
-            embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
-            try:
-                await message.channel.send(embed=embed)
-            except discord.errors.Forbidden:
-                pass
-
             return
 
         cursor.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,))

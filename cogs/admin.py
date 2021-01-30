@@ -87,12 +87,13 @@ class Admin(commands.Cog):
                     self.bot.reload_extension(cog)
                 except discord.ext.commands.ExtensionNotLoaded:
                     embed.add_field(name='Error', value=f"Module `{cog.split('.')[-1]}` is not currently loaded!", inline=False)
+                    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                    await ctx.send(embed=embed)
 
                 except discord.ext.commands.ExtensionFailed:
                     embed.add_field(name='Error', value=f'Module `{cog}` has an error, cannot reload!', inline=False)
-
-                embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                await ctx.send(embed=embed)
+                    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                    await ctx.send(embed=embed)
 
             embed = discord.Embed(title='Reload', description='All modules have been reloaded.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))

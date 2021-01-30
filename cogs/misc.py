@@ -15,7 +15,8 @@ class Misc(commands.Cog):
         cursor = db.cursor()
 
         if len(prefix) > 4:
-            embed = discord.Embed(title='Error', description='Prefixes are limited to 4 characters or less.')
+            embed = discord.Embed(title='Prefix')
+            embed.add_field(name='Error', value='Prefixes are limited to 4 characters or less.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
@@ -24,10 +25,9 @@ class Misc(commands.Cog):
         db.commit()
 
         embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
-
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
 
+        await ctx.send(embed=embed)
         db.close()
 
     @commands.command()

@@ -13,7 +13,7 @@ class Admin(commands.Cog):
         cogs = str()
 
         for cog in glob.glob('cogs/*.py'):
-            cogs += f'`{cog.replace('/', '.')[:-3]}`, '
+            cogs += f"`{cog.replace('/', '.')[:-3]}`, "
         return cogs[:-2]
 
     @commands.group(invoke_without_command=True)

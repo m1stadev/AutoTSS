@@ -82,7 +82,7 @@ class Device(commands.Cog):
 
         if len(devices) > max_devices:
             embed = discord.Embed(title='Add Device')
-            embed.add_field(name='Error', value=f'You cannot add over {max_devices} devices to AutoTSS.')
+            embed.add_field(name='Error', value=f'You cannot add over {max_devices} devices to AutoTSS.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await ctx.send(embed=embed)
@@ -105,8 +105,7 @@ class Device(commands.Cog):
             else:
                 description = "Enter your device's Hardware Model (e.g. n51ap)"
 
-            embed = discord.Embed(
-                title='Add Device', description=f'{description}\nType `cancel` to cancel.')
+            embed = discord.Embed(title='Add Device', description=f'{description}\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
@@ -178,7 +177,7 @@ class Device(commands.Cog):
 
         if identifier is False:
             embed = discord.Embed(title='Add Device')
-            embed.add_field(name='Error', value=f"Device Identifier `{device['identifier']}` does not exist.")
+            embed.add_field(name='Error', value=f"Device Identifier `{device['identifier']}` does not exist.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -187,7 +186,8 @@ class Device(commands.Cog):
         boardconfig = await self.check_boardconfig(device['identifier'], device['boardconfig'])
 
         if boardconfig is False:
-            embed = discord.Embed(title='Error', description=f"Device `{device['identifier']}`'s boardconfig `{device['boardconfig']}` does not exist.")
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s boardconfig `{device['boardconfig']}` does not exist.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -195,7 +195,8 @@ class Device(commands.Cog):
         ecid = await self.check_ecid(device['ecid'])
 
         if ecid is False:
-            embed = discord.Embed(title='Error', description=f"Device `{device['identifier']}`'s ECID `{device['ecid']}` is not valid.")
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s ECID `{device['ecid']}` is not valid.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -204,7 +205,8 @@ class Device(commands.Cog):
             apnonce = await self.check_apnonce(device['apnonce'])
 
             if apnonce is False:
-                embed = discord.Embed(title='Error', description=f"Device `{device['identifier']}`'s apnonce `{device['apnonce']}` is not valid.")
+                embed = discord.Embed(title='Add Device')
+                embed.add_field(name='Error', value=f"Device `{device['identifier']}`'s apnonce `{device['apnonce']}` is not valid.", inline=False)
                 embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
                 return
@@ -212,7 +214,8 @@ class Device(commands.Cog):
         cursor.execute('SELECT ecid from autotss')
         ecids = cursor.fetchall()
         if any(x[0] == device['ecid'] for x in ecids):
-            embed = discord.Embed(title='Error', description="This device's ECID is already in my database.")
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error', value="This device's ECID is already in my database.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -221,7 +224,8 @@ class Device(commands.Cog):
         names = cursor.fetchall()
 
         if any(x[0].lower() == device['name'].lower() for x in names):
-            embed = discord.Embed(title='Error', description="You've already added a device with this name.")
+            embed = discord.Embed(title='Add Device')
+            embed.add_field(name='Error', value="You've already added a device with this name.", inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -251,7 +255,8 @@ class Device(commands.Cog):
         devices = cursor.fetchall()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description='You have no devices added.', inline=False)
+            embed = discord.Embed(title='Remove Device')
+            embed.add_field(name='Error', value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
@@ -280,7 +285,8 @@ class Device(commands.Cog):
 
             return
 
-        embed = discord.Embed(title='Error', description='Invalid input given.')
+        embed = discord.Embed(title='Remove Device')
+        embed.add_field(name='Error', value='Invalid input given.', inline=False)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         try:
@@ -350,15 +356,14 @@ class Device(commands.Cog):
         cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
         devices = cursor.fetchall()
 
+        embed = discord.Embed(title=f"{ctx.author.name}'s Devices")
+
         if len(devices) == 0:
-            embed = discord.Embed(title=f"{ctx.author.name}'s Devices", inline=False)
             embed.add_field(name='Error', value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await ctx.send(embed=embed)
             return
-
-        embed = discord.Embed(title=f"{ctx.author.name}'s Devices")
 
         for x in range(len(devices)):
             device_info = f'Device Identifier: `{devices[x][3]}`\nECID: ||`{devices[x][4]}`||\nHardware Model: `{devices[x][5]}`'

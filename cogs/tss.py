@@ -133,7 +133,8 @@ class TSS(commands.Cog):
         devices = cursor.fetchall()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description='You have no devices added.', inline=False)
+            embed = discord.Embed(title='Save Blobs', description='You have no devices added.')
+            embed.add_field(name='Error', value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await ctx.send(embed=embed)
@@ -164,7 +165,8 @@ class TSS(commands.Cog):
         try:
             int(answer.content)
         except ValueError:
-            embed = discord.Embed(title='Error', description='Invalid input given.')
+            embed = discord.Embed(title='Save Blobs')
+            embed.add_field(name='Error', value='Invalid input given.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await message.edit(embed=embed)
@@ -177,7 +179,8 @@ class TSS(commands.Cog):
             pass
 
         if not 0 < num <= len(devices):
-            embed = discord.Embed(title='Error', description=f'Device `{num}` does not exist.')
+            embed = discord.Embed(title='Save Blobs')
+            embed.add_field(name='Error', value=f'Device `{num}` does not exist.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await message.edit(embed=embed)
@@ -242,15 +245,16 @@ class TSS(commands.Cog):
         devices = cursor.fetchall()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description='You have no devices added.', inline=False)
+            embed = discord.Embed(title='Save All Blobs')
+            embed.add_field(name='Error', value='You have no devices added.', inline=False)
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
             await ctx.send(embed=embed)
             return
 
-        blob_embed = discord.Embed(title='Save Blobs', description='Saving blobs for all of your devices...')
-        blob_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=blob_embed)
+        embed = discord.Embed(title='Save Blobs', description='Saving blobs for all of your devices...')
+        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        message = await ctx.send(embed=embed)
 
         saved_blobs = int()
         for x in range(len(devices)):
@@ -268,8 +272,8 @@ class TSS(commands.Cog):
                 blob = await self.save_blob(devices[x], i)
 
                 if blob is False:
-                    blob_embed.add_field(name='Error', value=f'Failed to save blobs for `{devices[x][2]} - iOS {signed_versions[signed_buildids.index(i)]} | {i}`.', inline=False)
-                    await message.edit(embed=blob_embed)
+                    embed.add_field(name='Error', value=f'Failed to save blobs for `{devices[x][2]} - iOS {signed_versions[signed_buildids.index(i)]} | {i}`.', inline=False)
+                    await message.edit(embed=embed)
 
                     signed_versions.pop(signed_buildids.index(i))
                     signed_buildids.pop(signed_buildids.index(i))
@@ -286,8 +290,7 @@ class TSS(commands.Cog):
         else:
             description = f'Saved **{saved_blobs} blobs** for **{len(devices)} devices**.'
 
-        embed = discord.Embed(title='Save Blobs', description=description)
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
         db.close()
 

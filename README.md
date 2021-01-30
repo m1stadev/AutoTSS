@@ -16,12 +16,14 @@ To locally host, follow these steps:
 0. Create a [Discord Bot](https://discord.com/developers/applications/).
     - Under the bot menu, make sure to enable the 'Server Members Intent'.
 
-1. Install the required libraries:
+1. Build and install [tsschecker](https://github.com/tihmstar/tsschecker/) and its dependencies.
+
+2. Install the required libraries:
 `pip3 install -r requirements.txt`
 
-2. Create a file named `token.txt` and place your bot's token in it.
+3. Create a file named `token.txt` and place your bot's token in it.
 
-3. Run `bot.py`:
+4. Run `bot.py`:
 `python3 bot.py`
 
 ## Invite

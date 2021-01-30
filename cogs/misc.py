@@ -51,7 +51,7 @@ class Misc(commands.Cog):
         embed.add_field(name='Disclaimer', value='This should NOT be your only source for saving blobs. I am not at fault for any issues you may experience with AutoTSS.', inline=False)
         embed.add_field(name='Notes', value='- There is a limit of 10 devices per user.\n- You must be in a server with AutoTSS, or your devices & blobs will be deleted. This **does not** have to be the same server that you added your devices to AutoTSS in.\n- Blobs are automatically saved every 30 minutes.', inline=False)
         embed.add_field(name='Source Code', value="AutoTSS's source code can be found on [GitHub](https://github.com/marijuanARM/autotss).", inline=False)
-        embed.add_field(name='Support', value='For any questions about AutoTSS, join [my discord](https://discord.gg/fAngssA).', inline=False)
+        embed.add_field(name='Support', value='For any questions about AutoTSS, join my [discord](https://discord.gg/fAngssA).', inline=False)
         embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 

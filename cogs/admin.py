@@ -135,7 +135,7 @@ class Admin(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Edit', description=f'Send a link to the raw text you wish to update `{module}` to.')
+        embed = discord.Embed(title='Edit', description=f'Send a link to the raw text you wish to update `{module}` to.\nType `cancel` to cancel.')
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         message = await ctx.send(embed=embed)
@@ -144,8 +144,22 @@ class Admin(commands.Cog):
             old_module = await f.read()
 
         answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+
+        if answer.content.lower() == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
+            embed = discord.Embed(title='Edit', description='Cancelled.')
+            embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await message.edit(embed=embed)
+
+            try:
+                await answer.delete()
+            except discord.errors.NotFound:
+                pass
+
         new_module = answer.content
-        await answer.delete()
+        try:
+            await answer.delete()
+        except discord.errors.NotFound:
+            pass
 
         async with aiohttp.ClientSession() as session:
             async with session.get(new_module) as response:

@@ -125,11 +125,6 @@ class Device(commands.Cog):
             elif x == 1:
                 device['identifier'] = answer.content.lower()
             elif x == 2:
-                # if answer.content.lower().startswith('0x'):
-                #     device['ecid'] = answer.content.lower()[2:]
-                # else:
-                #     device['ecid'] = answer.content.lower()
-
                 try:
                     # turn piss into hex
                     device['ecid'] = hex(int(answer.content))[2:]

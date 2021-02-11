@@ -1,10 +1,5 @@
 from discord.ext import commands
-import aiohttp
-import asyncio
-import discord
-import os
-import shutil
-import sqlite3
+import aiohttp, asyncio, discord, os, shutil, sqlite3
 
 
 class Device(commands.Cog):
@@ -101,7 +96,7 @@ class Device(commands.Cog):
             elif x == 1:
                 description = "Enter your device's identifier (e.g. iPhone8,4)"
             elif x == 2:
-                description = "Enter your device's ECID (hex only)"
+                description = "Enter your device's ECID"
             else:
                 description = "Enter your device's Hardware Model (e.g. n51ap)"
 
@@ -130,10 +125,21 @@ class Device(commands.Cog):
             elif x == 1:
                 device['identifier'] = answer.content.lower()
             elif x == 2:
-                if answer.content.lower().startswith('0x'):
-                    device['ecid'] = answer.content.lower()[2:]
-                else:
-                    device['ecid'] = answer.content.lower()
+                # if answer.content.lower().startswith('0x'):
+                #     device['ecid'] = answer.content.lower()[2:]
+                # else:
+                #     device['ecid'] = answer.content.lower()
+
+                try:
+                    # turn piss into hex
+                    device['ecid'] = hex(int(answer.content))[2:]
+                except ValueError:
+                    # already is hex
+                    if answer.content.lower().startswith('0x'):
+                        device['ecid'] = answer.content.lower()[2:]
+                    else:
+                        device['ecid'] = answer.content.lower()
+
             else:
                 device['boardconfig'] = answer.content.lower()
 

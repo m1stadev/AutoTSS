@@ -37,7 +37,10 @@ def get_prefix(client, message):
 		db.commit()
 
 	cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
-	return cursor.fetchone()
+	guild_prefix = cursor.fetchone()[0]
+	db.close()
+
+	return commands.when_mentioned_or(guild_prefix)(client, message)
 
 
 if __name__ == '__main__':

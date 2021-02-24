@@ -126,7 +126,7 @@ class TSS(commands.Cog):
 
 	@tss_cmd.command(name='save')
 	@commands.guild_only()
-	async def save_single_device_blobs(self, ctx):
+	async def save_single_blob(self, ctx):
 		timeout_embed = discord.Embed(title='Save Blobs', description='No response given in 1 minute, cancelling.')
 		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
@@ -137,7 +137,7 @@ class TSS(commands.Cog):
 		devices = cursor.fetchall()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Save Blobs', description='You have no devices added.')
+			embed = discord.Embed(title='Save Blobs')
 			embed.add_field(name='Error', value='You have no devices added.', inline=False)
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
@@ -297,7 +297,7 @@ class TSS(commands.Cog):
 		if saved_blobs == 0:
 			description = 'No blobs were saved.'
 		else:
-			description = f'Saved **{saved_blobs} blobs** for **{len(devices)} devices**.'
+			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{len(devices)} device{'s' if len(devices) != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)
@@ -318,7 +318,7 @@ class TSS(commands.Cog):
 		for x in range(saved_devices):
 			saved_blobs += len(ast.literal_eval(devices[x][6]))
 
-		embed = discord.Embed(title=f"{ctx.author.name}'s Saved Blobs", description=f'**{saved_blobs} blobs** saved for **{saved_devices} devices**.')
+		embed = discord.Embed(title=f"{ctx.author.name}'s Saved Blobs", description=f"**{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** saved for **{saved_devices} device{'s' if saved_devices != 1 else ''}**.")
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		for x in range(saved_devices):
@@ -419,7 +419,7 @@ class TSS(commands.Cog):
 			shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
 			url = await self.upload_zip(f'{tmpdir}_blobs.zip', 'blobs.zip')
 
-		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
+		embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
 
@@ -444,7 +444,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
-		embed = discord.Embed(title='Save Everything', description='Saving blobs for **all** devices...')
+		embed = discord.Embed(title='Save Everything', description=f"Saving blobs for {len(devices)} device{'s' if len(devices) != 1 else ''}...")
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
 
@@ -480,7 +480,7 @@ class TSS(commands.Cog):
 		if saved_blobs == 0:
 			description = 'No blobs were saved.'
 		else:
-			description = f'Saved **{saved_blobs} blobs** for **{len(devices)} devices**.'
+			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{len(devices)} device{'s' if len(devices) != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)

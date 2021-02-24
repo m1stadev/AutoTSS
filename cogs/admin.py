@@ -79,7 +79,7 @@ class Admin(commands.Cog):
 	async def _reload(self, ctx, *, module):
 		if module == 'all':
 			for cog in glob.glob('cogs/*.py'):
-				cog = cog.replace('/', '.')[:-3]
+				cog = cog.replace('/', '.').replace('\\', '.')[:-3]
 
 				embed = discord.Embed(title='Reload')
 

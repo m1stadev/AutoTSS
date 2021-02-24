@@ -148,6 +148,9 @@ class Events(commands.Cog):
 	async def on_command_error(self, ctx, error):
 		await self.bot.wait_until_ready()
 		if isinstance(error, commands.CommandNotFound):
+			if ctx.prefix.replace('!', '').replace(' ', '') == self.bot.user.mention:
+				return
+
 			embed = discord.Embed(title='Error', description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands I can run.")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)

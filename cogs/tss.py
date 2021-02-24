@@ -148,7 +148,7 @@ class TSS(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		for x in range(len(devices)):
-			device_info = f'Name: `{devices[x][2]}`\nDevice Identifier: `{devices[x][3]}`\nHardware Model: `{devices[x][5]}`'
+			device_info = f'Name: `{devices[x][2]}`\nDevice Identifier: `{devices[x][3]}`\nBoard Config: `{devices[x][5]}`'
 			if devices[x][7] is not None:
 				device_info += f'\nCustom apnonce: `{devices[x][7]}`'
 

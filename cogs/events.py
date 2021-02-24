@@ -136,9 +136,12 @@ class Events(commands.Cog):
 			)
 			''')
 		db.commit()
+
+		cursor.execute('SELECT ecid from autotss')
+		devices = len(cursor.fetchall())
 		db.close()
 
-		await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 		print('AutoTSS is now online.')
 
 	@commands.Cog.listener()

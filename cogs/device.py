@@ -88,7 +88,7 @@ class Device(commands.Cog):
 		cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
 		devices = cursor.fetchall()
 
-		if len(devices) > max_devices:
+		if len(devices) > max_devices and ctx.author != commands.is_owner:
 			embed = discord.Embed(title='Add Device')
 			embed.add_field(name='Error', value=f'You cannot add over {max_devices} devices to AutoTSS.', inline=False)
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -106,7 +106,7 @@ class Device(commands.Cog):
 			elif x == 2:
 				description = "Enter your device's ECID (hex only)"
 			else:
-				description = "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found using [System Info](https://arx8x.github.io/depictions/systeminfo.html) or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+				description = "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
 
 			embed = discord.Embed(title='Add Device', description=f'{description}\nType `cancel` to cancel.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -267,13 +267,17 @@ class Device(commands.Cog):
 
 		val = (device['num'], device['userid'], device['name'], device['identifier'], device['ecid'], device['boardconfig'], str(list()), device['apnonce'])
 		cursor.execute('INSERT INTO autotss(device_num, userid, name, identifier, ecid, boardconfig, blobs, apnonce) VALUES(?,?,?,?,?,?,?,?)', val)
-
 		db.commit()
-		db.close()
 
 		embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
+
+		cursor.execute('SELECT ecid from autotss')
+		devices = len(cursor.fetchall())
+		db.close()
+
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 
 	@device_cmd.command(name='remove')
 	@commands.guild_only()
@@ -388,7 +392,12 @@ class Device(commands.Cog):
 		except discord.errors.NotFound:
 			pass
 
+
+		cursor.execute('SELECT ecid from autotss')
+		devices = len(cursor.fetchall())
 		db.close()
+
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 
 	@device_cmd.command(name='list')
 	@commands.guild_only()

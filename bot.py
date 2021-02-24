@@ -18,7 +18,6 @@ def bot_token(token):
 
 def check_tsschecker():
 	tsschecker_check = subprocess.run('which tsschecker', stdout=subprocess.DEVNULL, shell=True)
-
 	if tsschecker_check.returncode != 0:
 		sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
@@ -37,11 +36,14 @@ def get_prefix(client, message):
 		db.commit()
 
 	cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
-	return cursor.fetchone()
+	guild_prefix = cursor.fetchone()[0]
+	db.close()
+
+	return commands.when_mentioned_or(guild_prefix)(client, message)
 
 
 if __name__ == '__main__':
-	check_tsschecker()
+	#check_tsschecker()
 
 	client = commands.Bot(command_prefix=get_prefix, help_command=None)
 

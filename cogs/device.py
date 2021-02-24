@@ -56,7 +56,7 @@ class Device(commands.Cog):
 		return True
 
 	async def check_ecid(self, ecid):
-		if not 9 < len(ecid) < 17:
+		if not 9 <= len(ecid) <= 16:
 			return False
 
 		try:

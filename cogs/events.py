@@ -42,7 +42,6 @@ class Events(commands.Cog):
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
 
 		await channel.send(embed=embed)
-		await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
 
 	@commands.Cog.listener()
 	async def on_guild_remove(self, guild):
@@ -52,10 +51,7 @@ class Events(commands.Cog):
 
 		cursor.execute('DELETE from prefix where guild = ?', (guild.id,))
 		db.commit()
-
 		db.close()
-
-		await self.bot.change_presence(activity=discord.Game(name=f'Ping me for help! | In {len(self.bot.guilds)} servers'))
 
 	@commands.Cog.listener()
 	async def on_member_remove(self, member):  # Don't bother saving blobs for a user if the user doesn't share any servers with the bot.
@@ -82,9 +78,13 @@ class Events(commands.Cog):
 			shutil.rmtree(f'Data/Blobs/{devices[x][4]}')
 
 		cursor.execute('DELETE * from autotss WHERE userid = ?', (member.id,))
-
 		db.commit()
+
+		cursor.execute('SELECT ecid from autotss')
+		devices = len(cursor.fetchall())
 		db.close()
+
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 
 	@commands.Cog.listener()
 	async def on_message(self, message):

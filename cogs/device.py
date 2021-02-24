@@ -50,7 +50,7 @@ class Device(commands.Cog):
 		if len(name_check) == 0:
 			return False
 
-		if not 5 <= len(name) <= 20:
+		if not 4 <= len(name) <= 20:
 			return False
 		
 		return True
@@ -226,7 +226,7 @@ class Device(commands.Cog):
 
 		if name_check is False:
 			embed = discord.Embed(title='Add Device')
-			embed.add_field(name='Error', value=f"Device name `{device['name']}` is not valid. A device's name must only contain letters, numbers, and spaces, and must be between 5 and 20 characters.", inline=False)
+			embed.add_field(name='Error', value=f"Device name `{device['name']}` is not valid. A device's name must only contain letters, numbers, and spaces, and must be between 4 and 20 characters.", inline=False)
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 			return

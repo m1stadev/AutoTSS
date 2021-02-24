@@ -123,6 +123,9 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def edit(self, ctx, *, module):
+		timeout_embed = discord.Embed(title='Edit', description='No response given in 1 minute, cancelling.')
+		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
         if module not in await self.list_cogs() or module == 'admin':
             embed = discord.Embed(title='Edit')
             if module not in await self.list_cogs():
@@ -143,7 +146,11 @@ class Admin(commands.Cog):
         async with aiofiles.open(f'cogs/{module}.py', 'r') as f:
             old_module = await f.read()
 
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+		try:
+        	answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+		except asyncio.exceptions.TimeoutError:
+			await message.edit(embed=timeout_embed)
+			return
 
         if answer.content.lower() == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             embed = discord.Embed(title='Edit', description='Cancelled.')

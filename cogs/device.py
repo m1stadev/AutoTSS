@@ -77,6 +77,9 @@ class Device(commands.Cog):
     @device_cmd.command(name='add')
     @commands.guild_only()
     async def add_device(self, ctx):
+		timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
+		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
@@ -113,7 +116,12 @@ class Device(commands.Cog):
             else:
                 await message.edit(embed=embed)
 
-            answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+			try:
+				answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			except asyncio.exceptions.TimeoutError:
+				await message.edit(embed=timeout_embed)
+				return
+
             if answer.content == 'cancel':
                 embed = discord.Embed(title='Add Device', description='Cancelled.')
                 await message.edit(embed=embed)
@@ -147,14 +155,23 @@ class Device(commands.Cog):
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await message.edit(embed=embed)
 
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+		try:
+			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+		except asyncio.exceptions.TimeoutError:
+			await message.edit(embed=timeout_embed)
+			return
 
         if answer.content.lower() == 'yes':
             embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
-            apnonce = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+			try:
+            	apnonce = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			except asyncio.exceptions.TimeoutError:
+				await message.edit(embed=timeout_embed)
+				return
+
             if apnonce.content.lower() == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
                 embed = discord.Embed(title='Add Device', description='Cancelled.')
                 await message.edit(embed=embed)
@@ -261,6 +278,9 @@ class Device(commands.Cog):
     @device_cmd.command(name='remove')
     @commands.guild_only()
     async def remove_device(self, ctx):
+		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
+		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
@@ -291,7 +311,12 @@ class Device(commands.Cog):
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+		try:
+        	answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+		except asyncio.exceptions.TimeoutError:
+			await message.edit(embed=timeout_embed)
+			return
+
         if answer.content == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             embed = discord.Embed(title='Remove Device', description='Cancelled.')
             await message.edit(embed=embed)
@@ -326,7 +351,12 @@ class Device(commands.Cog):
 
         await message.edit(embed=embed)
 
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+		try:
+        	answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+		except asyncio.exceptions.TimeoutError:
+			await message.edit(embed=timeout_embed)
+			return
+
         if answer.content.lower() == 'yes':
             os.makedirs('Data/Deleted Blobs', exist_ok=True)
             shutil.copytree(f'Data/Blobs/{device[4]}', f'Data/Deleted Blobs/{device[4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...

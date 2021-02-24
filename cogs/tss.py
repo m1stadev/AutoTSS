@@ -127,6 +127,9 @@ class TSS(commands.Cog):
     @tss_cmd.command(name='save')
     @commands.guild_only()
     async def save_single_device_blobs(self, ctx):
+		timeout_embed = discord.Embed(title='Save Blobs', description='No response given in 1 minute, cancelling.')
+		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
         db = sqlite3.connect('Data/autotss.db')
         cursor = db.cursor()
 
@@ -152,7 +155,12 @@ class TSS(commands.Cog):
             embed.add_field(name=devices[x][0], value=device_info, inline=False)
 
         message = await ctx.send(embed=embed)
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+
+		try:
+        	answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+		except asyncio.exceptions.TimeoutError:
+			await message.edit(embed=timeout_embed)
+			return
 
         if answer.content == 'cancel' or answer.content.lower().startswith(ctx.prefix):
             try:

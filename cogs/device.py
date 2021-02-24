@@ -99,11 +99,11 @@ class Device(commands.Cog):
             if x == 0:
                 description = 'Enter a name for your device'
             elif x == 1:
-                description = "Enter your device's identifier (e.g. iPhone8,4)"
+                description = "Enter your device's identifier (e.g. `iPhone8,4`)"
             elif x == 2:
                 description = "Enter your device's ECID (hex only)"
             else:
-                description = "Enter your device's Hardware Model (e.g. n51ap)"
+                description = "Enter your device's Hardware Model (e.g. `n51ap`). This value ends in `ap`, and can be found using [System Info](https://arx8x.github.io/depictions/systeminfo.html) or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
 
             embed = discord.Embed(title='Add Device', description=f'{description}\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))

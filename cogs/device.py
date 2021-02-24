@@ -3,6 +3,7 @@ import aiohttp
 import asyncio
 import discord
 import os
+import re
 import shutil
 import sqlite3
 
@@ -42,6 +43,16 @@ class Device(commands.Cog):
 			if json['boardconfig'].lower() != boardconfig:
 				return False
 
+		return True
+
+	async def check_name(self, name):
+		name_check = re.findall('^[a-zA-Z0-9 ]*$', name)
+		if len(name_check) == 0:
+			return False
+
+		if not 5 <= len(name) <= 20:
+			return False
+		
 		return True
 
 	async def check_ecid(self, ecid):
@@ -210,6 +221,15 @@ class Device(commands.Cog):
 		embed = discord.Embed(title='Add Device', description='Verifying input...')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
+
+		name_check = await self.check_name(device['name'])
+
+		if name_check is False:
+			embed = discord.Embed(title='Add Device')
+			embed.add_field(name='Error', value=f"Device name `{device['name']}` is not valid. A device's name must only contain letters, numbers, and spaces, and must be between 5 and 20 characters.", inline=False)
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await message.edit(embed=embed)
+			return
 
 		identifier = await self.check_identifier(device['identifier'])
 

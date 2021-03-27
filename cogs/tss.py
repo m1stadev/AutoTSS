@@ -24,14 +24,13 @@ class TSS(commands.Cog):
 		return resp.splitlines()[-1].split(':', 1)[1][1:]
 
 	async def get_signed_buildids(self, device):
-		signed_buildids = []
+		signed_buildids = list()
 		async with aiohttp.ClientSession() as session:
 			async with session.get(f'https://api.ipsw.me/v4/device/{device[3]}?type=ipsw') as resp:
 				api = await resp.json()
 
-		for x in list(api['firmwares']):
-			if x['signed'] is True:
-				signed_buildids.append(x['buildid'])
+		for x in [x for x in range(len(api['firmwares'])) if api['firmwares'][x]['signed'] == True]:
+				signed_buildids.append(api['firmwares'][x]['buildid'])
 
 		return signed_buildids
 

@@ -19,7 +19,7 @@ class Device(commands.Cog):
 			return False
 
 		async with aiohttp.ClientSession() as session:
-			async with session.get('https://api.ipsw.me/v2.1/firmwares.json/condensed') as resp:
+			async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
 				json = await resp.json()
 
 		if identifier not in json['devices']:

@@ -46,7 +46,7 @@ class TSS(commands.Cog):
 		save_path = f'Data/Blobs/{device[4]}/{version}/{buildid}/no-apnonce'
 		os.makedirs(save_path, exist_ok=True)
 
-		cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', f'0x{device[4]}', '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, stdout=asyncio.subprocess.PIPE)
+		cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', f'0x{device[4]}', '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, '--nocache', stdout=asyncio.subprocess.PIPE)
 		stdout, stderr = await cmd.communicate()
 
 		if 'Saved shsh blobs!' not in stdout.decode():
@@ -55,7 +55,7 @@ class TSS(commands.Cog):
 		if device[7] is not None:
 			save_path = f'Data/Blobs/{device[4]}/{version}/{buildid}/{device[7]}'
 			os.makedirs(save_path, exist_ok=True)
-			cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', f'0x{device[4]}', '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, '--apnonce', device[7], stdout=asyncio.subprocess.PIPE)
+			cmd = await asyncio.create_subprocess_exec('tsschecker', '-d', device[3],  '-e', f'0x{device[4]}', '--buildid', buildid, '-B', device[5], '-s', '--save-path', save_path, '--apnonce', device[7], '--nocache', stdout=asyncio.subprocess.PIPE)
 			stdout, stderr = await cmd.communicate()
 
 			if 'Saved shsh blobs!' not in stdout.decode():

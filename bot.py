@@ -3,6 +3,7 @@
 from discord.ext import commands
 import discord
 import glob
+import platform
 import sqlite3
 import subprocess
 import sys
@@ -43,11 +44,16 @@ def get_prefix(client, message):
 
 
 if __name__ == '__main__':
-	#check_tsschecker()
+	check_tsschecker()
 
 	client = commands.Bot(command_prefix=get_prefix, help_command=None)
 
-	for cog in glob.glob('cogs/*.py'):
+	if platform.system() == 'Windows':
+		cogs = glob.glob('cogs\*.py')
+	else:
+		cogs = glob.glob('cogs/*.py')
+
+	for cog in cogs:
 		client.load_extension(cog.replace('/', '.').replace('\\', '.')[:-3])
 
 	try:

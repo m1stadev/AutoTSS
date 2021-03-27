@@ -80,10 +80,15 @@ class Device(commands.Cog):
 	@commands.group(name='device', invoke_without_command=True)
 	@commands.guild_only()
 	async def device_cmd(self, ctx):
+		if ctx.prefix == self.bot.user.mention:
+			prefix = f'{ctx.prefix}`'
+		else:
+			prefix = f'`{ctx.prefix}'
+
 		embed = discord.Embed(title='Device Commands')
-		embed.add_field(name=f'`{ctx.prefix}device add`', value='Add a device', inline=False)
-		embed.add_field(name=f'`{ctx.prefix}device remove`', value='Remove a device', inline=False)
-		embed.add_field(name=f'`{ctx.prefix}device list`', value='List your devices', inline=False)
+		embed.add_field(name=f'{prefix}device add`', value='Add a device', inline=False)
+		embed.add_field(name=f'{prefix}device remove`', value='Remove a device', inline=False)
+		embed.add_field(name=f'{prefix}device list`', value='List your devices', inline=False)
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)

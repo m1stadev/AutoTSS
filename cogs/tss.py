@@ -104,7 +104,7 @@ class TSS(commands.Cog):
 		if saved_blobs == 0:
 			print('[AUTO] No blobs need to be saved.')
 		else:
-			print(f'[AUTO] Saved {saved_blobs} blobs.')
+			print(f"[AUTO] Saved {saved_blobs} blob{'s' if saved_blobs != 1 else ''}.")
 
 		db.close()
 
@@ -112,11 +112,12 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	async def tss_cmd(self, ctx):
 		embed = discord.Embed(title='TSS Commands')
+		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
 		embed.add_field(name='Manually save blobs for all of your devices', value=f'`{ctx.prefix}tss saveall`', inline=False)
 		embed.add_field(name='Manually save blobs for one of your devices', value=f'`{ctx.prefix}tss save`', inline=False)
 		embed.add_field(name='List all of the blobs saved for your devices', value=f'`{ctx.prefix}tss list`', inline=False)
 		embed.add_field(name='Download all of the blobs saved for your devices', value=f'`{ctx.prefix}tss download`', inline=False)
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		if await ctx.bot.is_owner(ctx.author):
 			embed.add_field(name='Download all blobs saved for all devices', value=f'`{ctx.prefix}tss downloadall`', inline=False)
 			embed.add_field(name='Save blobs for all devices', value=f'`{ctx.prefix}tss saveitall`', inline=False)

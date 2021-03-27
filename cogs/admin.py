@@ -21,12 +21,17 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def module(self, ctx):
+		if ctx.prefix == self.bot.user.mention:
+			prefix = f'{ctx.prefix}`'
+		else:
+			prefix = f'`{ctx.prefix}'
+
 		embed = discord.Embed(title='Module Commands')
-		embed.add_field(name='List', value=f'`{ctx.prefix}module list`', inline=False)
-		embed.add_field(name='Load', value=f'`{ctx.prefix}load <module>`', inline=False)
-		embed.add_field(name='Reload', value=f'`{ctx.prefix}module reload <all/module>`', inline=False)
-		embed.add_field(name='Unload', value=f'`{ctx.prefix}module unload <module>`', inline=False)
-		embed.add_field(name='Edit', value=f'`{ctx.prefix}module edit <module>`', inline=False)
+		embed.add_field(name='List', value=f'{prefix}module list`', inline=False)
+		embed.add_field(name='Load', value=f'{prefix}load <module>`', inline=False)
+		embed.add_field(name='Reload', value=f'{prefix}module reload <all/module>`', inline=False)
+		embed.add_field(name='Unload', value=f'{prefix}module unload <module>`', inline=False)
+		embed.add_field(name='Edit', value=f'{prefix}module edit <module>`', inline=False)
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await ctx.send(embed=embed)
 

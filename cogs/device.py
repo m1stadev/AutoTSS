@@ -13,10 +13,7 @@ class Device(commands.Cog):
 		self.bot = bot
 
 	async def check_identifier(self, identifier):
-		try:
-			identifier = f"{identifier.split('p')[0]}P{identifier.split('p')[1]}"
-		except IndexError:
-			return False
+		identifier = 'P'.join(identifier.split('p'))
 
 		async with aiohttp.ClientSession() as session:
 			async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
@@ -40,7 +37,7 @@ class Device(commands.Cog):
 				return False
 
 		else:
-			if json['boards'][0].lower() != boardconfig:
+			if json['boards'][0]['boardconfig'].lower() != boardconfig:
 				return False
 
 		return True

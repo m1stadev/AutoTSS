@@ -9,7 +9,7 @@ class Help(commands.Cog):
 	@commands.group(name='help', invoke_without_command=True)
 	@commands.guild_only()
 	async def help_command(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}>':
+		if ctx.prefix == f'<@!{self.bot.user.id}> ':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'
@@ -28,7 +28,7 @@ class Help(commands.Cog):
 	@help_command.command(name='device')
 	@commands.guild_only()
 	async def device_commands(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}>':
+		if ctx.prefix == f'<@!{self.bot.user.id}> ':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'
@@ -43,7 +43,7 @@ class Help(commands.Cog):
 	@help_command.command(name='tss')
 	@commands.guild_only()
 	async def tss_commands(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}>':
+		if ctx.prefix == f'<@!{self.bot.user.id}> ':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'
@@ -63,7 +63,7 @@ class Help(commands.Cog):
 	@help_command.command(name='misc')
 	@commands.guild_only()
 	async def misc_commands(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}>':
+		if ctx.prefix == f'<@!{self.bot.user.id}> ':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'
@@ -80,7 +80,7 @@ class Help(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	async def admin_commands(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}>':
+		if ctx.prefix == f'<@!{self.bot.user.id}> ':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'

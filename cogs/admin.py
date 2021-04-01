@@ -21,7 +21,7 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def module(self, ctx):
-		if ctx.prefix == self.bot.user.mention:
+		if ctx.prefix == f'<@!{self.bot.user.id}>':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'

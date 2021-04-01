@@ -77,7 +77,7 @@ class Device(commands.Cog):
 	@commands.group(name='device', invoke_without_command=True)
 	@commands.guild_only()
 	async def device_cmd(self, ctx):
-		if ctx.prefix == self.bot.user.mention:
+		if ctx.prefix == f'<@!{self.bot.user.id}>':
 			prefix = f'{ctx.prefix}`'
 		else:
 			prefix = f'`{ctx.prefix}'

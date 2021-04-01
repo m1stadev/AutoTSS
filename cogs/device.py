@@ -35,12 +35,12 @@ class Device(commands.Cog):
 			async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
 				json = await resp.json()
 
-		if identifier.startswith('iPhone8,') or identifier.startswith('iPad6,') or identifier.startswith('iPad7,') or identifier.startswith('iPad11,'):
-			if not json['boardconfig'].startswith(boardconfig[:3]):
+		if len(json['boards']) > 1:
+			if not any(json['boards'][x]['boardconfig'].lower() == boardconfig for x in range(len(json['boards']))):
 				return False
 
 		else:
-			if json['boardconfig'].lower() != boardconfig:
+			if json['boards'][0].lower() != boardconfig:
 				return False
 
 		return True

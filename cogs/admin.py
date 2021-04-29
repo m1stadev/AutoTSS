@@ -33,10 +33,9 @@ class Admin(commands.Cog):
 		embed = discord.Embed(title='Module Commands')
 		embed.add_field(name='Edit', value=f'{prefix}module edit <module>`', inline=False)
 		embed.add_field(name='List', value=f'{prefix}module list`', inline=False)
-		embed.add_field(name='Load', value=f'{prefix}module load <module>`', inline=False)
-		embed.add_field(name='Reload', value=f'{prefix}module reload <all/module>`', inline=False)
-		embed.add_field(name='Unload', value=f'{prefix}module unload <module>`', inline=False)
-		embed.add_field(name='Note:', value='Use commas to separate multiple modules.', inline=False)
+		embed.add_field(name='Load', value=f'{prefix}module load <module 1> <module 2>`', inline=False)
+		embed.add_field(name='Reload', value=f'{prefix}module reload <all/module 1> <module 2>`', inline=False)
+		embed.add_field(name='Unload', value=f'{prefix}module unload <module 1> <module 2>`', inline=False)
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await ctx.send(embed=embed)
 

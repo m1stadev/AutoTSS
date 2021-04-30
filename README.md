@@ -1,7 +1,7 @@
 # AutoTSS
 AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices.
 
-*Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/marijuanARM/autotss-cli/)!*
+*Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli/)!*
 
 ## Disclaimer
 - This should NOT be your main reliance for saving blobs. I am not at fault for any issues you may experience with AutoTSS.
@@ -30,4 +30,4 @@ To locally host, follow these steps:
 AutoTSS can be invited into any Discord server using [this](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184) link.
 
 ## Support
-For any questions/issues you have, join my [discord](https://discord.gg/fAngssA/).
+For any questions/issues you have, join my [Discord](https://discord.gg/fAngssA/).

@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
 from discord.ext import commands
+import aiosqlite
 import discord
 import glob
 import platform
-import sqlite3
 import subprocess
 import sys
 
 
-def bot_token(token):
-	try:
-		token_file = open(token, 'r')
-		return token_file.read()
-	except FileNotFoundError:
-		sys.exit("No bot token found in token.txt. Make sure you've created the file and put your token into it, or else this bot will not work.")
+def bot_token(): 
+	if os.getenv('AUTOTSS_TOKEN') is not None:
+		return os.getenv('AUTOTSS_TOKEN')
+	else:
+		sys.exit("[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting.")
 
 
 def check_tsschecker():
@@ -23,40 +22,33 @@ def check_tsschecker():
 		sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
 
-def get_prefix(client, message):
-	db = sqlite3.connect('Data/autotss.db')
-	cursor = db.cursor()
-
+async def get_prefix(client, message):
 	if message.channel.type is discord.ChannelType.private:
 		return 'p!'
 
-	cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
-
-	if cursor.fetchone() is None:
-		cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
-		db.commit()
-
-	cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
-	guild_prefix = cursor.fetchone()[0]
-	db.close()
+	async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,)) as cursor:
+		try:
+			guild_prefix = (await cursor.fetchone())[0]
+		except TypeError:
+			await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'p!'))
+			await db.commit()
+			guild_prefix = 'p!'
 
 	return commands.when_mentioned_or(guild_prefix)(client, message)
 
 
 if __name__ == '__main__':
+	if platform.system() == 'Windows':
+		sys.exit('[ERROR] AutoTSS is not supported on Windows. Exiting.')
+
 	check_tsschecker()
 
 	client = commands.Bot(command_prefix=get_prefix, help_command=None)
 
-	if platform.system() == 'Windows':
-		cogs = glob.glob('cogs\*.py')
-	else:
-		cogs = glob.glob('cogs/*.py')
-
-	for cog in cogs:
-		client.load_extension(cog.replace('/', '.').replace('\\', '.')[:-3])
+	for cog in glob.glob('cogs/*.py'):
+		client.load_extension(cog.replace('/', '.')[:-3])
 
 	try:
-		client.run(bot_token('token.txt'))
+		client.run(bot_token())
 	except discord.LoginFailure:
-		sys.exit("[ERROR] Token invalid, make sure your token is the only text in 'token.txt'. Exiting.")
+		sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")

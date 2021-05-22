@@ -1,5 +1,6 @@
 __pycache__/
 Data/
+.vscode/
 .DS_Store
 bot.log
 token.txt

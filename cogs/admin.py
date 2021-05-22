@@ -1,26 +1,16 @@
 from discord.ext import commands
 import aiofiles
 import aiohttp
-import aiosqlite
 import asyncio
 import discord
 import glob
-import math
-import time
-import platform
 
 
 class Admin(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	def get_modules(self):
-		if platform.system() == 'Windows':
-			modules = glob.glob('cogs\*.py')
-		else:
-			modules = glob.glob('cogs/*.py')
-
-		return sorted([module.replace('/', '.').replace('\\', '.')[:-3].split('.')[-1] for module in modules])
+	def get_modules(self): return sorted([cog.replace('/', '.')[:-3] for cog in glob.glob('cogs/*.py')])
 
 	@commands.group(invoke_without_command=True)
 	@commands.is_owner()

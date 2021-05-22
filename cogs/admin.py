@@ -10,7 +10,7 @@ class Admin(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	def get_modules(self): return sorted([cog.replace('/', '.')[:-3] for cog in glob.glob('cogs/*.py')])
+	def get_modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
 	@commands.group(invoke_without_command=True)
 	@commands.is_owner()

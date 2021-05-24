@@ -1,7 +1,7 @@
 from discord.ext import commands
+import aiosqlite
 import discord
 import random
-import sqlite3
 
 
 class Misc(commands.Cog):
@@ -12,9 +12,6 @@ class Misc(commands.Cog):
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
 	async def prefix(self, ctx, *, prefix):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
-
 		if len(prefix) > 4:
 			embed = discord.Embed(title='Prefix')
 			embed.add_field(name='Error', value='Prefixes are limited to 4 characters or less.', inline=False)
@@ -22,14 +19,14 @@ class Misc(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
-		cursor.execute('UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
-		db.commit()
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			await db.execute('UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
+			await db.commit()
 
 		embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)
-		db.close()
 
 	@commands.command()
 	@commands.guild_only()

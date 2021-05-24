@@ -1,8 +1,8 @@
 from discord.ext import commands
+import aiosqlite
 import discord
 import os
 import shutil
-import sqlite3
 
 
 class Events(commands.Cog):
@@ -12,17 +12,15 @@ class Events(commands.Cog):
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):
 		await self.bot.wait_until_ready()
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT prefix from prefix WHERE guild = ?', (guild.id,))
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			async with db.execute('SELECT prefix from prefix WHERE guild = ?', (guild.id,)) as cursor:
+				if await cursor.fetchone() is not None:
+					await db.execute('DELETE from prefix where guild = ?', (guild.id,))
+					await db.commit()
 
-		if cursor.fetchone() is not None:
-			cursor.execute('DELETE from prefix where guild = ?', (guild.id,))
-		db.commit()
-
-		cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild.id, 'b!'))
-		db.commit()
+			await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild.id, 'b!'))
+			await db.commit()
 
 		if guild.system_channel:
 			channel = guild.system_channel
@@ -37,8 +35,8 @@ class Events(commands.Cog):
 		embed.add_field(name='Creator', value=user.mention, inline=False)
 		embed.add_field(name='Disclaimer', value='This should NOT be your only source for saving blobs. I am not at fault for any issues you may experience with AutoTSS.', inline=False)
 		embed.add_field(name='Notes', value='- There is a limit of 10 devices per user.\n- You must be in a server with AutoTSS, or your devices & blobs will be deleted. This **does not** have to be the same server that you added your devices to AutoTSS in.\n- Blobs are automatically saved every 30 minutes.', inline=False)
-		embed.add_field(name='Source Code', value="AutoTSS's source code can be found on [GitHub](https://github.com/marijuanARM/autotss).", inline=False)
-		embed.add_field(name='Support', value='For any questions about AutoTSS, join my [discord](https://discord.gg/fAngssA).', inline=False)
+		embed.add_field(name='Source Code', value="AutoTSS's source code can be found on [GitHub](https://github.com/m1stadev/AutoTS).", inline=False)
+		embed.add_field(name='Support', value='For any questions about AutoTSS, join my [Discord](https://m1sta.xyz/discord).', inline=False)
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
 
 		await channel.send(embed=embed)
@@ -46,24 +44,20 @@ class Events(commands.Cog):
 	@commands.Cog.listener()
 	async def on_guild_remove(self, guild):
 		await self.bot.wait_until_ready()
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('DELETE from prefix where guild = ?', (guild.id,))
-		db.commit()
-		db.close()
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			await db.execute('DELETE from prefix where guild = ?', (guild.id,))
+			await db.commit()
 
 	@commands.Cog.listener()
 	async def on_member_remove(self, member):  # Don't bother saving blobs for a user if the user doesn't share any servers with the bot.
 		await self.bot.wait_until_ready()
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
 		if self.bot.get_user(member.id) is not None:
 			pass
 
-		cursor.execute('SELECT * from autotss WHERE userid = ?', (member.id,))
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (member.id,)) as cursor:
+			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
 			return
@@ -77,69 +71,67 @@ class Events(commands.Cog):
 			shutil.copytree(f'Data/Blobs/{devices[x][4]}', f'Data/Deleted Blobs/{devices[x][4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
 			shutil.rmtree(f'Data/Blobs/{devices[x][4]}')
 
-		cursor.execute('DELETE * from autotss WHERE userid = ?', (member.id,))
-		db.commit()
 
-		cursor.execute('SELECT ecid from autotss')
-		devices = len(cursor.fetchall())
-		db.close()
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			await db.execute('DELETE * from autotss WHERE userid = ?', (member.id,))
+			await db.commit()
+
+			async with db.execute('SELECT ecid from autotss') as cursor:
+				devices = len(await cursor.fetchall())
 
 		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
 		await self.bot.wait_until_ready()
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
 		if message.channel.type is discord.ChannelType.private:
 			return
 
-		cursor.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,))
-
-		if cursor.fetchone() is None:
-			cursor.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
-			db.commit()
-
-		cursor.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,))
-		prefix = cursor.fetchone()[0]
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			async with db.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,)) as cursor:
+				if await cursor.fetchone() is None:
+					await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
+					await db.commit()
+					
+					prefix = 'b!'
+				else:
+					prefix = await cursor.fetchone[0]
 
 		if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
 			embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
 			embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
 			await message.channel.send(embed=embed)
 
-		db.close()
-
 	@commands.Cog.listener()
 	async def on_ready(self):
 		os.makedirs('Data', exist_ok=True)
 
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
-		cursor.execute('''
-			CREATE TABLE IF NOT EXISTS autotss(
-			device_num INTEGER,
-			userid INTEGER,
-			name TEXT,
-			identifier TEXT,
-			ecid TEXT,
-			boardconfig TEXT,
-			blobs TEXT,
-			apnonce TEXT
-			)
-			''')
-		cursor.execute('''
-			CREATE TABLE IF NOT EXISTS prefix(
-			guild INTEGER,
-			prefix TEXT
-			)
-			''')
-		db.commit()
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			await db.execute('''
+				CREATE TABLE IF NOT EXISTS autotss(
+				device_num INTEGER,
+				userid INTEGER,
+				name TEXT,
+				identifier TEXT,
+				ecid TEXT,
+				boardconfig TEXT,
+				blobs TEXT,
+				apnonce TEXT
+				)
+				''')
+			await db.commit()
 
-		cursor.execute('SELECT ecid from autotss')
-		devices = len(cursor.fetchall())
-		db.close()
+			await db.execute('''
+				CREATE TABLE IF NOT EXISTS prefix(
+				guild INTEGER,
+				prefix TEXT
+				)
+				''')
+			await db.commit()
+
+			async with db.execute('SELECT ecid from autotss') as cursor:
+				devices = len(await cursor.fetchall())
 
 		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
 		print('AutoTSS is now online.')

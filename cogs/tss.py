@@ -1,13 +1,11 @@
 from discord.ext import commands, tasks
 import aiohttp
 import aiofiles
-import ast
+import aiosqlite
 import asyncio
 import discord
 import os
 import shutil
-import sqlite3
-import tempfile
 
 
 class TSS(commands.Cog):
@@ -68,17 +66,15 @@ class TSS(commands.Cog):
 		await self.bot.wait_until_ready()
 		await asyncio.sleep(1)
 
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT * from autotss')
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
+			devices = await cursor.fetchall()
 
 		saved_blobs = int()
 		for x in range(len(devices)):
+			signed_buildids = await self.get_signed_buildids(devices[x]) # Currently signed iOS builds
+			saved_buildids = eval(devices[x][6]) # iOS builds that already have saved blobs
 
-			signed_buildids = await self.get_signed_buildids(devices[x])
-			saved_buildids = ast.literal_eval(devices[x][6])
 			for i in list(signed_buildids):
 				if i in saved_buildids:
 					signed_buildids.pop(signed_buildids.index(i))
@@ -96,8 +92,10 @@ class TSS(commands.Cog):
 				else:
 					saved_buildids.append(i)
 
-			cursor.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
-			db.commit()
+
+			async with aiosqlite.connect('Data/autotss.db') as db:
+				await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
+				await db.commit()
 
 			saved_blobs += len(signed_buildids)
 
@@ -105,8 +103,6 @@ class TSS(commands.Cog):
 			print('[AUTO] No blobs need to be saved.')
 		else:
 			print(f"[AUTO] Saved {saved_blobs} blob{'s' if saved_blobs != 1 else ''}.")
-
-		db.close()
 
 	@commands.group(name='tss', invoke_without_command=True)
 	@commands.guild_only()
@@ -130,11 +126,8 @@ class TSS(commands.Cog):
 		timeout_embed = discord.Embed(title='Save Blobs', description='No response given in 1 minute, cancelling.')
 		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
-
-		cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
+			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Save Blobs')
@@ -195,8 +188,8 @@ class TSS(commands.Cog):
 			await message.edit(embed=embed)
 			return
 
-		cursor.execute('SELECT * from autotss WHERE device_num = ? AND userid = ?', (num, ctx.author.id))
-		device = cursor.fetchall()[0]
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE device_num = ? AND userid = ?', (num, ctx.author.id)) as cursor:
+			device = (await cursor.fetchall())[0]
 
 		embed = discord.Embed(title='Save Blobs', description=f'Saving blobs for `{device[2]}`...')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -204,7 +197,7 @@ class TSS(commands.Cog):
 		await message.edit(embed=embed)
 
 		signed_buildids = await self.get_signed_buildids(device)
-		saved_buildids = ast.literal_eval(device[6])
+		saved_buildids = eval(device[6])
 		for x in list(signed_buildids):
 			if x in saved_buildids:
 				signed_buildids.pop(signed_buildids.index(x))
@@ -226,8 +219,9 @@ class TSS(commands.Cog):
 			else:
 				saved_buildids.append(x)
 
-		cursor.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), device[0], ctx.author.id))
-		db.commit()
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), device[0], ctx.author.id))
+			await db.commit()
 
 		saved_versions = str()
 		for x in range(len(signed_buildids)):
@@ -242,20 +236,16 @@ class TSS(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await message.edit(embed=embed)
-		db.close()
 
 	@tss_cmd.command(name='saveall')
 	@commands.guild_only()
 	async def save_all_device_blobs(self, ctx):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
+			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Save All Blobs')
-			embed.add_field(name='Error', value='You have no devices added.', inline=False)
+			embed = discord.Embed(title='Error', description='You have no devices added.', inline=False)
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 			await ctx.send(embed=embed)
@@ -266,9 +256,12 @@ class TSS(commands.Cog):
 		message = await ctx.send(embed=embed)
 
 		saved_blobs = int()
+		saved_devices = int()
+
 		for x in range(len(devices)):
 			signed_buildids = await self.get_signed_buildids(devices[x])
-			saved_buildids = ast.literal_eval(devices[x][6])
+			saved_buildids = eval(devices[x][6])
+
 			for i in list(signed_buildids):
 				if i in saved_buildids:
 					signed_buildids.pop(signed_buildids.index(i))
@@ -289,15 +282,19 @@ class TSS(commands.Cog):
 				else:
 					saved_buildids.append(i)
 
-			cursor.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], ctx.author.id))
-			db.commit()
+			async with aiosqlite.connect('Data/autotss.db') as db:
+				await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], ctx.author.id))
+				await db.commit()
 
 			saved_blobs += len(signed_buildids)
+
+			if len(signed_buildids) > 0:
+				saved_devices += 1
 
 		if saved_blobs == 0:
 			description = 'No new blobs were saved.'
 		else:
-			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{len(devices)} device{'s' if len(devices) != 1 else ''}**."
+			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{saved_devices} device{'s' if saved_devices != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)
@@ -306,17 +303,15 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='list')
 	@commands.guild_only()
 	async def list_all_blobs(self, ctx):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
+			devices = await cursor.fetchall()
 
 		saved_blobs = int()
 		saved_devices = len(devices)
 
 		for x in range(saved_devices):
-			saved_blobs += len(ast.literal_eval(devices[x][6]))
+			saved_blobs += len(eval(devices[x][6]))
 
 		if saved_devices == 0:
 			embed = discord.Embed(title=f"{ctx.author.name}'s Saved Blobs")
@@ -329,7 +324,7 @@ class TSS(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		for x in range(saved_devices):
-			blobs = ast.literal_eval(devices[x][6])
+			blobs = eval(devices[x][6])
 
 			saved_blobs = str()
 
@@ -340,19 +335,15 @@ class TSS(commands.Cog):
 			embed.add_field(name=devices[x][2], value=saved_blobs[:-2], inline=False)
 
 		await ctx.send(embed=embed)
-		db.close()
 
 	@tss_cmd.command(name='download')
 	@commands.guild_only()
 	async def download_all_blobs(self, ctx):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,))
-		devices = cursor.fetchall()
-		db.close()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)):
+			devices = await cursor.fetchall()
+
 		ecids = list()
-
 		if len(devices) == 0:
 			embed = discord.Embed( title='Download Blobs', inline=False)
 			embed.add_field(name='Error', value='You have no devices added.')
@@ -363,14 +354,14 @@ class TSS(commands.Cog):
 
 		embed = discord.Embed(title='Download Blobs', description='Uploading blobs...')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
 		message = await ctx.send(embed=embed)
 
 		for x in range(len(devices)):
 			ecids.append(devices[x][4])
 
-		with tempfile.TemporaryDirectory() as tmpdir:
-			os.makedirs(f'{tmpdir}/Blobs')
+		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+			aiofiles.os.mkdir(f'{tmpdir}/Blobs')
+
 			for x in ecids:
 				try:
 					shutil.copytree(f'Data/Blobs/{x}', f'{tmpdir}/Blobs/{x}')
@@ -378,7 +369,6 @@ class TSS(commands.Cog):
 					pass
 
 			shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-
 			url = await self.upload_zip(f'{tmpdir}_blobs.zip', 'blobs.zip')
 
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
@@ -392,23 +382,18 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	async def download_everything(self, ctx):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
-
 		await ctx.message.delete()
 
 		embed = discord.Embed(title='Download All Blobs', description='Uploading all blobs...')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
 		message = await ctx.author.send(embed=embed)
-		cursor.execute('SELECT * from autotss')
-		devices = cursor.fetchall()
-		db.close()
-		ecids = list()
 
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
+			devices = await cursor.fetchall()
+
+		ecids = list()
 		if len(devices) == 0:
-			embed = discord.Embed(title='Download All Blobs', inline=False)
-			embed.add_field(name='Error', value='There are no devices added to AutoTSS.')
+			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 			return
@@ -416,7 +401,7 @@ class TSS(commands.Cog):
 		for x in range(len(devices)):
 			ecids.append(devices[x][4])
 
-		with tempfile.TemporaryDirectory() as tmpdir:
+		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 			for x in ecids:
 				try:
 					shutil.copytree(f'Data/Blobs/{x}', f'{tmpdir}/{x}')
@@ -437,17 +422,13 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	async def save_everything(self, ctx):
-		db = sqlite3.connect('Data/autotss.db')
-		cursor = db.cursor()
 
-		cursor.execute('SELECT * from autotss')
-		devices = cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
+			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Save Everything')
-			embed.add_field(name='Error', value='There are no devices in the database.', inline=False)
+			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
 			await ctx.send(embed=embed)
 			return
 
@@ -456,9 +437,11 @@ class TSS(commands.Cog):
 		message = await ctx.send(embed=embed)
 
 		saved_blobs = int()
+		saved_devices = int()
 		for x in range(len(devices)):
 			signed_buildids = await self.get_signed_buildids(devices[x])
-			saved_buildids = ast.literal_eval(devices[x][6])
+			saved_buildids = eval(devices[x][6])
+
 			for i in list(signed_buildids):
 				if i in saved_buildids:
 					signed_buildids.pop(signed_buildids.index(i))
@@ -479,19 +462,22 @@ class TSS(commands.Cog):
 				else:
 					saved_buildids.append(i)
 
-			cursor.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
-			db.commit()
+			async with asyncio.connect('Data/autotss.db') as db:
+				await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
+				await db.commit()
+
+			if len(signed_buildids) > 0:
+				saved_devices += 1
 
 			saved_blobs += len(signed_buildids)
 
 		if saved_blobs == 0:
 			description = 'No blobs were saved.'
 		else:
-			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{len(devices)} device{'s' if len(devices) != 1 else ''}**."
+			description = f"Saved **{saved_blobs} blob{'s' if saved_blobs != 1 else ''}** for **{saved_devices} device{'s' if saved_devices != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)
-		db.close()
 
 def setup(bot):
 	bot.add_cog(TSS(bot))

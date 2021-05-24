@@ -408,7 +408,7 @@ class Device(commands.Cog):
 			return
 
 		if answer.content.lower() == 'yes':
-			os.makedirs('Data/Deleted Blobs', exist_ok=True)
+			await self.amakedirs('Data/Deleted Blobs', exist_ok=True)
 			shutil.copytree(f'Data/Blobs/{device[4]}', f'Data/Deleted Blobs/{device[4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
 			shutil.rmtree(f'Data/Blobs/{device[4]}')
 

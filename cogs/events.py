@@ -1,4 +1,5 @@
 from discord.ext import commands
+import aiofiles
 import aiosqlite
 import discord
 import os
@@ -62,7 +63,10 @@ class Events(commands.Cog):
 		if len(devices) == 0:
 			return
 
-		os.makedirs('Data/Deleted Blobs', exist_ok=True)
+		try:
+			await aiofiles.os.mkdir('Data/Deleted Blobs')
+		except:
+			pass
 
 		for x in range(len(devices)):
 			if not os.path.isdir(f'Data/Blobs/{devices[x][4]}'):
@@ -90,13 +94,14 @@ class Events(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
 			async with db.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,)) as cursor:
-				if await cursor.fetchone() is None:
+				prefix = await cursor.fetchone()
+				if prefix is None:
 					await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
 					await db.commit()
 					
 					prefix = 'b!'
 				else:
-					prefix = await cursor.fetchone[0]
+					prefix = prefix[0]
 
 		if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
 			embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')

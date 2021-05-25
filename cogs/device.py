@@ -292,14 +292,15 @@ class Device(commands.Cog):
 				embed.add_field(name='Error', value=f"Device `{device['name']}`'s apnonce `{device['apnonce']}` is not valid.", inline=False)
 				return
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT ecid from autotss') as cursor:
-			ecids = await cursor.fetchall()
-
-		if any(x[0] == device['ecid'] for x in ecids):
+		async with aiosqlite.connect('Data/autotss.db') as db:
+			async with db.execute('SELECT ecid from autotss') as cursor:
+				ecids = await cursor.fetchall()
+			async with db.execute('SELECT name from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
+				names = await cursor.fetchall()
+	
+		if any(ecid[0] == device['ecid'] for ecid in ecids):
 			embed.add_field(name='Error', value="This device's ECID is already in my database.", inline=False)
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT name from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
-			names = await cursor.fetchall()
 
 		if any(x[0].lower() == device['name'].lower() for x in names):
 			embed.add_field(name='Error', value="You've already added a device with this name.", inline=False)
@@ -326,9 +327,6 @@ class Device(commands.Cog):
 	@device_cmd.command(name='remove')
 	@commands.guild_only()
 	async def remove_device(self, ctx):
-		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
-		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
 		try:
 			await ctx.message.delete()
 		except discord.errors.NotFound:
@@ -338,13 +336,13 @@ class Device(commands.Cog):
 			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Remove Device')
-			embed.add_field(name='Error', value='You have no devices added.', inline=False)
+			embed = discord.Embed(title='Error', description='You have no devices added.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
+		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		for x in range(len(devices)):
 			device_info = f'Name: `{devices[x][2]}`\nDevice Identifier: `{devices[x][3]}`\nBoard Config: `{devices[x][5]}`'
@@ -353,8 +351,10 @@ class Device(commands.Cog):
 
 			embed.add_field(name=devices[x][0], value=device_info, inline=False)
 
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
+
+		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
+		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		try:
 			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
@@ -372,8 +372,7 @@ class Device(commands.Cog):
 			await message.edit(embed=embed)
 			return
 
-		invalid_embed = discord.Embed(title='Remove Device')
-		invalid_embed.add_field(name='Error', value='Invalid input given.', inline=False)
+		invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
 		invalid_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		try:

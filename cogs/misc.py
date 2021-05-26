@@ -13,9 +13,7 @@ class Misc(commands.Cog):
 	@commands.has_permissions(administrator=True)
 	async def prefix(self, ctx, *, prefix):
 		if len(prefix) > 4:
-			embed = discord.Embed(title='Prefix')
-			embed.add_field(name='Error', value='Prefixes are limited to 4 characters or less.', inline=False)
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed = discord.Embed(title='Error', description='Prefixes are limited to 4 characters or less.')
 			await ctx.send(embed=embed)
 			return
 

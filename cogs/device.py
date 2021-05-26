@@ -125,10 +125,7 @@ class Device(commands.Cog):
 			devices = await cursor.fetchall()
 
 		if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
-			embed = discord.Embed(title='Add Device')
-			embed.add_field(name='Error', value=f'You cannot add over {max_devices} devices to AutoTSS.', inline=False)
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
+			embed = discord.Embed(title='Error', description=f'You cannot add over {max_devices} devices to AutoTSS.')
 			await ctx.send(embed=embed)
 			return
 

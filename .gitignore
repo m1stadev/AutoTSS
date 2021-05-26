@@ -3,3 +3,4 @@ Data/
 .vscode/
 .DS_Store
 bot.log
+*.db

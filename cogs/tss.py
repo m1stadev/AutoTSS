@@ -303,7 +303,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
-		embed = discord.Embed(title='Save All Blobs', description='Saving blobs for all devices...')
+		embed = discord.Embed(title='Save All Blobs', description=f"Saving all blobs for {len(devices)} device{'s' if len(devices) != 1 else ''}...")
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
 
@@ -332,12 +332,12 @@ class TSS(commands.Cog):
 				await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], devices[x][1]))
 				await db.commit()
 
-			total_blobs += len(signed_buildids)
+			blobs_saved += len(signed_buildids)
 
 			if len(signed_buildids) > 0:
 				devices_saved_for += 1
 
-		if total_blobs == 0:
+		if blobs_saved == 0:
 			description = 'No new blobs were saved.'
 		else:
 			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**."

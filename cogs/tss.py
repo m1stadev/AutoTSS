@@ -295,7 +295,7 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	async def save_all_blobs(self, ctx):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss', (ctx.author.id,)) as cursor:
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
 			devices = await cursor.fetchall()
 
 		if len(devices) == 0:

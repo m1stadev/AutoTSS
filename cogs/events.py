@@ -19,11 +19,11 @@ class Events(commands.Cog):
 			data = await cursor.fetchall()
 
 		for user_info in data:
-			user = await self.bot.fetch_user(user_info[1])
+			user = await self.bot.fetch_user(user_info[0])
 
-			if user.mutual_guilds > 0 and user_info[2] == False: # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
+			if (len(user.mutual_guilds) > 0) and (bool(user_info[2]) == False): # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
 				sql_args = (True, user.id)
-			elif user.mutual_guilds == 0 and user_info[2] == True: # Vice-versa
+			elif (len(user.mutual_guilds) == 0) and (bool(user_info[2]) == True): # Vice-versa
 				sql_args = (False, user.id)
 			else:
 				continue

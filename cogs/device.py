@@ -1,9 +1,11 @@
+from aioify import aioify
 from discord.ext import commands
 import aiofiles
 import aiohttp
 import aiosqlite
 import asyncio
 import discord
+import os
 import re
 import shutil
 
@@ -11,22 +13,8 @@ import shutil
 class Device(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-
-	async def amakedirs(directory, exist_ok=False):
-		folder_str = str()
-		if len(directory.split('/')) == 0:
-			return
-
-		for folder in directory.split('/'):
-			folder_str += folder
-
-			try:
-				await aiofiles.mkdir(folder)
-			except Exception as error:
-				if exist_ok:
-					pass
-				else:
-					raise error
+		self.os = aioify(os, name='os')
+		self.shutil = aioify(shutil, name='shutil')
 
 
 	async def check_identifier(self, identifier):
@@ -403,9 +391,9 @@ class Device(commands.Cog):
 			return
 
 		if answer.content.lower() == 'yes':
-			await self.amakedirs('Data/Deleted Blobs', exist_ok=True)
-			shutil.copytree(f'Data/Blobs/{device[4]}', f'Data/Deleted Blobs/{device[4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
-			shutil.rmtree(f'Data/Blobs/{device[4]}')
+			await self.os.makedirs('Data/Deleted Blobs', exist_ok=True)
+			await self.shutil.copytree(f'Data/Blobs/{device[4]}', f'Data/Deleted Blobs/{device[4]}', dirs_exist_ok=True)  # Just in case someone deletes their device accidentally...
+			await self.shutil.rmtree(f'Data/Blobs/{device[4]}')
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
 				await db.execute('DELETE from autotss WHERE device_num = ? AND userid = ?', (num, ctx.author.id))

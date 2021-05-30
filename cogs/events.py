@@ -10,6 +10,12 @@ class Events(commands.Cog):
 		self.bot = bot
 		self.check_users_loop.start()
 
+	async def update_device_count(self):
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+			devices = len(await cursor.fetchall())
+
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+
 	@tasks.loop(seconds=300)
 	async def check_users_loop(self):
 		await self.bot.wait_until_ready()
@@ -32,10 +38,7 @@ class Events(commands.Cog):
 				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', sql_args)
 				await db.commit()
 			
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-			devices = len(await cursor.fetchall())
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+		await self.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):
@@ -91,10 +94,7 @@ class Events(commands.Cog):
 			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
 			await db.commit()
 
-			async with db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-				devices = len(await cursor.fetchall())
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+		await self.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_member_remove(self, member):
@@ -110,10 +110,7 @@ class Events(commands.Cog):
 			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
 			await db.commit()
 
-			async with db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-				devices = len(await cursor.fetchall())
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+		await self.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
@@ -163,10 +160,7 @@ class Events(commands.Cog):
 				''')
 			await db.commit()
 
-			async with db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-				devices = len(await cursor.fetchall())
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+		await self.update_device_count()
 		print('AutoTSS is now online.')
 
 	@commands.Cog.listener()

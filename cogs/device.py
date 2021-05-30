@@ -16,53 +16,37 @@ class Device(commands.Cog):
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
 
-
 	async def check_identifier(self, identifier):
-		identifier = 'P'.join(identifier.split('p'))
-
-		async with aiohttp.ClientSession() as session:
-			async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
-				api = await resp.json()
-
-		if identifier not in api['devices']:
-			return False
-
-		return identifier
+		async with aiohttp.ClientSession() as session, session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
+			if identifier not in (await resp.json())['devices']:
+				return False
+			else:
+				return True
 
 	async def check_boardconfig(self, identifier, boardconfig):
 		if boardconfig[-2:] != 'ap':
 			return False
 
-		async with aiohttp.ClientSession() as session:
-			async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
-				api = await resp.json()
+		async with aiohttp.ClientSession() as session, session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+			api = await resp.json()
 
-		if len(api['boards']) > 1:
-			if not any(api['boards'][x]['boardconfig'].lower() == boardconfig for x in range(len(api['boards']))):
-				return False
-
+		if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
+			return False
 		else:
-			if api['boards'][0]['boardconfig'].lower() != boardconfig:
-				return False
-
-		return True
+			return True
 
 	async def check_name(self, name):
 		if not 4 <= len(name) <= 20: # Length check
 			return False
-
-		name_regex = re.findall(r'^[a-zA-Z0-9 ]*$', name) # Regex expression to make sure only allowed characters are in name
-		if len(name_regex) == 0:
-			return False
-		
-		return True
+		else:
+			return True
 
 	async def check_ecid(self, ecid):
 		if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
 			return False
 
 		try:
-			int(ecid, 16)
+			int(ecid, 16) # Make sure the ECID provided is hexadecimal, not decimal.
 		except ValueError or TypeError:
 			return False
 
@@ -74,7 +58,7 @@ class Device(commands.Cog):
 		except ValueError or TypeError:
 			return False
 
-		if len(nonce) not in (40, 64): # 32-bit devices' apnonce lengths are 40 characters, 64-bit devices' apnonce lengths are 64 characters
+		if len(nonce) not in (40, 64): # All ApNonce lengths are either 40 characters long, or 64 characters long
 			return False
 
 		return True
@@ -164,7 +148,7 @@ class Device(commands.Cog):
 			if x == 0:
 				device['name'] = answer.content
 			elif x == 1:
-				device['identifier'] = answer.content.lower()
+				device['identifier'] = 'P'.join(answer.content.lower().split('p'))
 			elif x == 2:
 				if answer.content.lower().startswith('0x'):
 					device['ecid'] = answer.content.lower()[2:]
@@ -257,8 +241,6 @@ class Device(commands.Cog):
 		identifier = await self.check_identifier(device['identifier'])
 		if identifier is False:
 			embed.add_field(name='Error', value=f"Device Identifier `{device['identifier']}` does not exist.", inline=False)
-
-		device['identifier'] = identifier
 
 		boardconfig = await self.check_boardconfig(device['identifier'], device['boardconfig'])
 		if boardconfig is False:

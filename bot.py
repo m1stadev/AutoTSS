@@ -31,9 +31,9 @@ async def get_prefix(client, message):
 		try:
 			guild_prefix = (await cursor.fetchone())[0]
 		except TypeError:
-			await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'p!'))
+			await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
 			await db.commit()
-			guild_prefix = 'p!'
+			guild_prefix = 'b!'
 
 	return commands.when_mentioned_or(guild_prefix)(client, message)
 

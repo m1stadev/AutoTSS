@@ -5,6 +5,7 @@ import aiohttp
 import aiosqlite
 import asyncio
 import discord
+import json
 import os
 import re
 import shutil
@@ -13,6 +14,7 @@ import shutil
 class Device(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.json = aioify(json, name='json')
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
 
@@ -35,20 +37,34 @@ class Device(commands.Cog):
 		else:
 			return True
 
-	async def check_name(self, name):
+	async def check_name(self, name, user): # This function will return different values based on where it errors out at
 		if not 4 <= len(name) <= 20: # Length check
-			return False
-		else:
-			return True
+			return 0
 
-	async def check_ecid(self, ecid):
+		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
+			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
+				devices = await self.json.loads((await cursor.fetchall())[0][0])
+
+		if any(devices[x]['name'] == name.lower() for x in devices.keys()):
+			return -1
+
+		return True
+
+	async def check_ecid(self, ecid, user):
 		if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
-			return False
+			return 0
 
 		try:
-			int(ecid, 16) # Make sure the ECID provided is hexadecimal, not decimal.
+			int(ecid, 16) # Make sure the ECID provided is hexadecimal, not decimal
 		except ValueError or TypeError:
-			return False
+			return 0
+
+		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
+				devices = (await cursor.fetchall())[0][0]
+
+		if ecid in devices: # There's no need to convert the json string to a dict here
+			return -1
 
 		return True
 
@@ -64,7 +80,7 @@ class Device(commands.Cog):
 		return True
 
 	async def update_device_count(self):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT ecid from autotss') as cursor:
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
 			devices = len(await cursor.fetchall())
 
 		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
@@ -89,22 +105,27 @@ class Device(commands.Cog):
 	@commands.guild_only()
 	async def add_device(self, ctx):
 		timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
-		timeout_embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
 
-		max_devices = 10  #TODO: Export this option to a separate config file
+		for embed in (timeout_embed, cancelled_embed):
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
-			devices = await cursor.fetchall()
+		max_devices = 10 #TODO: Export this option to a separate config file
+
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+			try:
+				devices = await self.json.loads((await cursor.fetchall())[0][1])
+			except IndexError:
+				devices = dict()
+				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
+				await db.commit()
 
 		if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
 			embed = discord.Embed(title='Error', description=f'You cannot add over {max_devices} devices to AutoTSS.')
 			await ctx.send(embed=embed)
 			return
 
-		device = {
-			'num': len(devices) + 1,
-			'userid': ctx.author.id
-			}
+		device = dict()
 
 		for x in range(4): # Loop that gets all of the required information to save blobs with from the user
 			descriptions = [
@@ -127,162 +148,146 @@ class Device(commands.Cog):
 
 			# Wait for a response from the user, and error out if the user takes over 1 minute to respond
 			try:
-				answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+				if x == 0:
+					answer = response.content # Don't make the device's name lowercase
+				else:
+					answer = response.content.lower()
+
 			except asyncio.exceptions.TimeoutError:
 				await message.edit(embed=timeout_embed)
 				return
 
-			if answer.content == 'cancel':
-				# Delete the message, unless it has already been deleted
-				try:
-					await answer.delete()
-				except discord.errors.NotFound:
-					pass
-
-				embed = discord.Embed(title='Add Device', description='Cancelled.')
-				await message.edit(embed=embed)
-				return
-
-
-			# Parse information into dict
-			if x == 0:
-				device['name'] = answer.content
-			elif x == 1:
-				device['identifier'] = 'P'.join(answer.content.lower().split('p'))
-			elif x == 2:
-				if answer.content.lower().startswith('0x'):
-					device['ecid'] = answer.content.lower()[2:]
-				else:
-					device['ecid'] = answer.content.lower()
-			else:
-				device['boardconfig'] = answer.content.lower()
-
+			# Delete the message
 			try:
-				await answer.delete()
+				await response.delete()
 			except discord.errors.NotFound:
 				pass
 
-		embed = discord.Embed(title='Add Device', description='Would you like to save blobs with a custom apnonce?\n*This is required on A12+ devices due to nonce entanglement, more info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*\nNOTE: This is **NOT** the same as your **generator**, which begins with `0x` and is 16 characters long.')
+			if answer.lower() == 'cancel' or answer.lower().startswith(ctx.prefix):
+				await message.edit(embed=cancelled_embed)
+				return
+
+			# Make sure given information is valid
+			if x == 0:
+				device['name'] = answer
+
+				name_check = await self.check_name(device['name'], ctx.author.id)
+				if name_check != True:
+					embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
+
+					if name_check == 0:
+						embed.description += " A device's name must be between 4 and 20 characters."
+					elif name_check == -1:
+						embed.description += " You cannot use a device's name more than once."
+
+					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					await message.edit(embed=embed)
+					return
+
+			elif x == 1:
+				device['identifier'] = 'P'.join(answer.split('p'))
+
+				identifier_check = await self.check_identifier(device['identifier'])
+				if identifier_check is False:
+					embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
+					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					await message.edit(embed=embed)
+					return
+
+
+			elif x == 2:
+				if answer.startswith('0x'):
+					device['ecid'] = answer[2:]
+				else:
+					device['ecid'] = answer
+
+				ecid_check = await self.check_ecid(device['ecid'], ctx.author.id)
+				if ecid_check != True:
+					embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
+					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					if ecid_check == -1:
+						embed.description += ' This ECID has already been added to AutoTSS.'
+
+					await message.edit(embed=embed)
+					return
+			else:
+				device['boardconfig'] = answer
+
+				boardconfig_check = await self.check_boardconfig(device['identifier'], device['boardconfig'])
+				if boardconfig_check is False:
+					embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
+					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					await message.edit(embed=embed)
+					return
+
+		apnonce_description = [
+			'Would you like to save blobs with a custom apnonce?',
+			'*This is required on A12+ devices due to nonce entanglement, more info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*',
+			'NOTE: This is **NOT** the same as your **generator**, which begins with `0x` and is 16 characters long.'
+		]
+
+		embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
 		embed.add_field(name='Options', value='Type **Yes** to add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
 
 		try:
-			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			answer = response.content.lower()
 		except asyncio.exceptions.TimeoutError:
 			await message.edit(embed=timeout_embed)
 			return
 
-		if answer.content.lower() == 'yes':
-			try:
-				await answer.delete()
-			except discord.errors.NotFound:
-				pass
+		try:
+			await response.delete()
+		except discord.errors.NotFound:
+			pass
 
+		if answer == 'yes':
 			embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 
 			try:
-				apnonce = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+				answer = response.content.lower()
 			except asyncio.exceptions.TimeoutError:
 				await message.edit(embed=timeout_embed)
 				return
 
-			if apnonce.content.lower() == 'cancel' or apnonce.content.lower().startswith(ctx.prefix):
-				try:
-					await apnonce.delete()
-				except discord.errors.NotFound:
-					pass
+			try:
+				await response.delete()
+			except discord.errors.NotFound:
+				pass
 
-				embed = discord.Embed(title='Add Device', description='Cancelled.')
-				await message.edit(embed=embed)
-					
+			if answer == 'cancel' or answer.startswith(ctx.prefix):
+				await message.edit(embed=cancelled_embed)
 				return
 
 			else:
-				try:
-					await apnonce.delete()
-				except discord.errors.NotFound:
-					pass
+				device['apnonce'] = answer
 
-				device['apnonce'] = apnonce.content.lower()
+				apnonce_check = await self.check_apnonce(device['apnonce'])
+				if apnonce_check is False:
+					embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
+					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					await message.edit(embed=embed)
+					return
 
-		elif answer.content.lower() == 'cancel' or answer.content.lower().startswith(ctx.prefix):
-			try:
-				await answer.delete()
-			except discord.errors.NotFound:
-				pass
-
-			embed = discord.Embed(title='Add Device', description='Cancelled.')
-			await message.edit(embed=embed)
+		elif answer == 'cancel' or answer.startswith(ctx.prefix):
+			await message.edit(embed=cancelled_embed)
 			return
 		else:
-			try:
-				await answer.delete()
-			except discord.errors.NotFound:
-				pass
-
 			device['apnonce'] = None
 
-		embed = discord.Embed(title='Add Device', description='Verifying input...')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-		await message.edit(embed=embed)
-
-		# Check user-provided input and make sure it's valid
-
-		embed = discord.Embed(title='Add Device')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-		name_check = await self.check_name(device['name'])
-		if name_check is False:
-			embed.add_field(name='Error', value=f"Device name `{device['name']}` is not valid. A device's name must only contain letters, numbers, and spaces, and must be between 4 and 20 characters.", inline=False)
-
-		identifier = await self.check_identifier(device['identifier'])
-		if identifier is False:
-			embed.add_field(name='Error', value=f"Device Identifier `{device['identifier']}` does not exist.", inline=False)
-
-		boardconfig = await self.check_boardconfig(device['identifier'], device['boardconfig'])
-		if boardconfig is False:
-			embed.add_field(name='Error', value=f"Device `{device['name']}`'s board config `{device['boardconfig']}` does not exist.", inline=False)
-			return
-
-		ecid = await self.check_ecid(device['ecid'])
-
-		if ecid is False:
-			embed.add_field(name='Error', value=f"Device `{device['name']}`'s ECID `{device['ecid']}` is not valid.", inline=False)
-			return
-
-		if device['apnonce'] is not None:
-			apnonce = await self.check_apnonce(device['apnonce'])
-			if apnonce is False:
-				embed.add_field(name='Error', value=f"Device `{device['name']}`'s apnonce `{device['apnonce']}` is not valid.", inline=False)
-				return
-
-		async with aiosqlite.connect('Data/autotss.db') as db:
-			async with db.execute('SELECT ecid from autotss') as cursor:
-				ecids = await cursor.fetchall()
-			async with db.execute('SELECT name from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
-				names = await cursor.fetchall()
-	
-		if any(ecid[0] == device['ecid'] for ecid in ecids):
-			embed.add_field(name='Error', value="This device's ECID is already in my database.", inline=False)
-
-
-		if any(x[0].lower() == device['name'].lower() for x in names):
-			embed.add_field(name='Error', value="You've already added a device with this name.", inline=False)
-			return
-
-		if len(embed.fields) > 0:
-			await message.edit(embed=embed)
-			return
 
 		# Add device information into the database
 
-		device_info = (device['num'], device['userid'], device['name'], device['identifier'], device['ecid'], device['boardconfig'], str(list()), device['apnonce'])
+		devices[len(devices)] = device
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
-			await db.execute('INSERT INTO autotss(device_num, userid, name, identifier, ecid, boardconfig, blobs, apnonce) VALUES(?,?,?,?,?,?,?,?)', device_info)
+			await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))
 			await db.commit()
 
 		embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")

@@ -107,16 +107,16 @@ class Device(commands.Cog):
 			}
 
 		for x in range(4): # Loop that gets all of the required information to save blobs with from the user
-			if x == 0:
-				description = 'Enter a name for your device'
-			elif x == 1:
-				description = "Enter your device's identifier (e.g. `iPhone8,4`)"
-			elif x == 2:
-				description = "Enter your device's ECID (hex only)"
-			else:
-				description = "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+			descriptions = [
+				'Enter a name for your device',
+				"Enter your device's identifier (e.g. `iPhone6,1`)",
+				"Enter your device's ECID (hex)",
+				"Enter your device's Board Config (e.g. `n51ap`). \
+				This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) \
+				under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+			]
 
-			embed = discord.Embed(title='Add Device', description=f'{description}\nType `cancel` to cancel.')
+			embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 			if x == 0:

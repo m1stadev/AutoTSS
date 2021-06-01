@@ -282,6 +282,8 @@ class Device(commands.Cog):
 		else:
 			device['apnonce'] = None
 
+		device['saved_blobs'] = dict()
+
 
 		# Add device information into the database
 

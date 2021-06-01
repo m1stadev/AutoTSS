@@ -387,10 +387,15 @@ class Device(commands.Cog):
 		if answer == 'yes':
 			await self.os.makedirs(f'Data/Deleted Blobs/{ctx.author.id}', exist_ok=True)
 
-			if not await self.os.path.exists(f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}"): # If for some reason, you've added a device, had blobs save for it, remove it, then do that *again*, then don't even bother backing up the new blobs.
-				await self.shutil.copytree(f"Data/Blobs/{devices[num]['ecid']}", f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}", dirs_exist_ok=True)
+			if await self.os.path.exists(f"Data/Blobs/{devices[num]['ecid']}"): # If for some reason, you've added a device, had blobs save for it, remove it, then do that *again*,
+				if not await self.os.path.exists(f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}"): # then don't even bother backing up the new blobs.
+					await self.shutil.copytree(
+						f"Data/Blobs/{devices[num]['ecid']}",
+						f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}",
+						dirs_exist_ok=True
+					)
 
-			await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
+				await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
 
 			embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -398,7 +403,7 @@ class Device(commands.Cog):
 			del devices[num]
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
-				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (devices, ctx.author.id))
+				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))
 				await db.commit()
 
 			await message.edit(embed=embed)

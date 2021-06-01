@@ -1,14 +1,16 @@
 from discord.ext import commands, tasks
+from aioify import aioify
 import aiofiles
 import aiosqlite
 import asyncio
 import discord
-
+import os
 
 class Events(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.check_users_loop.start()
+		self.os = aioify(os, name='os')
 
 	async def update_device_count(self):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
@@ -138,7 +140,7 @@ class Events(commands.Cog):
 	@commands.Cog.listener()
 	async def on_ready(self):
 		try:
-			await aiofiles.os.mkdir('Data')
+			await self.os.mkdir('Data')
 		except FileExistsError:
 			pass
 

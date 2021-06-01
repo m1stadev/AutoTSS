@@ -56,7 +56,7 @@ class Admin(commands.Cog):
 		message = await ctx.send(embed=embed)
 
 		try:
-			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
 		except asyncio.exceptions.TimeoutError:
 			embed = discord.Embed(title='Edit Module')
 			embed.add_field(name='Error', value='No response given in 1 minute, cancelling.')

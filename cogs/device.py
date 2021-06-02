@@ -95,12 +95,13 @@ class Device(commands.Cog):
 			prefix = f'`{ctx.prefix}'
 
 		embed = discord.Embed(title='Device Commands')
-		embed.add_field(name=f'{prefix}device add`', value='Add a device', inline=False)
-		embed.add_field(name=f'{prefix}device remove`', value='Remove a device', inline=False)
-		embed.add_field(name=f'{prefix}device list`', value='List your devices', inline=False)
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.add_field(name='Add a device', value=f'{prefix}device add`', inline=False)
+		embed.add_field(name='Remove a device', value=f'{prefix}device remove`', inline=False)
+		embed.add_field(name='List your devices', value=f'{prefix}device list`', inline=False)
 
 		await ctx.send(embed=embed)
+
 
 	@device_cmd.command(name='add')
 	@commands.guild_only()

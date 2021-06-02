@@ -200,7 +200,7 @@ class TSS(commands.Cog):
 
 		for x in range(num_devices):
 			blobs = eval(devices[x][6])
-			total_blobs += blobs
+			total_blobs += len(blobs)
 
 			blobs_str = str()
 

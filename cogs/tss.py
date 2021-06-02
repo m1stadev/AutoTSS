@@ -187,7 +187,7 @@ class TSS(commands.Cog):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
 			devices = await cursor.fetchall()
 
-		if saved_devices == 0:
+		if devices == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added.')
 			await ctx.send(embed=embed)
 			return
@@ -254,12 +254,12 @@ class TSS(commands.Cog):
 	async def download_all_blobs(self, ctx):
 		await ctx.message.delete()
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss', (ctx.author.id,)):
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss', (ctx.author.id,)) as cursor:
 			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
-			await message.edit(embed=embed)
+			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Download Blobs', description='Uploading blobs...')

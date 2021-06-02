@@ -167,12 +167,12 @@ class TSS(commands.Cog):
 				await db.execute('UPDATE autotss SET blobs = ? WHERE device_num = ? AND userid = ?', (str(saved_buildids), devices[x][0], ctx.author.id))
 				await db.commit()
 
-			total_blobs += len(signed_buildids)
+			blobs_saved += len(signed_buildids)
 
 			if len(signed_buildids) > 0:
 				devices_saved_for += 1
 
-		if total_blobs == 0:
+		if blobs_saved == 0:
 			description = 'No new blobs were saved.'
 		else:
 			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**."
@@ -217,12 +217,12 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='download')
 	@commands.guild_only()
 	async def download_blobs(self, ctx): #TODO: Make fully async
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)):
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE userid = ?', (ctx.author.id,)) as cursor:
 			devices = await cursor.fetchall()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added.')
-			await message.edit(embed=embed)
+			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Download Blobs', description='Uploading blobs...')

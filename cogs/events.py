@@ -4,6 +4,7 @@ import aiofiles
 import aiosqlite
 import asyncio
 import discord
+import json
 import os
 
 class Events(commands.Cog):
@@ -14,9 +15,13 @@ class Events(commands.Cog):
 
 	async def update_device_count(self):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-			devices = len(await cursor.fetchall())
+			devices = (await cursor.fetchall())
 
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {devices} device{'s' if devices != 1 else ''}"))
+		device_count = int()
+		for user_devices in devices:
+			device_count += len(json.loads(user_devices[0]))
+
+		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {device_count} device{'s' if device_count != 1 else ''}"))
 
 	@tasks.loop(seconds=300)
 	async def check_users_loop(self):

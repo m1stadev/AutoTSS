@@ -26,7 +26,6 @@ class Events(commands.Cog):
 	@tasks.loop(seconds=300)
 	async def check_users_loop(self):
 		await self.bot.wait_until_ready()
-		await asyncio.sleep(1)
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
 			data = await cursor.fetchall()
@@ -35,14 +34,14 @@ class Events(commands.Cog):
 			user = await self.bot.fetch_user(user_info[0])
 
 			if (len(user.mutual_guilds) > 0) and (bool(user_info[2]) == False): # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
-				sql_args = (True, user.id)
+				db_args = (True, user.id)
 			elif (len(user.mutual_guilds) == 0) and (bool(user_info[2]) == True): # Vice-versa
-				sql_args = (False, user.id)
+				db_args = (False, user.id)
 			else:
 				continue
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
-				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', sql_args)
+				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', db_args)
 				await db.commit()
 			
 		await self.update_device_count()

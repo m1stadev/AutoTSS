@@ -1,14 +1,11 @@
 from aioify import aioify
-from discord.errors import Forbidden
 from discord.ext import commands
-import aiofiles
 import aiohttp
 import aiosqlite
 import asyncio
 import discord
 import json
 import os
-import re
 import shutil
 
 

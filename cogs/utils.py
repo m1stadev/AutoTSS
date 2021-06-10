@@ -1,16 +1,21 @@
+from aioify import aioify
 from discord.ext import commands
 import aiofiles
 import aiohttp
 import aiosqlite
 import discord
 import json
+import os
 import remotezip
 import requests
+import shutil
 
 
 class Utils(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.os = aioify(os, name='os')
+		self.shutil = aioify(shutil, name='shutil')
 
 	async def buildid_to_version(self, identifier, buildid):
 		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
@@ -56,6 +61,18 @@ class Utils(commands.Cog):
 			resp = await response.text()
 
 		return resp.splitlines()[-1].split(':', 1)[1][1:]
+
+	async def backup_blobs(self, tmpdir, *ecids):
+		await self.os.mkdir(f'{tmpdir}/Blobs')
+
+		for ecid in ecids:
+			try:
+				await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/Blobs/{ecid}')
+			except FileNotFoundError:
+				pass
+
+		await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
+		return await self.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
 
 def setup(bot):
 	bot.add_cog(Utils(bot))

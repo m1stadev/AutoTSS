@@ -55,6 +55,7 @@ class TSS(commands.Cog):
 						blob_saved = True
 					else:
 						blob_saved = False
+
 				else:
 					blob_saved = False
 					await self.os.makedirs('/'.join(save_path))
@@ -180,20 +181,13 @@ class TSS(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		try:
 			message = await ctx.author.send(embed=embed)
+			await ctx.message.delete()
 		except:
 			message = await ctx.send(embed=embed)
 
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-			await self.os.mkdir(f'{tmpdir}/Blobs')
-
-			for ecid in [devices[x]['ecid'] for x in devices.keys()]:
-				try:
-					await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/Blobs/{ecid}')
-				except FileNotFoundError:
-					pass
-
-			await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-			url = await self.utils.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
+			ecids = [devices[x]['ecid'] for x in devices.keys()]
+			url = await self.utils.backup_blobs(tmpdir, *ecids)
 
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
@@ -205,6 +199,7 @@ class TSS(commands.Cog):
 			await message.edit(embed=embed)
 
 			await asyncio.sleep(10)
+			await ctx.message.delete()
 			await message.delete()
 
 	@tss_cmd.command(name='list')
@@ -353,16 +348,8 @@ class TSS(commands.Cog):
 			return
 
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-			await self.os.mkdir(f'{tmpdir}/Blobs')
-
-			for folder in glob.glob('Data/Blobs/*'):
-				try:
-					await self.shutil.copytree(folder, f"{tmpdir}/Blobs/{folder.split('/')[-1]}")
-				except FileNotFoundError:
-					pass
-
-			shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-			url = await self.utils.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
+			ecids = [ecid.split('/')[-1] for ecid in glob.glob('Data/Blobs/*')]
+			url = await self.utils.backup_blobs(tmpdir, *ecids)
 
 		embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))

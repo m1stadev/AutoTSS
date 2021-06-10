@@ -46,7 +46,12 @@ if __name__ == '__main__':
 
 	client = commands.Bot(command_prefix=get_prefix, help_command=None)
 
+	client.load_extension('cogs.utils') # Load utils cog first
+
 	for cog in glob.glob('cogs/*.py'):
+		if cog == 'cogs/utils.py':
+			continue
+
 		client.load_extension(cog.replace('/', '.')[:-3])
 
 	try:

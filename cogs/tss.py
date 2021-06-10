@@ -116,7 +116,7 @@ class TSS(commands.Cog):
 
 		num_devices = int()
 		for user_devices in all_devices:
-			user_devices = json.loads(user_devices[0])
+			user_devices = json.loads(user_devices[1])
 
 			num_devices += len(user_devices)
 

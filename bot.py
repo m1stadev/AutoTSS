@@ -37,8 +37,7 @@ async def get_prefix(client, message):
 
 	return commands.when_mentioned_or(guild_prefix)(client, message)
 
-
-if __name__ == '__main__':
+def main():
 	if platform.system() == 'Windows':
 		sys.exit('[ERROR] AutoTSS is not supported on Windows. Exiting.')
 
@@ -49,7 +48,7 @@ if __name__ == '__main__':
 	client.load_extension('cogs.utils') # Load utils cog first
 
 	for cog in glob.glob('cogs/*.py'):
-		if cog == 'cogs/utils.py':
+		if 'utils.py' in cog:
 			continue
 
 		client.load_extension(cog.replace('/', '.')[:-3])
@@ -58,3 +57,6 @@ if __name__ == '__main__':
 		client.run(bot_token())
 	except discord.LoginFailure:
 		sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
+
+if __name__ == '__main__':
+	main()

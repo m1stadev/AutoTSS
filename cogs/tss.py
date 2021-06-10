@@ -1,7 +1,6 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 import aiofiles
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -9,8 +8,6 @@ import glob
 import json
 import time
 import os
-import remotezip
-import requests
 import shutil
 
 
@@ -185,7 +182,6 @@ class TSS(commands.Cog):
 			message = await ctx.author.send(embed=embed)
 		except:
 			message = await ctx.send(embed=embed)
-		
 
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 			await self.os.mkdir(f'{tmpdir}/Blobs')

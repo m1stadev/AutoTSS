@@ -1,10 +1,7 @@
 from discord.ext import commands, tasks
 from aioify import aioify
-import aiofiles
 import aiosqlite
-import asyncio
 import discord
-import json
 import os
 
 class Events(commands.Cog):
@@ -12,16 +9,7 @@ class Events(commands.Cog):
 		self.bot = bot
 		self.check_users_loop.start()
 		self.os = aioify(os, name='os')
-
-	async def update_device_count(self):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-			devices = (await cursor.fetchall())
-
-		device_count = int()
-		for user_devices in devices:
-			device_count += len(json.loads(user_devices[0]))
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {device_count} device{'s' if device_count != 1 else ''}"))
+		self.utils = self.bot.get_cog('Utils')
 
 	@tasks.loop(seconds=300)
 	async def check_users_loop(self):
@@ -33,9 +21,9 @@ class Events(commands.Cog):
 		for user_info in data:
 			user = await self.bot.fetch_user(user_info[0])
 
-			if (len(user.mutual_guilds) > 0) and (bool(user_info[2]) == False): # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
+			if (len(user.mutual_guilds) > 0) and (user_info[2] == False): # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
 				db_args = (True, user.id)
-			elif (len(user.mutual_guilds) == 0) and (bool(user_info[2]) == True): # Vice-versa
+			elif (len(user.mutual_guilds) == 0) and (user_info[2] == True): # Vice-versa
 				db_args = (False, user.id)
 			else:
 				continue
@@ -44,7 +32,7 @@ class Events(commands.Cog):
 				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', db_args)
 				await db.commit()
 			
-		await self.update_device_count()
+		await self.utils.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):
@@ -100,7 +88,8 @@ class Events(commands.Cog):
 			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
 			await db.commit()
 
-		await self.update_device_count()
+		
+		await self.utils.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_member_remove(self, member):
@@ -116,7 +105,7 @@ class Events(commands.Cog):
 			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
 			await db.commit()
 
-		await self.update_device_count()
+		await self.utils.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
@@ -143,10 +132,7 @@ class Events(commands.Cog):
 
 	@commands.Cog.listener()
 	async def on_ready(self):
-		try:
-			await self.os.mkdir('Data')
-		except FileExistsError:
-			pass
+		await self.os.makedirs('Data', exist_ok=True)
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
 			await db.execute('''
@@ -166,7 +152,7 @@ class Events(commands.Cog):
 				''')
 			await db.commit()
 
-		await self.update_device_count()
+		await self.utils.update_device_count()
 		print('AutoTSS is now online.')
 
 	@commands.Cog.listener()

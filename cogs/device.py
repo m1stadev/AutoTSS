@@ -15,6 +15,7 @@ class Device(commands.Cog):
 		self.json = aioify(json, name='json')
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
+		self.utils = self.bot.get_cog('Utils')
 
 	async def check_identifier(self, identifier):
 		async with aiohttp.ClientSession() as session, session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
@@ -76,16 +77,6 @@ class Device(commands.Cog):
 			return False
 
 		return True
-
-	async def update_device_count(self):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-			devices = (await cursor.fetchall())
-
-		device_count = int()
-		for user_devices in devices:
-			device_count += len(json.loads(user_devices[0]))
-
-		await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving blobs for {device_count} device{'s' if device_count != 1 else ''}"))
 
 	@commands.group(name='device', invoke_without_command=True)
 	@commands.guild_only()
@@ -299,7 +290,7 @@ class Device(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
 
-		await self.update_device_count()
+		await self.utils.update_device_count()
 
 	@device_cmd.command(name='remove')
 	@commands.guild_only()
@@ -412,7 +403,7 @@ class Device(commands.Cog):
 				await db.commit()
 
 			await message.edit(embed=embed)
-			await self.update_device_count()
+			await self.utils.update_device_count()
 
 		else:
 			embed = discord.Embed(title='Remove Device', description='Cancelled.')

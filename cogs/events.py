@@ -7,7 +7,6 @@ import os
 class Events(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.check_users_loop.start()
 		self.os = aioify(os, name='os')
 		self.utils = self.bot.get_cog('Utils')
 		self.check_users_loop.start()

@@ -164,6 +164,7 @@ class TSS(commands.Cog):
 
 	@tss_cmd.command(name='download')
 	@commands.guild_only()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def download_blobs(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
@@ -249,6 +250,7 @@ class TSS(commands.Cog):
 
 	@tss_cmd.command(name='save')
 	@commands.guild_only()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def save_blobs(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ? AND enabled = ?', (ctx.author.id, True)) as cursor:
 			try:
@@ -326,6 +328,7 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='downloadall')
 	@commands.guild_only()
 	@commands.is_owner()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def download_all_blobs(self, ctx):
 		await ctx.message.delete()
 
@@ -372,6 +375,7 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='saveall')
 	@commands.guild_only()
 	@commands.is_owner()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def save_all_blobs(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()

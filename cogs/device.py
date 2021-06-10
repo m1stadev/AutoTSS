@@ -1,5 +1,6 @@
 from aioify import aioify
 from discord.ext import commands
+import aiofiles
 import aiohttp
 import aiosqlite
 import asyncio
@@ -312,7 +313,7 @@ class Device(commands.Cog):
 				await db.commit()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Error', description='You have no devices added.')
+			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
@@ -380,20 +381,35 @@ class Device(commands.Cog):
 			pass
 
 		if answer == 'yes':
-			await self.os.makedirs(f'Data/Deleted Blobs/{ctx.author.id}', exist_ok=True)
+			embed = discord.Embed(title='Remove Device', description='Removing device...')
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await message.edit(embed=embed)
 
-			if await self.os.path.exists(f"Data/Blobs/{devices[num]['ecid']}"): # If for some reason, you've added a device, had blobs save for it, remove it, then do that *again*,
-				if not await self.os.path.exists(f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}"): # then don't even bother backing up the new blobs.
-					await self.shutil.copytree(
-						f"Data/Blobs/{devices[num]['ecid']}",
-						f"Data/Deleted Blobs/{ctx.author.id}/{devices[num]['ecid']}",
-						dirs_exist_ok=True
+			async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+				url = await self.utils.backup_blobs(tmpdir, devices[num]['ecid'])
+
+			await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
+
+			embed = discord.Embed(title='Remove Device')
+			embed.description = f"Blobs from `{devices[num]['name']}`: [Click here]({url})"
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+			try:
+				await ctx.author.send(embed=embed)
+				embed.description = f"Device `{devices[num]['name']}` removed."
+				await message.edit(embed=embed)
+			except:
+				embed.description = f"Device `{devices[num]['name']}` removed.\nBlobs from `{devices[num]['name']}`: [Click here]({url})"
+				embed.set_footer(
+					text=f'{ctx.author.name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
+					icon_url=ctx.author.avatar_url_as(static_format='png')
 					)
 
-				await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
+				await message.edit(embed=embed)
 
-			embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+				await asyncio.sleep(15)
+				await ctx.message.delete()
+				await message.delete()
 
 			del devices[num]
 			new_devices = dict()
@@ -425,7 +441,7 @@ class Device(commands.Cog):
 				await db.commit()
 
 		if len(devices) == 0:
-			embed = discord.Embed(title='Error', description='You have no devices added.')
+			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return

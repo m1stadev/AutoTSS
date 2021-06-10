@@ -165,6 +165,17 @@ class Events(commands.Cog):
 			embed = discord.Embed(title='Error', description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands I can run.")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
+		
+		elif isinstance(error, commands.MaxConcurrencyReached):
+			if ctx.prefix == f'<@!{self.bot.user.id}> ':
+				prefix = f'{ctx.prefix}`'
+			else:
+				prefix = f'`{ctx.prefix}'
+
+			embed = discord.Embed(title='Error', description=f"You can't run {prefix + ctx.command.qualified_name}` more than once at the same time!")
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await ctx.send(embed=embed)
+
 		else:
 			raise error
 

@@ -264,6 +264,12 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
+		if self.save_blobs_loop.is_running():
+			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await ctx.send(embed=embed)
+			return
+
 		embed = discord.Embed(title='Save Blobs', description='Saving blobs for all of your devices...')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
@@ -378,6 +384,12 @@ class TSS(commands.Cog):
 
 		if num_devices == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
+			await ctx.send(embed=embed)
+			return
+
+		if self.save_blobs_loop.is_running():
+			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 

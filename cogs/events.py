@@ -10,6 +10,7 @@ class Events(commands.Cog):
 		self.check_users_loop.start()
 		self.os = aioify(os, name='os')
 		self.utils = self.bot.get_cog('Utils')
+		self.check_users_loop.start()
 
 	@tasks.loop(seconds=300)
 	async def check_users_loop(self):

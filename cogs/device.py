@@ -97,6 +97,7 @@ class Device(commands.Cog):
 
 	@device_cmd.command(name='add')
 	@commands.guild_only()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def add_device(self, ctx):
 		timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
 		cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
@@ -294,6 +295,7 @@ class Device(commands.Cog):
 
 	@device_cmd.command(name='remove')
 	@commands.guild_only()
+	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def remove_device(self, ctx):
 		invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
 		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')

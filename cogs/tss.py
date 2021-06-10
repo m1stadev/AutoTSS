@@ -20,40 +20,8 @@ class TSS(commands.Cog):
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
 		self.time = aioify(time, name='time')
+		self.utils = self.bot.get_cog('Utils')
 		self.save_blobs_loop.start()
-
-	def get_manifest(self, identifier, buildid, dir):
-		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-		api = requests.get(api_url).json()
-
-		firm = next(x['url'] for x in api['firmwares'] if x['buildid'] == buildid)
-		with remotezip.RemoteZip(firm) as ipsw:
-			manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
-
-		with open(f'{dir}/BuildManifest.plist', 'wb') as f:
-			f.write(manifest)
-
-		return f'{dir}/BuildManifest.plist'
-
-	async def upload_file(self, file, name):
-		async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:
-			resp = await response.text()
-
-		return resp.splitlines()[-1].split(':', 1)[1][1:]
-
-	async def get_signed_buildids(self, identifier):
-		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-		async with aiohttp.ClientSession() as session, session.get(api_url) as resp:
-			api = await resp.json()
-
-		return [x['buildid'] for x in api['firmwares'] if x['signed'] == True]
-
-	async def buildid_to_version(self, identifier, buildid):
-		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-		async with aiohttp.ClientSession() as session, session.get(api_url) as resp:
-			api = await resp.json()
-
-		return next(x['version'] for x in api['firmwares'] if x['buildid'] == buildid)
 
 	async def save_blob(self, device, version, manifest):
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
@@ -134,17 +102,17 @@ class TSS(commands.Cog):
 			for x in devices.keys():
 				current_blobs_saved = blobs_saved
 
-				signed_buildids = await self.get_signed_buildids(devices[x]['identifier'])
+				signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
 				saved_versions = devices[x]['saved_blobs']
 
 				for buildid in signed_buildids:
 					if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
 						continue
 
-					version = await self.buildid_to_version(devices[x]['identifier'], buildid)
+					version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
 
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.get_manifest, devices[x]['identifier'], buildid, tmpdir)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
 						saved_blob = await self.save_blob(devices[x], version, manifest)
 
 					if saved_blob is True:
@@ -228,7 +196,7 @@ class TSS(commands.Cog):
 					pass
 
 			await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-			url = await self.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
+			url = await self.utils.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
 
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
@@ -306,17 +274,17 @@ class TSS(commands.Cog):
 		for x in devices.keys():
 			current_blobs_saved = blobs_saved
 
-			signed_buildids = await self.get_signed_buildids(devices[x]['identifier'])
+			signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
 			saved_versions = devices[x]['saved_blobs']
 
 			for buildid in signed_buildids:
 				if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
 					continue
 
-				version = await self.buildid_to_version(devices[x]['identifier'], buildid)
+				version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
 
 				async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-					manifest = await asyncio.to_thread(self.get_manifest, devices[x]['identifier'], buildid, tmpdir)
+					manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
 					saved_blob = await self.save_blob(devices[x], version, manifest)
 
 				if saved_blob is True:
@@ -389,7 +357,7 @@ class TSS(commands.Cog):
 					pass
 
 			shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-			url = await self.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
+			url = await self.utils.upload_file(f'{tmpdir}_blobs.zip', 'blobs.zip')
 
 		embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -427,17 +395,17 @@ class TSS(commands.Cog):
 			for x in devices.keys():
 				current_blobs_saved = blobs_saved
 
-				signed_buildids = await self.get_signed_buildids(devices[x]['identifier'])
+				signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
 				saved_versions = devices[x]['saved_blobs']
 
 				for buildid in signed_buildids:
 					if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
 						continue
 
-					version = await self.buildid_to_version(devices[x]['identifier'], buildid)
+					version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
 
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.get_manifest, devices[x]['identifier'], buildid, tmpdir)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
 						saved_blob = await self.save_blob(devices[x], version, manifest)
 
 					if saved_blob is True:

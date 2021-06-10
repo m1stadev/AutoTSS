@@ -144,7 +144,7 @@ class Device(commands.Cog):
 
 			# Wait for a response from the user, and error out if the user takes over 1 minute to respond
 			try:
-				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
+				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 				if x == 0:
 					answer = response.content # Don't make the device's name lowercase
 				else:
@@ -229,7 +229,7 @@ class Device(commands.Cog):
 		await message.edit(embed=embed)
 
 		try:
-			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
+			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 			answer = response.content.lower()
 		except asyncio.exceptions.TimeoutError:
 			await message.edit(embed=timeout_embed)
@@ -246,7 +246,7 @@ class Device(commands.Cog):
 			await message.edit(embed=embed)
 
 			try:
-				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
+				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 				answer = response.content.lower()
 			except asyncio.exceptions.TimeoutError:
 				await message.edit(embed=timeout_embed)
@@ -336,7 +336,7 @@ class Device(commands.Cog):
 		message = await ctx.send(embed=embed)
 
 		try:
-			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
+			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 			answer = response.content.lower()
 		except asyncio.exceptions.TimeoutError:
 			await message.edit(embed=timeout_embed)
@@ -369,7 +369,7 @@ class Device(commands.Cog):
 		await message.edit(embed=embed)
 
 		try:
-			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
+			response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 			answer = response.content.lower()
 		except asyncio.exceptions.TimeoutError:
 			await message.edit(embed=timeout_embed)

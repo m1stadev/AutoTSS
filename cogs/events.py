@@ -111,19 +111,10 @@ class Events(commands.Cog):
 	async def on_message(self, message):
 		await self.bot.wait_until_ready()
 
-		if message.channel.type is discord.ChannelType.private:
+		if message.channel.type == discord.ChannelType.private:
 			return
 
-		async with aiosqlite.connect('Data/autotss.db') as db:
-			async with db.execute('SELECT prefix from prefix WHERE guild = ?', (message.guild.id,)) as cursor:
-				prefix = await cursor.fetchone()
-				if prefix is None:
-					await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
-					await db.commit()
-					
-					prefix = 'b!'
-				else:
-					prefix = prefix[0]
+		prefix = await self.utils.get_prefix(message.guild.id)
 
 		if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
 			embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
@@ -158,20 +149,17 @@ class Events(commands.Cog):
 	@commands.Cog.listener()
 	async def on_command_error(self, ctx, error):
 		await self.bot.wait_until_ready()
+
+		prefix = await self.utils.get_prefix(ctx.guild.id)
 		if isinstance(error, commands.CommandNotFound):
 			if ctx.prefix.replace('!', '').replace(' ', '') == self.bot.user.mention:
 				return
 
-			embed = discord.Embed(title='Error', description=f"That command doesn't exist! Use `{ctx.prefix}help` to see all the commands I can run.")
+			embed = discord.Embed(title='Error', description=f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run.")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 		
 		elif isinstance(error, commands.MaxConcurrencyReached):
-			if ctx.prefix == f'<@!{self.bot.user.id}> ':
-				prefix = f'{ctx.prefix}`'
-			else:
-				prefix = f'`{ctx.prefix}'
-
 			embed = discord.Embed(title='Error', description=f"You can't run {prefix + ctx.command.qualified_name}` more than once at the same time!")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)

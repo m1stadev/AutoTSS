@@ -7,11 +7,19 @@ import random
 class Misc(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.utils = self.bot.get_cog('Utils')
 
 	@commands.command()
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
-	async def prefix(self, ctx, *, prefix):
+	async def prefix(self, ctx, *, prefix=None):
+		if prefix is None:
+			prefix = await self.utils.get_prefix(ctx.guild.id)
+			embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await ctx.send(embed=embed)
+			return
+
 		if len(prefix) > 4:
 			embed = discord.Embed(title='Error', description='Prefixes are limited to 4 characters or less.')
 			await ctx.send(embed=embed)
@@ -40,7 +48,7 @@ class Misc(commands.Cog):
 	async def ping(self, ctx):
 		num = random.randint(0, 1500)
 
-		if num == 69:  # nothing like some easter eggs, right?
+		if num == 69: # nothing like some easter eggs, right?
 			title = 'Nice'
 		elif num == 1337:
 			title = 'L33t'
@@ -58,9 +66,11 @@ class Misc(commands.Cog):
 	@commands.command()
 	@commands.guild_only()
 	async def info(self, ctx):
+		prefix = await self.utils.get_prefix(ctx.guild.id)
+
 		embed = discord.Embed(title="Hi, I'm AutoTSS!")
 		embed.add_field(name='What do I do?', value='I can automatically save SHSH blobs for all of your iOS devices!', inline=False)
-		embed.add_field(name='Prefix', value='My prefix is `b!`. To see what I can do, run `b!help`!', inline=False)
+		embed.add_field(name='Prefix', value=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!', inline=False)
 		embed.add_field(name='Creator', value=(await self.bot.fetch_user(728035061781495878)).mention, inline=False)
 		embed.add_field(name='Disclaimer', value='This should NOT be your only source for saving blobs. I am not at fault for any issues you may experience with AutoTSS.', inline=False)
 		embed.add_field(name='Notes', value='- There is a limit of 10 devices per user.\n- You must be in a server with AutoTSS, or your devices & blobs will be deleted. This **does not** have to be the same server that you added your devices to AutoTSS in.\n- Blobs are automatically saved every 30 minutes.', inline=False)

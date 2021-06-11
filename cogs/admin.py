@@ -9,23 +9,21 @@ import glob
 class Admin(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.utils = self.bot.get_cog('Utils')
 
 	async def get_modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
 	@commands.group(invoke_without_command=True)
 	@commands.is_owner()
 	async def module(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}> ':
-			prefix = f'{ctx.prefix}`'
-		else:
-			prefix = f'`{ctx.prefix}'
+		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Module Commands')
-		embed.add_field(name='Edit', value=f'{prefix}module edit <module>`', inline=False)
-		embed.add_field(name='List', value=f'{prefix}module list`', inline=False)
-		embed.add_field(name='Load', value=f'{prefix}module load <module 1> <module 2>`', inline=False)
-		embed.add_field(name='Reload', value=f'{prefix}module reload <all/module 1> <module 2>`', inline=False)
-		embed.add_field(name='Unload', value=f'{prefix}module unload <module 1> <module 2>`', inline=False)
+		embed.add_field(name='Edit', value=f'`{prefix}module edit <module>`', inline=False)
+		embed.add_field(name='List', value=f'`{prefix}module list`', inline=False)
+		embed.add_field(name='Load', value=f'`{prefix}module load <module 1> <module 2>`', inline=False)
+		embed.add_field(name='Reload', value=f'`{prefix}module reload <all/module 1> <module 2>`', inline=False)
+		embed.add_field(name='Unload', value=f'`{prefix}module unload <module 1> <module 2>`', inline=False)
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await ctx.send(embed=embed)
 

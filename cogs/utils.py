@@ -37,6 +37,16 @@ class Utils(commands.Cog):
 
 		return f'{dir}/BuildManifest.plist'
 
+	async def get_prefix(self, guild):
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
+			try:
+				guild_prefix = (await cursor.fetchone())[0]
+			except TypeError:
+				await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild, 'b!'))
+				await db.commit()
+				guild_prefix = 'b!'
+
+		return guild_prefix
 
 	async def get_signed_buildids(self, identifier):
 		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'

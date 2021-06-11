@@ -18,18 +18,18 @@ class Device(commands.Cog):
 		self.shutil = aioify(shutil, name='shutil')
 		self.utils = self.bot.get_cog('Utils')
 
-	async def check_identifier(self, identifier):
-		async with aiohttp.ClientSession() as session, session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
+	async def check_identifier(self, session, identifier):
+		async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
 			if identifier not in (await resp.json())['devices']:
 				return False
 			else:
 				return True
 
-	async def check_boardconfig(self, identifier, boardconfig):
+	async def check_boardconfig(self, session, identifier, boardconfig):
 		if boardconfig[-2:] != 'ap':
 			return False
 
-		async with aiohttp.ClientSession() as session, session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+		async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
 			api = await resp.json()
 
 		if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
@@ -97,6 +97,8 @@ class Device(commands.Cog):
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def add_device(self, ctx):
+		prefix = await self.utils.get_prefix(ctx.guild.id)
+
 		timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
 		cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
 
@@ -119,100 +121,100 @@ class Device(commands.Cog):
 			return
 
 		device = dict()
+		async with aiohttp.ClientSession() as session:
+			for x in range(4): # Loop that gets all of the required information to save blobs with from the user
+				descriptions = [
+					'Enter a name for your device',
+					"Enter your device's identifier (e.g. `iPhone6,1`)",
+					"Enter your device's ECID (hex)",
+					"Enter your device's Board Config (e.g. `n51ap`). \
+					This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) \
+					under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+				]
 
-		for x in range(4): # Loop that gets all of the required information to save blobs with from the user
-			descriptions = [
-				'Enter a name for your device',
-				"Enter your device's identifier (e.g. `iPhone6,1`)",
-				"Enter your device's ECID (hex)",
-				"Enter your device's Board Config (e.g. `n51ap`). \
-				This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) \
-				under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
-			]
+				embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
+				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-			embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-			if x == 0:
-				message = await ctx.send(embed=embed)
-			else:
-				await message.edit(embed=embed)
-
-
-			# Wait for a response from the user, and error out if the user takes over 1 minute to respond
-			try:
-				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
 				if x == 0:
-					answer = response.content # Don't make the device's name lowercase
+					message = await ctx.send(embed=embed)
 				else:
-					answer = response.content.lower()
-
-			except asyncio.exceptions.TimeoutError:
-				await message.edit(embed=timeout_embed)
-				return
-
-			# Delete the message
-			try:
-				await response.delete()
-			except discord.errors.NotFound:
-				pass
-
-			if answer.lower() == 'cancel' or answer.lower().startswith(ctx.prefix):
-				await message.edit(embed=cancelled_embed)
-				return
-
-			# Make sure given information is valid
-			if x == 0:
-				device['name'] = answer
-
-				name_check = await self.check_name(device['name'], ctx.author.id)
-				if name_check != True:
-					embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
-
-					if name_check == 0:
-						embed.description += " A device's name must be between 4 and 20 characters."
-					elif name_check == -1:
-						embed.description += " You cannot use a device's name more than once."
-
-					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 					await message.edit(embed=embed)
+
+
+				# Wait for a response from the user, and error out if the user takes over 1 minute to respond
+				try:
+					response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+					if x == 0:
+						answer = response.content # Don't make the device's name lowercase
+					else:
+						answer = response.content.lower()
+
+				except asyncio.exceptions.TimeoutError:
+					await message.edit(embed=timeout_embed)
 					return
 
-			elif x == 1:
-				device['identifier'] = 'P'.join(answer.split('p'))
+				# Delete the message
+				try:
+					await response.delete()
+				except discord.errors.NotFound:
+					pass
 
-				identifier_check = await self.check_identifier(device['identifier'])
-				if identifier_check is False:
-					embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
-					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-					await message.edit(embed=embed)
+				if answer.lower() == 'cancel' or answer.startswith(prefix):
+					await message.edit(embed=cancelled_embed)
 					return
 
+				# Make sure given information is valid
+				if x == 0:
+					device['name'] = answer
 
-			elif x == 2:
-				if answer.startswith('0x'):
-					device['ecid'] = answer[2:]
+					name_check = await self.check_name(device['name'], ctx.author.id)
+					if name_check != True:
+						embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
+
+						if name_check == 0:
+							embed.description += " A device's name must be between 4 and 20 characters."
+						elif name_check == -1:
+							embed.description += " You cannot use a device's name more than once."
+
+						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						await message.edit(embed=embed)
+						return
+
+				elif x == 1:
+					device['identifier'] = 'P'.join(answer.split('p'))
+
+					identifier_check = await self.check_identifier(session, device['identifier'])
+					if identifier_check is False:
+						embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
+						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						await message.edit(embed=embed)
+						return
+
+
+				elif x == 2:
+					if answer.startswith('0x'):
+						device['ecid'] = answer[2:]
+					else:
+						device['ecid'] = answer
+
+					ecid_check = await self.check_ecid(device['ecid'], ctx.author.id)
+					if ecid_check != True:
+						embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
+						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						if ecid_check == -1:
+							embed.description += ' This ECID has already been added to AutoTSS.'
+
+						await message.edit(embed=embed)
+						return
 				else:
-					device['ecid'] = answer
+					device['boardconfig'] = answer
 
-				ecid_check = await self.check_ecid(device['ecid'], ctx.author.id)
-				if ecid_check != True:
-					embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
-					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-					if ecid_check == -1:
-						embed.description += ' This ECID has already been added to AutoTSS.'
-
-					await message.edit(embed=embed)
-					return
-			else:
-				device['boardconfig'] = answer
-
-				boardconfig_check = await self.check_boardconfig(device['identifier'], device['boardconfig'])
-				if boardconfig_check is False:
-					embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
-					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-					await message.edit(embed=embed)
-					return
+					boardconfig_check = await self.check_boardconfig(session, device['identifier'], device['boardconfig'])
+					if boardconfig_check is False:
+						embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
+						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						await message.edit(embed=embed)
+						return
 
 		apnonce_description = [
 			'Would you like to save blobs with a custom apnonce?',
@@ -254,7 +256,7 @@ class Device(commands.Cog):
 			except discord.errors.NotFound:
 				pass
 
-			if answer == 'cancel' or answer.startswith(ctx.prefix):
+			if answer == 'cancel' or answer.startswith(prefix):
 				await message.edit(embed=cancelled_embed)
 				return
 
@@ -268,7 +270,7 @@ class Device(commands.Cog):
 					await message.edit(embed=embed)
 					return
 
-		elif answer == 'cancel' or answer.startswith(ctx.prefix):
+		elif answer == 'cancel' or answer.startswith(prefix):
 			await message.edit(embed=cancelled_embed)
 			return
 		else:
@@ -295,6 +297,8 @@ class Device(commands.Cog):
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def remove_device(self, ctx):
+		prefix = await self.utils.get_prefix(ctx.guild.id)
+
 		invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
 		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
 
@@ -344,7 +348,7 @@ class Device(commands.Cog):
 		except:
 			pass
 
-		if answer == 'cancel' or answer.startswith(ctx.prefix):
+		if answer == 'cancel' or answer.startswith(prefix):
 			embed = discord.Embed(title='Remove Device', description='Cancelled.')
 			await message.edit(embed=embed)
 			return

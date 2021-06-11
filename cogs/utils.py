@@ -40,6 +40,67 @@ class Utils(commands.Cog):
 
 		return next(x['version'] for x in api['firmwares'] if x['buildid'] == buildid)
 
+	async def check_apnonce(self, nonce):
+		try:
+			int(nonce, 16)
+		except ValueError or TypeError:
+			return False
+
+		if len(nonce) not in (40, 64): # All ApNonce lengths are either 40 characters long, or 64 characters long
+			return False
+
+		return True
+
+	async def check_boardconfig(self, session, identifier, boardconfig):
+		if boardconfig[-2:] != 'ap':
+			return False
+
+		async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+			api = await resp.json()
+
+		if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
+			return False
+		else:
+			return True
+
+	async def check_ecid(self, ecid, user):
+		if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
+			return 0
+
+		try:
+			int(ecid, 16) # Make sure the ECID provided is hexadecimal, not decimal
+		except ValueError or TypeError:
+			return 0
+
+		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
+				devices = (await cursor.fetchone())[0]
+
+		if ecid in devices: # There's no need to convert the json string to a dict here
+			return -1
+
+		return True
+
+	async def check_identifier(self, session, identifier):
+		async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
+			if identifier not in (await resp.json())['devices']:
+				return False
+			else:
+				return True
+
+	async def check_name(self, name, user): # This function will return different values based on where it errors out at
+		if not 4 <= len(name) <= 20: # Length check
+			return 0
+
+		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
+			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
+				devices = await self.json.loads((await cursor.fetchone())[0])
+
+		if any(x['name'] == name.lower() for x in devices):
+			return -1
+
+		return True
+
 	def get_manifest(self, identifier, buildid, dir):
 		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
 		api = requests.get(api_url).json()

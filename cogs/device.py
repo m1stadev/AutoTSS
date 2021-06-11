@@ -14,70 +14,8 @@ class Device(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.json = aioify(json, name='json')
-		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
 		self.utils = self.bot.get_cog('Utils')
-
-	async def check_identifier(self, session, identifier):
-		async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
-			if identifier not in (await resp.json())['devices']:
-				return False
-			else:
-				return True
-
-	async def check_boardconfig(self, session, identifier, boardconfig):
-		if boardconfig[-2:] != 'ap':
-			return False
-
-		async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
-			api = await resp.json()
-
-		if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
-			return False
-		else:
-			return True
-
-	async def check_name(self, name, user): # This function will return different values based on where it errors out at
-		if not 4 <= len(name) <= 20: # Length check
-			return 0
-
-		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
-			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = await self.json.loads((await cursor.fetchone())[0])
-
-		if any(x['name'] == name.lower() for x in devices):
-			return -1
-
-		return True
-
-	async def check_ecid(self, ecid, user):
-		if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
-			return 0
-
-		try:
-			int(ecid, 16) # Make sure the ECID provided is hexadecimal, not decimal
-		except ValueError or TypeError:
-			return 0
-
-		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
-			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = (await cursor.fetchone())[0]
-
-		if ecid in devices: # There's no need to convert the json string to a dict here
-			return -1
-
-		return True
-
-	async def check_apnonce(self, nonce):
-		try:
-			int(nonce, 16)
-		except ValueError or TypeError:
-			return False
-
-		if len(nonce) not in (40, 64): # All ApNonce lengths are either 40 characters long, or 64 characters long
-			return False
-
-		return True
 
 	@commands.group(name='device', invoke_without_command=True)
 	@commands.guild_only()
@@ -167,7 +105,7 @@ class Device(commands.Cog):
 				if x == 0:
 					device['name'] = answer
 
-					name_check = await self.check_name(device['name'], ctx.author.id)
+					name_check = await self.utils.check_name(device['name'], ctx.author.id)
 					if name_check != True:
 						embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
 
@@ -183,7 +121,7 @@ class Device(commands.Cog):
 				elif x == 1:
 					device['identifier'] = 'P'.join(answer.split('p'))
 
-					identifier_check = await self.check_identifier(session, device['identifier'])
+					identifier_check = await self.utils.check_identifier(session, device['identifier'])
 					if identifier_check is False:
 						embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
 						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -197,7 +135,7 @@ class Device(commands.Cog):
 					else:
 						device['ecid'] = answer
 
-					ecid_check = await self.check_ecid(device['ecid'], ctx.author.id)
+					ecid_check = await self.utils.check_ecid(device['ecid'], ctx.author.id)
 					if ecid_check != True:
 						embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
 						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -209,7 +147,7 @@ class Device(commands.Cog):
 				else:
 					device['boardconfig'] = answer
 
-					boardconfig_check = await self.check_boardconfig(session, device['identifier'], device['boardconfig'])
+					boardconfig_check = await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig'])
 					if boardconfig_check is False:
 						embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
 						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -263,7 +201,7 @@ class Device(commands.Cog):
 			else:
 				device['apnonce'] = answer
 
-				apnonce_check = await self.check_apnonce(device['apnonce'])
+				apnonce_check = await self.utils.check_apnonce(device['apnonce'])
 				if apnonce_check is False:
 					embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
 					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))

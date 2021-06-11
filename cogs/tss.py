@@ -73,9 +73,11 @@ class TSS(commands.Cog):
 
 		return True
 
-	@tasks.loop(seconds=1800)  # Change this value to modify the frequency at which blobs will be saved at
+	@tasks.loop(minutes=30)
 	async def save_blobs_loop(self):
 		await self.bot.wait_until_ready()
+		await asyncio.sleep(1)
+		self.blobs_loop = True
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
@@ -88,6 +90,7 @@ class TSS(commands.Cog):
 
 		if num_devices == 0:
 			print('[AUTO] No blobs need to be saved.')
+			self.blobs_loop = False
 			return
 
 		blobs_saved = int()
@@ -138,6 +141,8 @@ class TSS(commands.Cog):
 			print('[AUTO] No new blobs were saved.')
 		else:
 			print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}.")
+
+		self.blobs_loop = False
 
 	@commands.group(name='tss', invoke_without_command=True)
 	@commands.guild_only()
@@ -250,7 +255,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
-		if self.save_blobs_loop.is_running():
+		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
@@ -371,7 +376,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
-		if self.save_blobs_loop.is_running():
+		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
 			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)

@@ -37,6 +37,12 @@ class Utils(commands.Cog):
 
 		return f'{dir}/BuildManifest.plist'
 
+	async def get_cpid(self, session, identifier):
+		async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+			api = await resp.json()
+
+		return hex(api['cpid'])
+
 	async def get_prefix(self, guild):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
 			try:

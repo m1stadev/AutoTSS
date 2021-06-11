@@ -150,6 +150,12 @@ class Events(commands.Cog):
 	async def on_command_error(self, ctx, error):
 		await self.bot.wait_until_ready()
 
+		if ctx.message.channel.type == discord.ChannelType.private:
+			embed = discord.Embed(title='Error', description='AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.')
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await ctx.send(embed=embed)
+			return
+
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 		if isinstance(error, commands.CommandNotFound):
 			if ctx.prefix.replace('!', '').replace(' ', '') == self.bot.user.mention:

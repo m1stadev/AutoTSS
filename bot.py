@@ -25,7 +25,7 @@ def check_tsschecker():
 
 async def get_prefix(client, message):
 	if message.channel.type is discord.ChannelType.private:
-		return 'p!'
+		return 'b!'
 
 	async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,)) as cursor:
 		try:

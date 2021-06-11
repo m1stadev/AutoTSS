@@ -88,7 +88,6 @@ class Events(commands.Cog):
 			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
 			await db.commit()
 
-		
 		await self.utils.update_device_count()
 
 	@commands.Cog.listener()

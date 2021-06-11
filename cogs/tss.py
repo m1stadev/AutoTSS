@@ -82,9 +82,9 @@ class TSS(commands.Cog):
 
 		num_devices = int()
 		for user_devices in all_devices:
-			user_devices = json.loads(user_devices[1])
+			devices = json.loads(user_devices[1])
 
-			num_devices += len(user_devices)
+			num_devices += len(devices)
 
 		if num_devices == 0:
 			print('[AUTO] No blobs need to be saved.')
@@ -97,35 +97,35 @@ class TSS(commands.Cog):
 			user = user_devices[0]
 			devices = json.loads(user_devices[1])
 
-			for x in devices.keys():
+			for device in devices:
 				current_blobs_saved = blobs_saved
 
-				signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
-				saved_versions = devices[x]['saved_blobs']
+				signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
+				saved_versions = device['saved_blobs']
 
 				for buildid in signed_buildids:
-					if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
+					if any(buildid == firm['buildid'] for firm in saved_versions): # If we've already saved blobs for this version, skip
 						continue
 
-					version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
+					version = await self.utils.buildid_to_version(device['identifier'], buildid)
 
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
-						saved_blob = await self.save_blob(devices[x], version, manifest)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
+						saved_blob = await self.save_blob(device, version, manifest)
 
 					if saved_blob is True:
-						saved_versions[len(saved_versions)] = {
+						saved_versions.append({
 							'version': version,
 							'buildid': buildid, 
 							'type': 'Release'
-						}
+						})
 
 						blobs_saved += 1
 					else:
-						failed_info = f"{devices[x]['name']} - iOS {version} | {buildid}"
+						failed_info = f"{device['name']} - iOS {version} | {buildid}"
 						print(f'Failed to save blobs for `{failed_info}`.')
 
-				devices[x]['saved_blobs'] = saved_versions
+				device['saved_blobs'] = saved_versions
 
 				if blobs_saved > current_blobs_saved:
 					devices_saved_for += 1
@@ -165,9 +165,7 @@ class TSS(commands.Cog):
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
-				await db.commit()
+				devices = list()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
@@ -183,7 +181,7 @@ class TSS(commands.Cog):
 			message = await ctx.send(embed=embed)
 
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-			ecids = [devices[x]['ecid'] for x in devices.keys()]
+			ecids = [device['ecid'] for device in devices]
 			url = await self.utils.backup_blobs(tmpdir, *ecids)
 
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
@@ -206,9 +204,7 @@ class TSS(commands.Cog):
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
-				await db.commit()
+				devices = list()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
@@ -220,16 +216,18 @@ class TSS(commands.Cog):
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		blobs_saved = int()
-		for x in devices.keys():
-			blobs = devices[x]['saved_blobs']
+		for device in devices:
+			blobs = device['saved_blobs']
 			blobs_saved += len(blobs)
 
 			blobs_list = list()
+			for blob in blobs:
+				blobs_list.append(f"`iOS {blob['version']} | {blob['buildid']}`")
 
-			for i in blobs.keys():
-				blobs_list.append(f"`iOS {blobs[i]['version']} | {blobs[i]['buildid']}`")
-
-			embed.add_field(name=devices[x]['name'], value=', '.join(blobs_list), inline=False)
+			if len(blobs_list) == 0:
+				embed.add_field(name=device['name'], value='No blobs saved.', inline=False)
+			else:
+				embed.add_field(name=device['name'], value=', '.join(blobs_list), inline=False)
 
 		num_devices = len(devices)
 		embed.description = f"**{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** saved for **{num_devices} device{'s' if num_devices != 1 else ''}**."
@@ -244,9 +242,7 @@ class TSS(commands.Cog):
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
-				await db.commit()
+				devices = list()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
@@ -267,36 +263,36 @@ class TSS(commands.Cog):
 		blobs_saved = int()
 		devices_saved_for = int()
 
-		for x in devices.keys():
+		for device in devices:
 			current_blobs_saved = blobs_saved
 
-			signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
-			saved_versions = devices[x]['saved_blobs']
+			signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
+			saved_versions = device['saved_blobs']
 
 			for buildid in signed_buildids:
-				if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
+				if any(buildid == firm['buildid'] for firm in saved_versions):
 					continue
 
-				version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
+				version = await self.utils.buildid_to_version(device['identifier'], buildid)
 
 				async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-					manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
-					saved_blob = await self.save_blob(devices[x], version, manifest)
+					manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
+					saved_blob = await self.save_blob(device, version, manifest)
 
 				if saved_blob is True:
-					saved_versions[len(saved_versions)] = {
+					saved_versions.append({
 						'version': version,
 						'buildid': buildid, 
 						'type': 'Release'
-					}
+					})
 
 					blobs_saved += 1
 				else:
-					failed_info = f"{devices[x]['name']} - iOS {version} | {buildid}"
+					failed_info = f"{device['name']} - iOS {version} | {buildid}"
 					embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 					await message.edit(embed=embed)
 
-			devices[x]['saved_blobs'] = saved_versions
+			device['saved_blobs'] = saved_versions
 
 			if blobs_saved > current_blobs_saved:
 				devices_saved_for += 1
@@ -325,9 +321,9 @@ class TSS(commands.Cog):
 
 		num_devices = int()
 		for user_devices in all_devices:
-			user_devices = json.loads(user_devices[0])
+			devices = json.loads(user_devices[0])
 
-			num_devices += len(user_devices)
+			num_devices += len(devices)
 
 		if num_devices == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
@@ -348,8 +344,12 @@ class TSS(commands.Cog):
 			ecids = [ecid.split('/')[-1] for ecid in glob.glob('Data/Blobs/*')]
 			url = await self.utils.backup_blobs(tmpdir, *ecids)
 
-		embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		if url is None:
+			embed = discord.Embed(title='Error', description='There are no blobs saved in AutoTSS.')
+		else:
+			embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
+			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
 		await message.edit(embed=embed)
 
 	@tss_cmd.command(name='saveall')
@@ -362,9 +362,9 @@ class TSS(commands.Cog):
 
 		num_devices = int()
 		for user_devices in all_devices:
-			user_devices = json.loads(user_devices[1])
+			devices = json.loads(user_devices[1])
 
-			num_devices += len(user_devices)
+			num_devices += len(devices)
 
 		if num_devices == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
@@ -388,36 +388,36 @@ class TSS(commands.Cog):
 			user = user_devices[0]
 			devices = json.loads(user_devices[1])
 
-			for x in devices.keys():
+			for device in devices:
 				current_blobs_saved = blobs_saved
 
-				signed_buildids = await self.utils.get_signed_buildids(devices[x]['identifier'])
-				saved_versions = devices[x]['saved_blobs']
+				signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
+				saved_versions = device['saved_blobs']
 
 				for buildid in signed_buildids:
-					if any(buildid == saved_versions[firm]['buildid'] for firm in saved_versions):
+					if any(buildid == firm['buildid'] for firm in saved_versions):
 						continue
 
-					version = await self.utils.buildid_to_version(devices[x]['identifier'], buildid)
+					version = await self.utils.buildid_to_version(device['identifier'], buildid)
 
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.utils.get_manifest, devices[x]['identifier'], buildid, tmpdir)
-						saved_blob = await self.save_blob(devices[x], version, manifest)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
+						saved_blob = await self.save_blob(device, version, manifest)
 
 					if saved_blob is True:
-						saved_versions[len(saved_versions)] = {
+						saved_versions.append({
 							'version': version,
 							'buildid': buildid, 
 							'type': 'Release'
-						}
+						})
 
 						blobs_saved += 1
 					else:
-						failed_info = f"{devices[x]['name']} - iOS {version} | {buildid}"
+						failed_info = f"{device['name']} - iOS {version} | {buildid}"
 						embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 						await message.edit(embed=embed)
 
-				devices[x]['saved_blobs'] = saved_versions
+				device['saved_blobs'] = saved_versions
 
 				if blobs_saved > current_blobs_saved:
 					devices_saved_for += 1

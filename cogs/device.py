@@ -299,19 +299,18 @@ class Device(commands.Cog):
 	async def remove_device(self, ctx):
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
+		cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
 		invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
 		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
 
-		for x in (invalid_embed, timeout_embed):
+		for x in (cancelled_embed, invalid_embed, timeout_embed):
 			x.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
-				await db.commit()
+				devices = list()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
@@ -322,7 +321,7 @@ class Device(commands.Cog):
 		embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
 		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-		for x in devices.keys():
+		for x in range(len(devices)):
 			device_info = [
 				f"Name: `{devices[x]['name']}`",
 				f"Device Identifier: `{devices[x]['identifier']}`",
@@ -332,7 +331,7 @@ class Device(commands.Cog):
 			if devices[x]['apnonce'] is not None:
 				device_info.append(f"Custom ApNonce: `{devices[x]['apnonce']}`")
 
-			embed.add_field(name=int(x) + 1, value='\n'.join(device_info), inline=False)
+			embed.add_field(name=x + 1, value='\n'.join(device_info), inline=False)
 
 		message = await ctx.send(embed=embed)
 
@@ -349,17 +348,16 @@ class Device(commands.Cog):
 			pass
 
 		if answer == 'cancel' or answer.startswith(prefix):
-			embed = discord.Embed(title='Remove Device', description='Cancelled.')
-			await message.edit(embed=embed)
+			await message.edit(embed=cancelled_embed)
 			return
 
 		try:
-			num = str(int(answer) - 1)
-		except ValueError:
+			num = int(answer) - 1
+		except:
 			await message.edit(embed=invalid_embed)
 			return
 
-		if num not in devices.keys():
+		if num not in range(len(devices)):
 			await message.edit(embed=invalid_embed)
 			return
 
@@ -389,46 +387,46 @@ class Device(commands.Cog):
 			async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 				url = await self.utils.backup_blobs(tmpdir, devices[num]['ecid'])
 
-			await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
-
-			embed = discord.Embed(title='Remove Device')
-			embed.description = f"Blobs from `{devices[num]['name']}`: [Click here]({url})"
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-			try:
-				await ctx.author.send(embed=embed)
-				embed.description = f"Device `{devices[num]['name']}` removed."
-				await message.edit(embed=embed)
-			except:
-				embed.description = f"Device `{devices[num]['name']}` removed.\nBlobs from `{devices[num]['name']}`: [Click here]({url})"
-				embed.set_footer(
-					text=f'{ctx.author.name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
-					icon_url=ctx.author.avatar_url_as(static_format='png')
-					)
-
+			if url is None:
+				embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")
+				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 				await message.edit(embed=embed)
 
-				await asyncio.sleep(15)
-				await ctx.message.delete()
-				await message.delete()
+			else:
+				await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
 
-			del devices[num]
-			new_devices = dict()
-			for d in list(devices.keys()):
-				new_devices[len(new_devices)] = devices[d]
+				embed = discord.Embed(title='Remove Device')
+				embed.description = f"Blobs from `{devices[num]['name']}`: [Click here]({url})"
+				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+				try:
+					await ctx.author.send(embed=embed)
+					embed.description = f"Device `{devices[num]['name']}` removed."
+					await message.edit(embed=embed)
+				except:
+					embed.description = f"Device `{devices[num]['name']}` removed.\nBlobs from `{devices[num]['name']}`: [Click here]({url})"
+					embed.set_footer(
+						text=f'{ctx.author.name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
+						icon_url=ctx.author.avatar_url_as(static_format='png')
+						)
+
+					await message.edit(embed=embed)
+
+					await asyncio.sleep(15)
+					await ctx.message.delete()
+					await message.delete()
+
+			devices.pop(num)
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
-				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(new_devices), ctx.author.id))
+				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))
 				await db.commit()
 
 			await message.edit(embed=embed)
 			await self.utils.update_device_count()
 
 		else:
-			embed = discord.Embed(title='Remove Device', description='Cancelled.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-			await message.edit(embed=embed)
+			await message.edit(embed=cancelled_embed)
 
 	@device_cmd.command(name='list')
 	@commands.guild_only()

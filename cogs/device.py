@@ -43,7 +43,7 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
 			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = await self.json.loads((await cursor.fetchall())[0][0])
+				devices = await self.json.loads((await cursor.fetchone())[0])
 
 		if any(devices[x]['name'] == name.lower() for x in devices.keys()):
 			return -1
@@ -61,7 +61,7 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
 			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = (await cursor.fetchall())[0][0]
+				devices = (await cursor.fetchone())[0]
 
 		if ecid in devices: # There's no need to convert the json string to a dict here
 			return -1
@@ -109,7 +109,7 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchall())[0][0])
+				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
@@ -123,14 +123,14 @@ class Device(commands.Cog):
 		device = dict()
 		async with aiohttp.ClientSession() as session:
 			for x in range(4): # Loop that gets all of the required information to save blobs with from the user
-				descriptions = [
+				descriptions = (
 					'Enter a name for your device',
 					"Enter your device's identifier (e.g. `iPhone6,1`)",
 					"Enter your device's ECID (hex)",
 					"Enter your device's Board Config (e.g. `n51ap`). \
 					This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) \
 					under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
-				]
+				)
 
 				embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
 				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -307,7 +307,7 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchall())[0][0])
+				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
@@ -435,7 +435,7 @@ class Device(commands.Cog):
 	async def list_devices(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchall())[0][0])
+				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))

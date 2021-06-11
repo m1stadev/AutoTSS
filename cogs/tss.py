@@ -163,7 +163,7 @@ class TSS(commands.Cog):
 	async def download_blobs(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = json.loads((await cursor.fetchall())[0][0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
@@ -204,7 +204,7 @@ class TSS(commands.Cog):
 	async def list_blobs(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = json.loads((await cursor.fetchall())[0][0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
@@ -240,9 +240,9 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def save_blobs(self, ctx):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ? AND enabled = ?', (ctx.author.id, True)) as cursor:
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = json.loads((await cursor.fetchall())[0][0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = dict()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))

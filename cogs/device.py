@@ -45,7 +45,7 @@ class Device(commands.Cog):
 			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
 				devices = await self.json.loads((await cursor.fetchone())[0])
 
-		if any(devices[x]['name'] == name.lower() for x in devices.keys()):
+		if any(x['name'] == name.lower() for x in devices):
 			return -1
 
 		return True
@@ -111,7 +111,7 @@ class Device(commands.Cog):
 			try:
 				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
+				devices = list()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
 				await db.commit()
 
@@ -276,12 +276,10 @@ class Device(commands.Cog):
 		else:
 			device['apnonce'] = None
 
-		device['saved_blobs'] = dict()
-
+		device['saved_blobs'] = list()
 
 		# Add device information into the database
-
-		devices[len(devices)] = device
+		devices.append(device)
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
 			await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))

@@ -16,6 +16,7 @@ class Utils(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.os = aioify(os, name='os')
+		self.json = aioify(json, name='json')
 		self.shutil = aioify(shutil, name='shutil')
 
 	async def backup_blobs(self, tmpdir, *ecids):
@@ -118,7 +119,7 @@ class Utils(commands.Cog):
 		async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
 			api = await resp.json()
 
-		return hex(api['cpid'])
+		return api['cpid']
 
 	async def get_prefix(self, guild):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:

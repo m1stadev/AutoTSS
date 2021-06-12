@@ -157,7 +157,7 @@ class Events(commands.Cog):
 			await ctx.send(embed=embed)
 		
 		elif isinstance(error, commands.MaxConcurrencyReached):
-			embed = discord.Embed(title='Error', description=f"You can't run {prefix + ctx.command.qualified_name}` more than once at the same time!")
+			embed = discord.Embed(title='Error', description=f"You can't run `{prefix + ctx.command.qualified_name}` more than once at the same time!")
 			await ctx.send(embed=embed)
 
 		else:

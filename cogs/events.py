@@ -1,6 +1,7 @@
 from discord.ext import commands, tasks
 from aioify import aioify
 import aiosqlite
+import asyncio
 import discord
 import json
 import os
@@ -11,10 +12,10 @@ class Events(commands.Cog):
 		self.json = aioify(json, name='json')
 		self.os = aioify(os, name='os')
 		self.utils = self.bot.get_cog('Utils')
-		self.update_db_loop.start()
+		self.auto_clean_db.start()
 
 	@tasks.loop(minutes=5)
-	async def update_db_loop(self):
+	async def auto_clean_db(self):
 		await self.bot.wait_until_ready()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
 			data = await cursor.fetchall()
@@ -26,23 +27,6 @@ class Events(commands.Cog):
 				async with aiosqlite.connect('Data/autotss.db') as db:
 					await db.execute('DELETE FROM autotss WHERE user = ?', (user_info[0],))
 					await db.commit()
-
-				continue
-
-			user_guilds = (await self.bot.fetch_user(user_info[0])).mutual_guilds
-
-			if (len(user_guilds) > 0) and (user_info[2] == False): # If the user shares at least one guild with the bot, but blob saving is still disabled for some reason
-				db_args = (True, user_info[0])
-			elif (len(user_guilds) == 0) and (user_info[2] == True): # Vice-versa
-				db_args = (False, user_info[0])
-			else:
-				continue
-
-			async with aiosqlite.connect('Data/autotss.db') as db:
-				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', db_args)
-				await db.commit()
-			
-		await self.utils.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):

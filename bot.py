@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
 	check_tsschecker()
 
-	client = commands.Bot(command_prefix=get_prefix, help_command=None)
+	client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None)
 
 	for cog in glob.glob('cogs/*.py'):
 		client.load_extension(cog.replace('/', '.')[:-3])

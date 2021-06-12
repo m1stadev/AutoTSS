@@ -16,7 +16,7 @@ class Misc(commands.Cog):
 		if prefix is None:
 			prefix = await self.utils.get_prefix(ctx.guild.id)
 			embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
@@ -30,7 +30,7 @@ class Misc(commands.Cog):
 			await db.commit()
 
 		embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)
 
@@ -39,7 +39,7 @@ class Misc(commands.Cog):
 	async def invite(self, ctx):
 		embed = discord.Embed(title='Invite', description=f'[Click here](https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=93184).')
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)
 
@@ -77,7 +77,7 @@ class Misc(commands.Cog):
 		embed.add_field(name='Source Code', value="AutoTSS's source code can be found on [GitHub](https://github.com/m1stadev/AutoTSS).", inline=False)
 		embed.add_field(name='Support', value='For any questions about AutoTSS, join my [discord](https://m1sta.xyz/discord).', inline=False)
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)
 

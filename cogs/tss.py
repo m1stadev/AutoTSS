@@ -150,7 +150,7 @@ class TSS(commands.Cog):
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='TSS Commands')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		embed.add_field(name='Download all blobs saved for your devices', value=f'`{prefix}tss download`', inline=False)
 		embed.add_field(name='List all blobs saved for your devices', value=f'`{prefix}tss list`', inline=False)
@@ -178,7 +178,7 @@ class TSS(commands.Cog):
 			return
 
 		embed = discord.Embed(title='Download Blobs', description='Uploading blobs...')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		try:
 			message = await ctx.author.send(embed=embed)
 			await ctx.message.delete()
@@ -192,10 +192,10 @@ class TSS(commands.Cog):
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
 		if message.channel.type == discord.ChannelType.private:
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 		else:
-			embed.set_footer(text=f'{ctx.author.name} | This message will automatically be deleted in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 
 			await asyncio.sleep(10)
@@ -213,12 +213,12 @@ class TSS(commands.Cog):
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
-		embed = discord.Embed(title=f"{ctx.author.name}'s Saved Blobs")
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved Blobs")
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		blobs_saved = int()
 		for device in devices:
@@ -251,18 +251,18 @@ class TSS(commands.Cog):
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
 		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Save Blobs', description='Saving blobs for all of your devices...')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
 
 		blobs_saved = int()
@@ -336,7 +336,7 @@ class TSS(commands.Cog):
 			return
 
 		embed = discord.Embed(title='Download All Blobs', description='Uploading blobs...')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		try:
 			message = await ctx.author.send(embed=embed)
@@ -353,7 +353,7 @@ class TSS(commands.Cog):
 			embed = discord.Embed(title='Error', description='There are no blobs saved in AutoTSS.')
 		else:
 			embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await message.edit(embed=embed)
 
@@ -378,12 +378,12 @@ class TSS(commands.Cog):
 
 		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Save Blobs', description='Saving blobs for all devices...')
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
 
 		blobs_saved = int()

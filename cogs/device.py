@@ -26,7 +26,7 @@ class Device(commands.Cog):
 		embed.add_field(name='Add a device', value=f'`{prefix}device add`', inline=False)
 		embed.add_field(name='Remove a device', value=f'`{prefix}device remove`', inline=False)
 		embed.add_field(name='List your devices', value=f'`{prefix}device list`', inline=False)
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await ctx.send(embed=embed)
 
@@ -40,7 +40,7 @@ class Device(commands.Cog):
 		cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
 
 		for embed in (timeout_embed, cancelled_embed):
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		max_devices = 10 #TODO: Export this option to a separate config file
 
@@ -70,7 +70,7 @@ class Device(commands.Cog):
 				)
 
 				embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
-				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+				embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 				if x == 0:
 					message = await ctx.send(embed=embed)
@@ -113,7 +113,7 @@ class Device(commands.Cog):
 						elif name_check == -1:
 							embed.description += " You cannot use a device's name more than once."
 
-						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
 						return
 
@@ -123,7 +123,7 @@ class Device(commands.Cog):
 					identifier_check = await self.utils.check_identifier(session, device['identifier'])
 					if identifier_check is False:
 						embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
-						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
 						return
 
@@ -137,7 +137,7 @@ class Device(commands.Cog):
 					ecid_check = await self.utils.check_ecid(device['ecid'], ctx.author.id)
 					if ecid_check != True:
 						embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
-						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						if ecid_check == -1:
 							embed.description += ' This ECID has already been added to AutoTSS.'
 
@@ -149,7 +149,7 @@ class Device(commands.Cog):
 					boardconfig_check = await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig'])
 					if boardconfig_check is False:
 						embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
-						embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
 						return
 
@@ -161,7 +161,7 @@ class Device(commands.Cog):
 
 		embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
 		embed.add_field(name='Options', value='Type **Yes** to add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
 
 		try:
@@ -178,7 +178,7 @@ class Device(commands.Cog):
 
 		if answer == 'yes':
 			embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 
 			try:
@@ -203,7 +203,7 @@ class Device(commands.Cog):
 				apnonce_check = await self.utils.check_apnonce(device['apnonce'])
 				if apnonce_check is False:
 					embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
-					embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+					embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 					await message.edit(embed=embed)
 					return
 
@@ -223,7 +223,7 @@ class Device(commands.Cog):
 			await db.commit()
 
 		embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await message.edit(embed=embed)
 
 		await self.utils.update_device_count()
@@ -239,7 +239,7 @@ class Device(commands.Cog):
 		timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
 
 		for x in (cancelled_embed, invalid_embed, timeout_embed):
-			x.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
@@ -249,12 +249,12 @@ class Device(commands.Cog):
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
 		embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		for x in range(len(devices)):
 			device_info = [
@@ -298,7 +298,7 @@ class Device(commands.Cog):
 
 		embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
 		embed.add_field(name='Options', value='Type **yes** to delete your device & blobs from AutoTSS, or anything else to cancel.', inline=False)
-		embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await message.edit(embed=embed)
 
@@ -316,7 +316,7 @@ class Device(commands.Cog):
 
 		if answer == 'yes':
 			embed = discord.Embed(title='Remove Device', description='Removing device...')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)
 
 			async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
@@ -324,7 +324,7 @@ class Device(commands.Cog):
 
 			if url is None:
 				embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")
-				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+				embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 				await message.edit(embed=embed)
 
 			else:
@@ -332,7 +332,7 @@ class Device(commands.Cog):
 
 				embed = discord.Embed(title='Remove Device')
 				embed.description = f"Blobs from `{devices[num]['name']}`: [Click here]({url})"
-				embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+				embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 				try:
 					await ctx.author.send(embed=embed)
@@ -341,7 +341,7 @@ class Device(commands.Cog):
 				except:
 					embed.description = f"Device `{devices[num]['name']}` removed.\nBlobs from `{devices[num]['name']}`: [Click here]({url})"
 					embed.set_footer(
-						text=f'{ctx.author.name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
+						text=f'{ctx.author.display_name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
 						icon_url=ctx.author.avatar_url_as(static_format='png')
 						)
 
@@ -376,11 +376,11 @@ class Device(commands.Cog):
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-			embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await ctx.send(embed=embed)
 			return
 
-		embed = discord.Embed(title=f"{ctx.author.name}'s Devices")
+		embed = discord.Embed(title=f"{ctx.author.display_name}'s Devices")
 
 		for x in devices.keys():
 			device_info = [
@@ -394,7 +394,7 @@ class Device(commands.Cog):
 
 			embed.add_field(name=f"`{devices[x]['name']}`", value='\n'.join(device_info), inline=False)
 
-		embed.set_footer(text=f'{ctx.author.name} | This message will be censored in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+		embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
 
 		await asyncio.sleep(10)

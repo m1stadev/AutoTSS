@@ -18,7 +18,7 @@ class TSS(commands.Cog):
 		self.shutil = aioify(shutil, name='shutil')
 		self.time = aioify(time, name='time')
 		self.utils = self.bot.get_cog('Utils')
-		self.save_blobs_loop.start()
+		self.auto_blob_saver.start()
 
 	async def save_blob(self, device, version, manifest):
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
@@ -74,7 +74,7 @@ class TSS(commands.Cog):
 		return True
 
 	@tasks.loop(minutes=30)
-	async def save_blobs_loop(self):
+	async def auto_blob_saver(self):
 		await self.bot.wait_until_ready()
 		await asyncio.sleep(1)
 		self.blobs_loop = True

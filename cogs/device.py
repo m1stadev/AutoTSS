@@ -213,11 +213,11 @@ class Device(commands.Cog):
 			else:
 				device['apnonce'] = None
 
-			if await self.utils.get_cpid(session, device['identifier']) >= 32800 and device['apnonce'] is None:
-				embed = discord.Embed(title='Add Device') # Ask the user if they'd like to save blobs with a custom ApNonce
+			if await self.utils.get_cpid(session, device['identifier']) >= 32800 and device['apnonce'] is None: # If A12+ and no apnonce was specified
+				embed = discord.Embed(title='Add Device')
 				apnonce_warning = (
 					'You are attempting to add an A12+ device while choosing to not specify a custom apnonce.',
-					'This **will** save nonworking blobs.',
+					'This **will** save non-working blobs.',
 					'Are you sure you want to do this?'
 				)
 

@@ -431,9 +431,7 @@ class Device(commands.Cog):
 			try:
 				devices = await self.json.loads((await cursor.fetchone())[0])
 			except IndexError:
-				devices = dict()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
-				await db.commit()
+				devices = list()
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
@@ -442,17 +440,17 @@ class Device(commands.Cog):
 
 		embed = discord.Embed(title=f"{ctx.author.display_name}'s Devices")
 
-		for x in devices.keys():
+		for device in devices:
 			device_info = [
-				f"Device Identifier: `{devices[x]['identifier']}`",
-				f"ECID: ||`{devices[x]['ecid']}`||",
-				f"Boardconfig: `{devices[x]['boardconfig']}`"
+				f"Device Identifier: `{device['identifier']}`",
+				f"ECID: ||`{device['ecid']}`||",
+				f"Boardconfig: `{device['boardconfig']}`"
 			]
 
-			if devices[x]['apnonce'] is not None:
-				device_info.append(f"Custom ApNonce: `{devices[x]['apnonce']}`")
+			if device['apnonce'] is not None:
+				device_info.append(f"Custom ApNonce: `{device['apnonce']}`")
 
-			embed.add_field(name=f"`{devices[x]['name']}`", value='\n'.join(device_info), inline=False)
+			embed.add_field(name=f"`{device['name']}`", value='\n'.join(device_info), inline=False)
 
 		embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
 		message = await ctx.send(embed=embed)
@@ -461,7 +459,8 @@ class Device(commands.Cog):
 
 		for x in range(len(embed.fields)):
 			field_values = [value for value in embed.fields[x].value.split('\n') if 'ECID' not in value]
-			embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values), inline=False)	
+			embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values), inline=False)
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
 		await message.edit(embed=embed)
 

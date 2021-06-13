@@ -1,6 +1,7 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 import aiofiles
+import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -18,13 +19,14 @@ class TSS(commands.Cog):
 		self.shutil = aioify(shutil, name='shutil')
 		self.time = aioify(time, name='time')
 		self.utils = self.bot.get_cog('Utils')
+		self.blobs_loop = None
 		self.auto_blob_saver.start()
 
 	async def save_blob(self, device, version, manifest):
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 			args = ['tsschecker', '-d', device['identifier'], '-B', device['boardconfig'], '-e', '0x' + device['ecid'], '-m', manifest, '-s', '--save-path', tmpdir]
-
 			save_path = ('Data', 'Blobs', device['ecid'], version, 'no-apnonce')
+
 			if await self.os.path.exists('/'.join(save_path)):
 				if len(glob.glob(f"{'/'.join(save_path)}/*")) > 0:
 					blob_saved = True
@@ -76,7 +78,6 @@ class TSS(commands.Cog):
 	@tasks.loop(minutes=30)
 	async def auto_blob_saver(self):
 		await self.bot.wait_until_ready()
-		await asyncio.sleep(1)
 		self.blobs_loop = True
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
@@ -102,30 +103,29 @@ class TSS(commands.Cog):
 
 			for device in devices:
 				current_blobs_saved = blobs_saved
-
-				signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
 				saved_versions = device['saved_blobs']
 
-				for buildid in signed_buildids:
-					if any(buildid == firm['buildid'] for firm in saved_versions): # If we've already saved blobs for this version, skip
+				async with aiohttp.ClientSession() as session:
+					signed_firms = await self.utils.get_signed_buildids(session, device['identifier'])
+
+				for firm in signed_firms:
+					if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in saved_versions): # If we've already saved blobs for this version, skip
 						continue
 
-					version = await self.utils.buildid_to_version(device['identifier'], buildid)
-
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
-						saved_blob = await self.save_blob(device, version, manifest)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+						saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 					if saved_blob is True:
 						saved_versions.append({
-							'version': version,
-							'buildid': buildid, 
-							'type': 'Release'
+							'version': firm['version'],
+							'buildid': firm['buildid'], 
+							'type': firm['type']
 						})
 
 						blobs_saved += 1
 					else:
-						failed_info = f"{device['name']} - iOS {version} | {buildid}"
+						failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
 						print(f'Failed to save blobs for `{failed_info}`.')
 
 				device['saved_blobs'] = saved_versions
@@ -143,6 +143,10 @@ class TSS(commands.Cog):
 			print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}.")
 
 		self.blobs_loop = False
+
+	@auto_blob_saver.before_loop
+	async def before_auto_blob_saver(self):
+		await asyncio.sleep(1)
 
 	@commands.group(name='tss', invoke_without_command=True)
 	@commands.guild_only()
@@ -267,30 +271,29 @@ class TSS(commands.Cog):
 
 		for device in devices:
 			current_blobs_saved = blobs_saved
-
-			signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
 			saved_versions = device['saved_blobs']
 
-			for buildid in signed_buildids:
-				if any(buildid == firm['buildid'] for firm in saved_versions):
+			async with aiohttp.ClientSession() as session:
+				signed_firms = await self.utils.get_signed_buildids(session, device['identifier'])
+
+			for firm in signed_firms:
+				if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in saved_versions): # If we've already saved blobs for this version, skip
 					continue
 
-				version = await self.utils.buildid_to_version(device['identifier'], buildid)
-
 				async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-					manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
-					saved_blob = await self.save_blob(device, version, manifest)
+					manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+					saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 				if saved_blob is True:
 					saved_versions.append({
-						'version': version,
-						'buildid': buildid, 
-						'type': 'Release'
+						'version': firm['version'],
+						'buildid': firm['buildid'], 
+						'type': firm['type']
 					})
 
 					blobs_saved += 1
 				else:
-					failed_info = f"{device['name']} - iOS {version} | {buildid}"
+					failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
 					embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 					await message.edit(embed=embed)
 
@@ -391,30 +394,29 @@ class TSS(commands.Cog):
 
 			for device in devices:
 				current_blobs_saved = blobs_saved
-
-				signed_buildids = await self.utils.get_signed_buildids(device['identifier'])
 				saved_versions = device['saved_blobs']
 
-				for buildid in signed_buildids:
-					if any(buildid == firm['buildid'] for firm in saved_versions):
+				async with aiohttp.ClientSession() as session:
+					signed_firms = await self.utils.get_signed_buildids(session, device['identifier'])
+
+				for firm in signed_firms:
+					if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in saved_versions): # If we've already saved blobs for this version, skip
 						continue
 
-					version = await self.utils.buildid_to_version(device['identifier'], buildid)
-
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.utils.get_manifest, device['identifier'], buildid, tmpdir)
-						saved_blob = await self.save_blob(device, version, manifest)
+						manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+						saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 					if saved_blob is True:
 						saved_versions.append({
-							'version': version,
-							'buildid': buildid, 
-							'type': 'Release'
+							'version': firm['version'],
+							'buildid': firm['buildid'], 
+							'type': firm['type']
 						})
 
 						blobs_saved += 1
 					else:
-						failed_info = f"{device['name']} - iOS {version} | {buildid}"
+						failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
 						embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 						await message.edit(embed=embed)
 

@@ -102,12 +102,8 @@ class Utils(commands.Cog):
 
 		return True
 
-	def get_manifest(self, identifier, buildid, dir):
-		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-		api = requests.get(api_url).json()
-
-		firm = next(x['url'] for x in api['firmwares'] if x['buildid'] == buildid)
-		with remotezip.RemoteZip(firm) as ipsw:
+	def get_manifest(self, url, dir):
+		with remotezip.RemoteZip(url) as ipsw:
 			manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
 
 		with open(f'{dir}/BuildManifest.plist', 'wb') as f:
@@ -132,12 +128,42 @@ class Utils(commands.Cog):
 
 		return guild_prefix
 
-	async def get_signed_buildids(self, identifier):
+	async def get_signed_buildids(self, session, identifier):
 		api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-		async with aiohttp.ClientSession() as session, session.get(api_url) as resp:
+		async with session.get(api_url) as resp:
 			api = await resp.json()
 
-		return [x['buildid'] for x in api['firmwares'] if x['signed'] == True]
+		buildids = list()
+
+		for firm in [x for x in api['firmwares'] if x['signed'] == True]:
+			buildids.append({
+					'version': firm['version'],
+					'buildid': firm['buildid'],
+					'url': firm['url'],
+					'type': 'Release'
+
+				})
+
+		beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
+		async with session.get(beta_api_url) as resp:
+			if resp.status != 200:
+				beta_api = None
+			else:
+				beta_api = await resp.json()
+
+		if beta_api is None:
+			return buildids
+
+		for firm in [x for x in beta_api if x['signed'] == True]:
+			buildids.append({
+					'version': firm['version'],
+					'buildid': firm['buildid'],
+					'url': firm['url'],
+					'type': 'Beta'
+
+				})
+
+		return buildids
 
 	async def update_device_count(self):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:

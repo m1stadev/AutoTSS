@@ -9,6 +9,7 @@ import glob
 import json
 import os
 import shutil
+import time
 
 
 class TSS(commands.Cog):
@@ -16,6 +17,7 @@ class TSS(commands.Cog):
 		self.bot = bot
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
+		self.time = aioify(time, name='time')
 		self.utils = self.bot.get_cog('Utils')
 		self.blobs_loop = None
 		self.auto_blob_saver.start()
@@ -77,6 +79,7 @@ class TSS(commands.Cog):
 	async def auto_blob_saver(self):
 		self.blobs_loop = True
 
+		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
 
@@ -140,7 +143,8 @@ class TSS(commands.Cog):
 		if blobs_saved == 0:
 			print('[AUTO] No new blobs were saved.')
 		else:
-			print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}.")
+			total_time = round(await self.time.time() - start_time)
+			print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''} in {total_time} second{'s' if total_time == 1 else ''}.")
 
 		self.blobs_loop = False
 
@@ -251,6 +255,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
+		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
@@ -312,7 +317,8 @@ class TSS(commands.Cog):
 		if blobs_saved == 0:
 			description = 'No new blobs were saved.'
 		else:
-			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**."
+			total_time = round(await self.time.time() - start_time)
+			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}** in **{total_time} second{'s' if total_time != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)
@@ -370,6 +376,7 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
+		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
 
@@ -438,7 +445,8 @@ class TSS(commands.Cog):
 		if blobs_saved == 0:
 			description = 'No new blobs were saved.'
 		else:
-			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**."
+			total_time = round(await self.time.time() - start_time)
+			description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}** in **{total_time} second{'s' if total_time != 1 else ''}**."
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)

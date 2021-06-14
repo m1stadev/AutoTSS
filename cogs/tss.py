@@ -187,10 +187,10 @@ class TSS(commands.Cog):
 							failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
 							print(f'Failed to save blobs for `{failed_info}`.')
 
-					device['saved_blobs'] = saved_versions
-
 					if blobs_saved > current_blobs_saved:
 						devices_saved_for += 1
+
+					device['saved_blobs'] = saved_versions
 
 					async with aiosqlite.connect('Data/autotss.db') as db:
 						await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
@@ -361,10 +361,10 @@ class TSS(commands.Cog):
 						embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 						await message.edit(embed=embed)
 
-			device['saved_blobs'] = saved_versions
+				if blobs_saved > current_blobs_saved:
+					devices_saved_for += 1
 
-			if blobs_saved > current_blobs_saved:
-				devices_saved_for += 1
+				device['saved_blobs'] = saved_versions
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
 				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
@@ -489,10 +489,10 @@ class TSS(commands.Cog):
 							embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
 							await message.edit(embed=embed)
 
-				device['saved_blobs'] = saved_versions
+					if blobs_saved > current_blobs_saved:
+						devices_saved_for += 1
 
-				if blobs_saved > current_blobs_saved:
-					devices_saved_for += 1
+					device['saved_blobs'] = saved_versions
 
 				async with aiosqlite.connect('Data/autotss.db') as db:
 					await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))

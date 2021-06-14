@@ -274,7 +274,7 @@ class Device(commands.Cog):
 				else:
 					device['apnonce'] = answer
 
-					apnonce_check = await self.utils.check_apnonce(device['apnonce'])
+					apnonce_check = await self.utils.check_apnonce(cpid, device['apnonce'])
 					if apnonce_check is False:
 						embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

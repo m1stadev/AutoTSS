@@ -47,13 +47,18 @@ class Utils(commands.Cog):
 
 		return next(x['version'] for x in api['firmwares'] if x['buildid'] == buildid)
 
-	async def check_apnonce(self, nonce):
+	async def check_apnonce(self, cpid, nonce):
 		try:
 			int(nonce, 16)
 		except ValueError or TypeError:
 			return False
 
-		if len(nonce) not in (40, 64): # All ApNonce lengths are either 40 characters long, or 64 characters long
+		if cpid >= 32784: # A10+ device apnonce's are 64 characters long, 
+			apnonce_len = 64
+		else: # A9 and below device apnonce's are 40 characters.
+			apnonce_len = 40
+
+		if len(nonce) != apnonce_len:
 			return False
 
 		return True

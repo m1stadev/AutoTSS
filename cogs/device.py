@@ -521,6 +521,9 @@ class Device(commands.Cog):
 				f"Boardconfig: `{device['boardconfig']}`"
 			]
 
+			if device['generator'] is not None:
+				device_info.append(f"Custom generator: `{device['generator']}`")
+
 			if device['apnonce'] is not None:
 				device_info.append(f"Custom ApNonce: `{device['apnonce']}`")
 

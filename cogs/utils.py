@@ -88,6 +88,19 @@ class Utils(commands.Cog):
 
 		return True
 
+	async def check_generator(self, generator):
+		if not generator.startswith('0x'): # Generator must start wth '0x'
+			return
+		if len(generator) != 18: # Generator must be 18 characters long, including '0x' prefix
+			return
+
+		try:
+			int(generator, 16) # Generator must be hexadecimal
+		except:
+			return
+
+		return True
+
 	async def check_identifier(self, session, identifier):
 		async with session.get('https://api.ipsw.me/v2.1/firmwares.json') as resp:
 			if identifier not in (await resp.json())['devices']:

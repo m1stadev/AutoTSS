@@ -1,5 +1,5 @@
-from discord.ext import commands, tasks
 from aioify import aioify
+from discord.ext import commands, tasks
 import aiosqlite
 import asyncio
 import discord
@@ -143,8 +143,10 @@ class Events(commands.Cog):
 	async def on_command_error(self, ctx, error):
 		await self.bot.wait_until_ready()
 
+		embed = discord.Embed(title='Error')
+
 		if ctx.message.channel.type == discord.ChannelType.private:
-			embed = discord.Embed(title='Error', description='AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.')
+			embed.description='AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
 			await ctx.send(embed=embed)
 			return
 
@@ -153,11 +155,21 @@ class Events(commands.Cog):
 			if ctx.prefix.replace('!', '').replace(' ', '') == self.bot.user.mention:
 				return
 
-			embed = discord.Embed(title='Error', description=f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run.")
+			embed.description = f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run."
 			await ctx.send(embed=embed)
 		
 		elif isinstance(error, commands.MaxConcurrencyReached):
-			embed = discord.Embed(title='Error', description=f"You can't run `{prefix + ctx.command.qualified_name}` more than once at the same time!")
+			embed.description = f"You can't run `{prefix + ctx.command.qualified_name}` more than once at the same time!"
+			await ctx.send(embed=embed)
+
+		elif isinstance(error, commands.errors.CommandInvokeError):
+			if isinstance(error.original, discord.errors.Forbidden):
+				error_message = f"I don't have the proper permissions to run correctly! \
+					Please ping an Administrator and tell them to kick & re-invite me using \
+					[this]({self.utils.invite}) link to fix this issue."
+				
+				embed.description = error_message
+
 			await ctx.send(embed=embed)
 
 		else:

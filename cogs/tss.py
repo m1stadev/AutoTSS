@@ -24,38 +24,50 @@ class TSS(commands.Cog):
 
 	async def save_blob(self, device, version, manifest):
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-			args = ['tsschecker', '-d', device['identifier'], '-B', device['boardconfig'], '-e', '0x' + device['ecid'], '-m', manifest, '-s', '--save-path', tmpdir]
-			save_path = ('Data', 'Blobs', device['ecid'], version, 'no-apnonce')
-
-			if await self.os.path.exists('/'.join(save_path)):
-				if len(glob.glob(f"{'/'.join(save_path)}/*")) > 0:
-					blob_saved = True
-				else:
-					blob_saved = False
-			else:
-				blob_saved = False
-				await self.os.makedirs('/'.join(save_path))
-
+			base_args = ('tsschecker', '-d', device['identifier'], '-B', device['boardconfig'], '-e', '0x' + device['ecid'], '-m', manifest, '-s', '--save-path', tmpdir)
 			generators = ['0x1111111111111111', '0xbd34a880be0b53f3']
 
-			if blob_saved == False:
-				if device['generator'] is None:
-					if device['apnonce'] is not None: # If only ApNonce specified, only save specified apnonce blobs
-						args.append('--apnonce')
-						args.append(device['apnonce'])
+			apnonce_save_path = ('Data', 'Blobs', device['ecid'], version, device['apnonce'])
+			normal_save_path = ('Data', 'Blobs', device['ecid'], version, 'no-apnonce')
 
-						save_path = ('Data', 'Blobs', device['ecid'], version, device['apnonce'])
-						if await self.os.path.exists('/'.join(save_path)):
-							if len(glob.glob(f"{'/'.join(save_path)}/*")) > 0:
-								blob_saved = True
-							else:
-								blob_saved = False
-
+			if device['generator'] is None:
+				if device['apnonce'] is not None: # If only ApNonce specified, only save specified apnonce blobs
+					if await self.os.path.exists('/'.join(apnonce_save_path)):
+						if len(glob.glob(f"{'/'.join(apnonce_save_path)}/*")) > 0:
+							blob_saved = True
 						else:
 							blob_saved = False
-							await self.os.makedirs('/'.join(save_path))
 
-						if blob_saved == False:
+					else:
+						blob_saved = False
+						await self.os.makedirs('/'.join(apnonce_save_path))
+
+					if blob_saved == False:
+						args = (*base_args, '--apnonce', device['apnonce'])
+						cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+						stdout = (await cmd.communicate())[0]
+
+						if 'Saved shsh blobs!' not in stdout.decode():
+							print(stdout.decode())
+
+						for blob in glob.glob(f"{tmpdir}/*"):
+							blob_path = (*apnonce_save_path, blob.split('/')[-1])
+							await self.os.rename(blob, '/'.join(blob_path))
+
+				else: # If no generator/ApNonce specified, save for default generators
+					if await self.os.path.exists('/'.join(normal_save_path)):
+						if len(glob.glob(f"{'/'.join(normal_save_path)}/*")) > 0:
+							blob_saved = True
+						else:
+							blob_saved = False
+
+					else:
+						blob_saved = False
+						await self.os.makedirs('/'.join(normal_save_path))
+
+					if blob_saved == False:
+						for generator in generators:
+							args = (*base_args, '-g', generator)
 							cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
 							stdout = (await cmd.communicate())[0]
 
@@ -63,58 +75,50 @@ class TSS(commands.Cog):
 								return False
 
 							for blob in glob.glob(f"{tmpdir}/*"):
-								blob_path = (*save_path, blob.split('/')[-1])
-								await self.os.rename(blob, '/'.join(blob_path))
-
-					else: # If no generator/ApNonce specified, save for default generators
-						for generator in generators:
-							gen_args = (*args, '-g', generator)
-							cmd = await asyncio.create_subprocess_exec(*gen_args, stdout=asyncio.subprocess.PIPE)
-							stdout = (await cmd.communicate())[0]
-
-							if 'Saved shsh blobs!' not in stdout.decode():
-								return False
-
-							for blob in glob.glob(f"{tmpdir}/*"):
-								blob_path = '/'.join((*save_path, blob.split('/')[-1]))
+								blob_path = '/'.join((*normal_save_path, blob.split('/')[-1]))
 								await self.os.rename(blob, blob_path)
 
-
-				else:
-					if device['apnonce'] is not None: # If generator + ApNonce specified, only save for that combo
-						args.append('--apnonce')
-						args.append(device['apnonce'])
-						args.append('-g')
-						args.append(device['generator'])
-
-						save_path = ('Data', 'Blobs', device['ecid'], version, device['apnonce'])
-						if await self.os.path.exists('/'.join(save_path)):
-							if len(glob.glob(f"{'/'.join(save_path)}/*")) > 0:
-								blob_saved = True
-							else:
-								blob_saved = False
-
+			else:
+				if device['apnonce'] is not None: # If generator + ApNonce specified, only save for that combo
+					if await self.os.path.exists('/'.join(apnonce_save_path)):
+						if len(glob.glob(f"{'/'.join(apnonce_save_path)}/*")) > 0:
+							blob_saved = True
 						else:
 							blob_saved = False
-							await self.os.makedirs('/'.join(save_path))
 
-						if blob_saved == False:
-							cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
-							stdout = (await cmd.communicate())[0]
+					else:
+						blob_saved = False
+						await self.os.makedirs('/'.join(apnonce_save_path))
 
-							if 'Saved shsh blobs!' not in stdout.decode():
-								return False
+					if blob_saved == False:
+						args = (*base_args, '-g', device['generator'], '--apnonce', device['apnonce'])
+						cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+						stdout = (await cmd.communicate())[0]
 
-							for blob in glob.glob(f"{tmpdir}/*"):
-								blob_path = (*save_path, blob.split('/')[-1])
-								await self.os.rename(blob, '/'.join(blob_path))
+						if 'Saved shsh blobs!' not in stdout.decode():
+							return False
 
-					else: # If only generator specified, save for default generators + custom generator
-						if device['generator'] not in generators:
-							generators.append(device['generator'])
+						for blob in glob.glob(f"{tmpdir}/*"):
+							blob_path = (*apnonce_save_path, blob.split('/')[-1])
+							await self.os.rename(blob, '/'.join(blob_path))
 
+				else: # If only generator specified, save for default generators + custom generator
+					if device['generator'] not in generators:
+						generators.append(device['generator'])
+
+					if await self.os.path.exists('/'.join(normal_save_path)):
+						if len(glob.glob(f"{'/'.join(normal_save_path)}/*")) > 0:
+							blob_saved = True
+						else:
+							blob_saved = False
+
+					else:
+						blob_saved = False
+						await self.os.makedirs('/'.join(normal_save_path))
+
+					if blob_saved == False:
 						for generator in generators:
-							gen_args = (*args, '-g', generator)
+							gen_args = (*base_args, '-g', generator)
 							cmd = await asyncio.create_subprocess_exec(*gen_args, stdout=asyncio.subprocess.PIPE)
 							stdout = (await cmd.communicate())[0]
 
@@ -122,7 +126,7 @@ class TSS(commands.Cog):
 								return False
 
 							for blob in glob.glob(f"{tmpdir}/*"):
-								blob_path = '/'.join((*save_path, blob.split('/')[-1]))
+								blob_path = '/'.join((*normal_save_path, blob.split('/')[-1]))
 								await self.os.rename(blob, blob_path)
 
 		return True

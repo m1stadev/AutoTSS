@@ -22,7 +22,7 @@ class Utils(commands.Cog):
 	async def get_invite(self): self.invite = f'https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=93184'
 
 	@get_invite.before_loop
-	async def before_auto_blob_saver(self):
+	async def before_get_invite(self):
 		await self.bot.wait_until_ready()
 
 	async def backup_blobs(self, tmpdir, *ecids):

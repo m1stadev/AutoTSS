@@ -147,7 +147,6 @@ class TSS(commands.Cog):
 	@auto_blob_saver.before_loop
 	async def before_auto_blob_saver(self):
 		await self.bot.wait_until_ready()
-		await asyncio.sleep(1)
 
 	@commands.group(name='tss', invoke_without_command=True)
 	@commands.guild_only()

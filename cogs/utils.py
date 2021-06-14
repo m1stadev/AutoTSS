@@ -1,5 +1,5 @@
 from aioify import aioify
-from discord.ext import commands
+from discord.ext import commands, tasks
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -18,6 +18,14 @@ class Utils(commands.Cog):
 		self.os = aioify(os, name='os')
 		self.json = aioify(json, name='json')
 		self.shutil = aioify(shutil, name='shutil')
+		self.get_invite.start()
+
+	@tasks.loop(count=1)
+	async def get_invite(self): self.invite = f'https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=93184'
+
+	@get_invite.before_loop
+	async def before_auto_blob_saver(self):
+		await self.bot.wait_until_ready()
 
 	async def backup_blobs(self, tmpdir, *ecids):
 		await self.os.mkdir(f'{tmpdir}/Blobs')

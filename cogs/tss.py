@@ -97,7 +97,6 @@ class TSS(commands.Cog):
 		devices_saved_for = int()
 		cached_signed_buildids = dict()
 
-
 		async with aiohttp.ClientSession() as session:
 			for user_devices in all_devices:
 				user = user_devices[0]

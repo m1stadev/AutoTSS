@@ -47,7 +47,7 @@ class Device(commands.Cog):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = await self.json.loads((await cursor.fetchone())[0])
-			except IndexError:
+			except TypeError:
 				devices = list()
 				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
 				await db.commit()

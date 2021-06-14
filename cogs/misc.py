@@ -37,7 +37,7 @@ class Misc(commands.Cog):
 	@commands.command()
 	@commands.guild_only()
 	async def invite(self, ctx):
-		embed = discord.Embed(title='Invite', description=f'[Click here](https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=93184).')
+		embed = discord.Embed(title='Invite', description=f'[Click here]({self.utils.invite}).')
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 

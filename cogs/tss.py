@@ -107,7 +107,7 @@ class TSS(commands.Cog):
 					saved_versions = device['saved_blobs']
 
 					if device['identifier'] not in cached_signed_buildids.keys():
-							cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+						cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
 
 					signed_firms = cached_signed_buildids[device['identifier']]
 					for firm in signed_firms:
@@ -279,7 +279,7 @@ class TSS(commands.Cog):
 				saved_versions = device['saved_blobs']
 
 				if device['identifier'] not in cached_signed_buildids.keys():
-						cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+					cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
 
 				signed_firms = cached_signed_buildids[device['identifier']]
 				for firm in signed_firms:
@@ -405,7 +405,7 @@ class TSS(commands.Cog):
 					saved_versions = device['saved_blobs']
 
 					if device['identifier'] not in cached_signed_buildids.keys():
-							cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+						cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
 
 					signed_firms = cached_signed_buildids[device['identifier']]
 					for firm in signed_firms:

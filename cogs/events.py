@@ -1,15 +1,14 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 import aiosqlite
-import asyncio
 import discord
 import json
 import os
 
+
 class Events(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.json = aioify(json, name='json')
 		self.os = aioify(os, name='os')
 		self.utils = self.bot.get_cog('Utils')
 		self.auto_clean_db.start()
@@ -21,7 +20,7 @@ class Events(commands.Cog):
 			data = await cursor.fetchall()
 
 		for user_info in data:
-			devices = await self.json.loads(user_info[1])
+			devices = json.loads(user_info[1])
 			
 			if devices == list():
 				async with aiosqlite.connect('Data/autotss.db') as db:

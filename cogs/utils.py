@@ -8,7 +8,6 @@ import glob
 import json
 import os
 import remotezip
-import requests
 import shutil
 
 
@@ -16,7 +15,6 @@ class Utils(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.os = aioify(os, name='os')
-		self.json = aioify(json, name='json')
 		self.shutil = aioify(shutil, name='shutil')
 		self.get_invite.start()
 
@@ -103,7 +101,7 @@ class Utils(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
 			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = await self.json.loads((await cursor.fetchone())[0])
+				devices = json.loads((await cursor.fetchone())[0])
 
 		if any(x['name'] == name.lower() for x in devices):
 			return -1

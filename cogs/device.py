@@ -6,14 +6,12 @@ import aiosqlite
 import asyncio
 import discord
 import json
-import os
 import shutil
 
 
 class Device(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.json = aioify(json, name='json')
 		self.shutil = aioify(shutil, name='shutil')
 		self.utils = self.bot.get_cog('Utils')
 
@@ -46,10 +44,10 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchone())[0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except TypeError:
 				devices = list()
-				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, await self.json.dumps(devices), True))
+				await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
 				await db.commit()
 
 		if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
@@ -281,7 +279,7 @@ class Device(commands.Cog):
 		devices.append(device)
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
-			await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))
+			await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
 			await db.commit()
 
 		embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")
@@ -305,7 +303,7 @@ class Device(commands.Cog):
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchone())[0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = list()
 
@@ -415,7 +413,7 @@ class Device(commands.Cog):
 			devices.pop(num)
 
 			async with aiosqlite.connect('Data/autotss.db') as db:
-				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (await self.json.dumps(devices), ctx.author.id))
+				await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
 				await db.commit()
 
 			await message.edit(embed=embed)
@@ -429,7 +427,7 @@ class Device(commands.Cog):
 	async def list_devices(self, ctx):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
-				devices = await self.json.loads((await cursor.fetchone())[0])
+				devices = json.loads((await cursor.fetchone())[0])
 			except IndexError:
 				devices = list()
 

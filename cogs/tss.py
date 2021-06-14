@@ -7,7 +7,6 @@ import asyncio
 import discord
 import glob
 import json
-import time
 import os
 import shutil
 
@@ -17,7 +16,6 @@ class TSS(commands.Cog):
 		self.bot = bot
 		self.os = aioify(os, name='os')
 		self.shutil = aioify(shutil, name='shutil')
-		self.time = aioify(time, name='time')
 		self.utils = self.bot.get_cog('Utils')
 		self.blobs_loop = None
 		self.auto_blob_saver.start()

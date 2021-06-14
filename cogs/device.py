@@ -125,6 +125,7 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
+					cpid = await self.utils.get_cpid(session, device['identifier'])
 
 				elif x == 2:
 					if answer.startswith('0x'):
@@ -141,6 +142,7 @@ class Device(commands.Cog):
 
 						await message.edit(embed=embed)
 						return
+
 				else:
 					device['boardconfig'] = answer
 
@@ -151,11 +153,85 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
+			generator_description = [
+				'Would you like to save blobs with a custom generator?',
+				'*If being ran on A12+ devices, you **will** need to provide a matching apnonce. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*',
+				'This value is hexadecimal, 16 characters long, and begins with `0x`.'
+			]
+
+			embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
+			embed.add_field(name='Options', value='Type **yes** to add a custom generator, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await message.edit(embed=embed)
+
+			try:
+				response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+				answer = response.content.lower()
+			except asyncio.exceptions.TimeoutError:
+				await message.edit(embed=timeout_embed)
+				return
+
+			try:
+				await response.delete()
+			except discord.errors.NotFound:
+				pass
+
+			if answer == 'yes':
+				embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save blobs with.\nType `cancel` to cancel.')
+				embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+				await message.edit(embed=embed)
+
+				try:
+					response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+					answer = response.content.lower()
+				except asyncio.exceptions.TimeoutError:
+					await message.edit(embed=timeout_embed)
+					return
+
+				try:
+					await response.delete()
+				except discord.errors.NotFound:
+					pass
+
+				if answer == 'cancel' or answer.startswith(prefix):
+					await message.edit(embed=cancelled_embed)
+					return
+
+				else:
+					device['generator'] = answer
+
+					generator_check = await self.utils.check_generator(device['generator'])
+					if generator_check is False:
+						embed = discord.Embed(title='Error', description=f"Device Generator `{device['generator']}` is not valid.")
+						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+						await message.edit(embed=embed)
+						return
+
+			elif answer == 'cancel' or answer.startswith(prefix):
+				await message.edit(embed=cancelled_embed)
+				return
+			else:
+				device['generator'] = None
+
 			apnonce_description = [
 				'Would you like to save blobs with a custom apnonce?',
-				'*This is required on A12+ devices due to nonce entanglement, more info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*',
-				'NOTE: This is **NOT** the same as your **generator**, which begins with `0x` and is 16 characters long.'
 			]
+
+			if device['generator'] is not None:
+				apnonce_description.append(f"This custom apnonce MUST match with your custom generator `{device['generator']}`, or else your SHSH blobs **will be invalid**.")
+
+			if cpid >= 32800:
+				if len(apnonce_description) == 2:
+					a12_apnonce_desc = 'This also MUST be done for your device, or else your SHSH blobs **will be invalid**. More info \
+						[here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).'
+
+				else:
+					a12_apnonce_desc = 'This MUST be done for your device, or else your SHSH blobs **will be invalid**. More info \
+						[here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).'
+
+				apnonce_description.append(a12_apnonce_desc)
+
+			apnonce_description.append('NOTE: This is **NOT** the same as your **generator**, which is hex, begins with `0x`, and is 16 characters long.')
 
 			embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
 			embed.add_field(name='Options', value='Type **yes** to add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
@@ -211,11 +287,11 @@ class Device(commands.Cog):
 			else:
 				device['apnonce'] = None
 
-			if await self.utils.get_cpid(session, device['identifier']) >= 32800 and device['apnonce'] is None: # If A12+ and no apnonce was specified
+			if cpid >= 32800 and device['apnonce'] is None: # If A12+ and no apnonce was specified
 				embed = discord.Embed(title='Add Device')
 				apnonce_warning = (
 					'You are attempting to add an A12+ device while choosing to not specify a custom apnonce.',
-					'This **will** save non-working blobs.',
+					'This will save **non-working SHSH blobs**.',
 					'Are you sure you want to do this?'
 				)
 

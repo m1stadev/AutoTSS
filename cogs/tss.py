@@ -48,7 +48,7 @@ class TSS(commands.Cog):
 						stdout = (await cmd.communicate())[0]
 
 						if 'Saved shsh blobs!' not in stdout.decode():
-							print(stdout.decode())
+							return False
 
 						for blob in glob.glob(f"{tmpdir}/*"):
 							blob_path = (*apnonce_save_path, blob.split('/')[-1])

@@ -95,46 +95,50 @@ class TSS(commands.Cog):
 
 		blobs_saved = int()
 		devices_saved_for = int()
+		cached_signed_buildids = dict()
 
-		for user_devices in all_devices:
-			user = user_devices[0]
-			devices = json.loads(user_devices[1])
 
-			for device in devices:
-				current_blobs_saved = blobs_saved
-				saved_versions = device['saved_blobs']
+		async with aiohttp.ClientSession() as session:
+			for user_devices in all_devices:
+				user = user_devices[0]
+				devices = json.loads(user_devices[1])
 
-				async with aiohttp.ClientSession() as session:
-					signed_firms = await self.utils.get_signed_buildids(session, device['identifier'])
+				for device in devices:
+					current_blobs_saved = blobs_saved
+					saved_versions = device['saved_blobs']
 
-				for firm in signed_firms:
-					if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in saved_versions): # If we've already saved blobs for this version, skip
-						continue
+					if device['identifier'] not in cached_signed_buildids.keys():
+							cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
 
-					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-						manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
-						saved_blob = await self.save_blob(device, firm['version'], manifest)
+					signed_firms = cached_signed_buildids[device['identifier']]
+					for firm in signed_firms:
+						if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in saved_versions): # If we've already saved blobs for this version, skip
+							continue
 
-					if saved_blob is True:
-						saved_versions.append({
-							'version': firm['version'],
-							'buildid': firm['buildid'], 
-							'type': firm['type']
-						})
+						async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+							manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+							saved_blob = await self.save_blob(device, firm['version'], manifest)
 
-						blobs_saved += 1
-					else:
-						failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-						print(f'Failed to save blobs for `{failed_info}`.')
+						if saved_blob is True:
+							saved_versions.append({
+								'version': firm['version'],
+								'buildid': firm['buildid'], 
+								'type': firm['type']
+							})
 
-				device['saved_blobs'] = saved_versions
+							blobs_saved += 1
+						else:
+							failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
+							print(f'Failed to save blobs for `{failed_info}`.')
 
-				if blobs_saved > current_blobs_saved:
-					devices_saved_for += 1
+					device['saved_blobs'] = saved_versions
 
-				async with aiosqlite.connect('Data/autotss.db') as db:
-					await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
-					await db.commit()
+					if blobs_saved > current_blobs_saved:
+						devices_saved_for += 1
+
+					async with aiosqlite.connect('Data/autotss.db') as db:
+						await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
+						await db.commit()
 
 		if blobs_saved == 0:
 			print('[AUTO] No new blobs were saved.')

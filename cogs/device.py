@@ -126,8 +126,6 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
-					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-
 				elif x == 2:
 					if answer.startswith('0x'):
 						device['ecid'] = answer[2:]
@@ -158,6 +156,8 @@ class Device(commands.Cog):
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
 						return
+
+					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
 
 			generator_description = [
 				'Would you like to save blobs with a custom generator?',

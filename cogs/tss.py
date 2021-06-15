@@ -30,7 +30,7 @@ class TSS(commands.Cog):
 			apnonce_save_path = ('Data', 'Blobs', device['ecid'], version, device['apnonce'])
 			normal_save_path = ('Data', 'Blobs', device['ecid'], version, 'no-apnonce')
 
-			if device['generator'] is None:
+			if device['generator'] is None: #TODO: Make this less shit
 				if device['apnonce'] is not None: # If only ApNonce specified, only save specified apnonce blobs
 					if await self.os.path.exists('/'.join(apnonce_save_path)):
 						if len(glob.glob(f"{'/'.join(apnonce_save_path)}/*")) > 0:

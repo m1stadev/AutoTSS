@@ -43,7 +43,7 @@ def main():
 
 	check_tsschecker()
 
-	client = commands.Bot(command_prefix=get_prefix, help_command=None)
+	client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None)
 
 	client.load_extension('cogs.utils') # Load utils cog first
 

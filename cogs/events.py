@@ -18,15 +18,15 @@ class Events(commands.Cog):
 
 	@tasks.loop(minutes=5)
 	async def auto_clean_db(self):
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
 			data = await cursor.fetchall()
 
-		for user_info in data:
-			devices = json.loads(user_info[1])
+		for user_devices in data:
+			devices = json.loads(user_devices)
 			
 			if devices == list():
 				async with aiosqlite.connect('Data/autotss.db') as db:
-					await db.execute('DELETE FROM autotss WHERE user = ?', (user_info[0],))
+					await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices,))
 					await db.commit()
 
 	@auto_clean_db.before_loop
@@ -137,10 +137,10 @@ class Events(commands.Cog):
 	async def on_member_join(self, member):
 		await self.bot.wait_until_ready()
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (member.id,)) as cursor:
-			devices = await cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+			data = await cursor.fetchone()
 
-		if devices is None:
+		if data is None:
 			return
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
@@ -153,10 +153,10 @@ class Events(commands.Cog):
 	async def on_member_remove(self, member):
 		await self.bot.wait_until_ready()
 
-		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (member.id,)) as cursor:
-			devices = await cursor.fetchall()
+		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+			data = await cursor.fetchone()
 
-		if devices is None:
+		if data is None:
 			return
 
 		async with aiosqlite.connect('Data/autotss.db') as db:

@@ -9,23 +9,21 @@ import glob
 class Admin(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.utils = self.bot.get_cog('Utils')
 
-	def get_modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
+	async def get_modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
 	@commands.group(invoke_without_command=True)
 	@commands.is_owner()
 	async def module(self, ctx):
-		if ctx.prefix == f'<@!{self.bot.user.id}> ':
-			prefix = f'{ctx.prefix}`'
-		else:
-			prefix = f'`{ctx.prefix}'
+		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Module Commands')
-		embed.add_field(name='Edit', value=f'{prefix}module edit <module>`', inline=False)
-		embed.add_field(name='List', value=f'{prefix}module list`', inline=False)
-		embed.add_field(name='Load', value=f'{prefix}module load <module 1> <module 2>`', inline=False)
-		embed.add_field(name='Reload', value=f'{prefix}module reload <all/module 1> <module 2>`', inline=False)
-		embed.add_field(name='Unload', value=f'{prefix}module unload <module 1> <module 2>`', inline=False)
+		embed.add_field(name='Edit', value=f'`{prefix}module edit <module>`', inline=False)
+		embed.add_field(name='List', value=f'`{prefix}module list`', inline=False)
+		embed.add_field(name='Load', value=f'`{prefix}module load <module 1> <module 2>`', inline=False)
+		embed.add_field(name='Reload', value=f'`{prefix}module reload <all/module 1> <module 2>`', inline=False)
+		embed.add_field(name='Unload', value=f'`{prefix}module unload <module 1> <module 2>`', inline=False)
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 		await ctx.send(embed=embed)
 
@@ -33,7 +31,7 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def edit(self, ctx, *modules):
-		local_modules = self.get_modules()
+		local_modules = await self.get_modules()
 		modules = [module.lower() for module in modules]
 
 		if len(modules) > 1:
@@ -56,7 +54,7 @@ class Admin(commands.Cog):
 		message = await ctx.send(embed=embed)
 
 		try:
-			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+			answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
 		except asyncio.exceptions.TimeoutError:
 			embed = discord.Embed(title='Edit Module')
 			embed.add_field(name='Error', value='No response given in 1 minute, cancelling.')
@@ -118,7 +116,7 @@ class Admin(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	async def _list(self, ctx):
-		local_modules = self.get_modules()
+		local_modules = await self.get_modules()
 
 		embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(local_modules)}`")
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png')) 
@@ -128,7 +126,7 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def load(self, ctx, *modules):
-		local_modules = self.get_modules()
+		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		
 		if len(modules) > 1 or modules[0] == 'all':
@@ -188,7 +186,7 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def _reload(self, ctx, *modules):
-		local_modules = self.get_modules()
+		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		
 		if len(modules) > 1 or modules[0] == 'all':
@@ -252,7 +250,7 @@ class Admin(commands.Cog):
 	@commands.is_owner()
 	@commands.guild_only()
 	async def unload(self, ctx, *modules):
-		local_modules = self.get_modules()
+		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		
 		if len(modules) > 1 or modules[0] == 'all':

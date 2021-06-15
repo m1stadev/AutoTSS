@@ -1,3 +1,5 @@
 aiohttp
+aioify
 aiofiles
+aiosqlite
 discord.py

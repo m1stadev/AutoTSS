@@ -15,7 +15,6 @@ class Events(commands.Cog):
 
 	@tasks.loop(minutes=5)
 	async def auto_clean_db(self):
-		await self.bot.wait_until_ready()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss') as cursor:
 			data = await cursor.fetchall()
 
@@ -26,6 +25,10 @@ class Events(commands.Cog):
 				async with aiosqlite.connect('Data/autotss.db') as db:
 					await db.execute('DELETE FROM autotss WHERE user = ?', (user_info[0],))
 					await db.commit()
+
+	@auto_clean_db.before_loop
+	async def before_auto_clean_db(self):
+		await self.bot.wait_until_ready()
 
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):

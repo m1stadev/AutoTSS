@@ -14,6 +14,7 @@ class Events(commands.Cog):
 		self.os = aioify(os, name='os')
 		self.utils = self.bot.get_cog('Utils')
 		self.auto_clean_db.start()
+		#self.auto_invalid_device_check.start()
 
 	@tasks.loop(minutes=5)
 	async def auto_clean_db(self):

@@ -288,7 +288,7 @@ class Device(commands.Cog):
 			else:
 				device['apnonce'] = None
 
-			if cpid >= 32800 and device['apnonce'] is None: # If A12+ and no apnonce was specified
+			if 32800 <= cpid < 35072 and device['apnonce'] is None: # If A12+ and no apnonce was specified
 				embed = discord.Embed(title='Add Device')
 				apnonce_warning = (
 					'You are attempting to add an A12+ device while choosing to not specify a custom apnonce.',

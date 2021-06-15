@@ -22,11 +22,11 @@ class Events(commands.Cog):
 			data = await cursor.fetchall()
 
 		for user_devices in data:
-			devices = json.loads(user_devices)
+			devices = json.loads(user_devices[0])
 			
 			if devices == list():
 				async with aiosqlite.connect('Data/autotss.db') as db:
-					await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices,))
+					await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices[0],))
 					await db.commit()
 
 	@auto_clean_db.before_loop
@@ -159,11 +159,12 @@ class Events(commands.Cog):
 		if data is None:
 			return
 
-		async with aiosqlite.connect('Data/autotss.db') as db:
-			await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
-			await db.commit()
+		if len(member.mutual_guilds) == 0:
+			async with aiosqlite.connect('Data/autotss.db') as db:
+				await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
+				await db.commit()
 
-		await self.utils.update_device_count()
+			await self.utils.update_device_count()
 
 	@commands.Cog.listener()
 	async def on_message(self, message):

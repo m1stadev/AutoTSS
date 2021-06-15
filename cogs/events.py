@@ -44,7 +44,7 @@ class Events(commands.Cog):
 				devices = json.loads(userinfo[1])
 
 				for device in devices:
-					cpid = await self.utils.get_cpid(session, device['identifier'])
+					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
 
 					if (32800 <= cpid < 35072) and (device['apnonce'] is None):
 						if userid not in invalid_devices.keys():

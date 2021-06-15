@@ -73,7 +73,7 @@ class Misc(commands.Cog):
 		embed.add_field(name='Prefix', value=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!', inline=False)
 		embed.add_field(name='Creator', value=(await self.bot.fetch_user(728035061781495878)).mention, inline=False)
 		embed.add_field(name='Disclaimer', value='This should NOT be your only source for saving blobs. I am not at fault for any issues you may experience with AutoTSS.', inline=False)
-		embed.add_field(name='Notes', value='- There is a limit of 10 devices per user.\n- You must be in a server with AutoTSS, or your devices & blobs will be deleted. This **does not** have to be the same server that you added your devices to AutoTSS in.\n- Blobs are automatically saved every 30 minutes.', inline=False)
+		embed.add_field(name='Notes', value='- There is a limit of 10 devices per user.\n- You must be in a server with AutoTSS, or your SHSH blobs will no longer be automatically saved. This **does not** have to be the same server that you added your devices to AutoTSS in.\n- Blobs are automatically saved every 30 minutes.', inline=False)
 		embed.add_field(name='Source Code', value="AutoTSS's source code can be found on [GitHub](https://github.com/m1stadev/AutoTSS).", inline=False)
 		embed.add_field(name='Support', value='For any questions about AutoTSS, join my [discord](https://m1sta.xyz/discord).', inline=False)
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))

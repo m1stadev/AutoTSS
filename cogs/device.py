@@ -28,6 +28,7 @@ class Device(commands.Cog):
 
 		await ctx.send(embed=embed)
 
+
 	@device_cmd.command(name='add')
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)

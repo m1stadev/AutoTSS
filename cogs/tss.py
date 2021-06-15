@@ -255,6 +255,7 @@ class TSS(commands.Cog):
 
 		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
+
 		if message.channel.type == discord.ChannelType.private:
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 			await message.edit(embed=embed)

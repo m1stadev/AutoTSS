@@ -126,7 +126,7 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
-					cpid = await self.utils.get_cpid(session, device['identifier'])
+					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
 
 				elif x == 2:
 					if answer.startswith('0x'):
@@ -161,7 +161,9 @@ class Device(commands.Cog):
 
 			generator_description = [
 				'Would you like to save blobs with a custom generator?',
-				'*If being ran on A12+ devices, you **will** need to provide a matching apnonce. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*',
+				'*If being ran on A12+ devices, you **will** need to provide a matching apnonce for SHSH blobs to be saved correctly.*',
+				'Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/saving-blobs#getting-generator-and-apnonce-jailbroken-a12-only)',
+				'Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/saving-blobs#get-your-device-specific-apnonce-and-generator)',
 				'This value is hexadecimal, 16 characters long, and begins with `0x`.'
 			]
 

@@ -43,7 +43,10 @@ def main():
 
 	check_tsschecker()
 
-	client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None)
+	intents = discord.Intents.default()
+	intents.members = True
+
+	client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None, intents=intents)
 
 	client.load_extension('cogs.utils') # Load utils cog first
 
@@ -57,6 +60,8 @@ def main():
 		client.run(bot_token())
 	except discord.LoginFailure:
 		sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
+	except discord.errors.PrivilegedIntentsRequired:
+		sys.exit("[ERROR] Server Members Intent not enabled, go to 'https://discord.com/developers/applications/' and enable the Server Members Intent. Exiting.")
 
 if __name__ == '__main__':
 	main()

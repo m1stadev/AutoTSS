@@ -173,7 +173,10 @@ class TSS(commands.Cog):
 
 						async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 							manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
-							saved_blob = await self.save_blob(device, firm['version'], manifest)
+							if manifest == False:
+								saved_blob = False
+							else:
+								saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 						if saved_blob is True:
 							saved_versions.append({
@@ -348,7 +351,10 @@ class TSS(commands.Cog):
 
 					async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 						manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
-						saved_blob = await self.save_blob(device, firm['version'], manifest)
+						if manifest == False:
+							saved_blob = False
+						else:
+							saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 					if saved_blob is True:
 						saved_versions.append({
@@ -476,7 +482,10 @@ class TSS(commands.Cog):
 
 						async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 							manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
-							saved_blob = await self.save_blob(device, firm['version'], manifest)
+							if manifest == False:
+								saved_blob = False
+							else:
+								saved_blob = await self.save_blob(device, firm['version'], manifest)
 
 						if saved_blob is True:
 							saved_versions.append({

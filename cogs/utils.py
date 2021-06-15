@@ -133,8 +133,11 @@ class Utils(commands.Cog):
 		return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
 	def get_manifest(self, url, dir):
-		with remotezip.RemoteZip(url) as ipsw:
-			manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
+		try:
+			with remotezip.RemoteZip(url) as ipsw:
+				manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
+		except remotezip.RemoteIOError:
+			return False
 
 		with open(f'{dir}/BuildManifest.plist', 'wb') as f:
 			f.write(manifest)

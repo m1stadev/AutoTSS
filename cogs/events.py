@@ -2,6 +2,7 @@ from aioify import aioify
 from discord.ext import commands, tasks
 import aiohttp
 import aiosqlite
+import asyncio
 import discord
 import json
 import os
@@ -30,6 +31,7 @@ class Events(commands.Cog):
 	@auto_clean_db.before_loop
 	async def before_auto_clean_db(self):
 		await self.bot.wait_until_ready()
+		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@tasks.loop(hours=72)
 	async def auto_invalid_device_check(self, ctx): # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
@@ -88,6 +90,7 @@ class Events(commands.Cog):
 	@auto_invalid_device_check.before_loop
 	async def before_invalid_device_check(self):
 		await self.bot.wait_until_ready()
+		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@commands.Cog.listener()
 	async def on_guild_join(self, guild):

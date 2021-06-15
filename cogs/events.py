@@ -210,7 +210,7 @@ class Events(commands.Cog):
 		embed = discord.Embed(title='Error')
 
 		if ctx.message.channel.type == discord.ChannelType.private:
-			embed.description='AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
+			embed.description = 'AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
 			await ctx.send(embed=embed)
 			return
 
@@ -233,8 +233,9 @@ class Events(commands.Cog):
 					[this]({self.utils.invite}) link to fix this issue."
 				
 				embed.description = error_message
-
-			await ctx.send(embed=embed)
+				await ctx.send(embed=embed)
+			else:
+				raise error
 
 		else:
 			raise error

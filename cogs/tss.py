@@ -133,8 +133,11 @@ class TSS(commands.Cog):
 
 	@tasks.loop(minutes=30)
 	async def auto_blob_saver(self):
-		self.blobs_loop = True
+		if self.blobs_loop == True:
+			print('[AUTO] Manual blob saving currently running, not saving blobs.')
+			return
 
+		self.blobs_loop = True
 		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
@@ -440,6 +443,8 @@ class TSS(commands.Cog):
 			await ctx.send(embed=embed)
 			return
 
+		self.blobs_loop = True
+
 		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
@@ -453,6 +458,7 @@ class TSS(commands.Cog):
 		if num_devices == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
 			await ctx.send(embed=embed)
+			self.blobs_loop = False
 			return
 
 		embed = discord.Embed(title='Save Blobs', description='Saving blobs for all devices...')
@@ -517,6 +523,8 @@ class TSS(commands.Cog):
 
 		embed.add_field(name='Finished!', value=description, inline=False)
 		await message.edit(embed=embed)
+
+		self.blobs_loop = False
 
 def setup(bot):
 	bot.add_cog(TSS(bot))

@@ -95,14 +95,15 @@ class Utils(commands.Cog):
 
 	async def check_generator(self, generator):
 		if not generator.startswith('0x'): # Generator must start wth '0x'
-			return
+			return False
+
 		if len(generator) != 18: # Generator must be 18 characters long, including '0x' prefix
-			return
+			return False
 
 		try:
 			int(generator, 16) # Generator must be hexadecimal
 		except:
-			return
+			return False
 
 		return True
 

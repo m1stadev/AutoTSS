@@ -116,14 +116,12 @@ class Events(commands.Cog):
 		embed.add_field(name='Support', value='For any questions about AutoTSS, join my [Discord](https://m1sta.xyz/discord).', inline=False)
 		embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
 
-		for ch in guild.text_channels:
-			channel = self.bot.get_channel(ch.id)
-
+		for channel in guild.text_channels:
 			try:
 				await channel.send(embed=embed)
 				break
 			except:
-				continue
+				pass
 
 	@commands.Cog.listener()
 	async def on_guild_remove(self, guild):
@@ -230,12 +228,31 @@ class Events(commands.Cog):
 
 		elif isinstance(error, commands.errors.CommandInvokeError):
 			if isinstance(error.original, discord.errors.Forbidden):
-				error_message = f"I don't have the proper permissions to run correctly! \
+				embed.description = f"I don't have the proper permissions to run correctly! \
 					Please ping an Administrator and tell them to kick & re-invite me using \
 					[this]({self.utils.invite}) link to fix this issue."
-				
-				embed.description = error_message
-				await ctx.send(embed=embed)
+
+				message_sent = False
+				for channel in ctx.guild.text_channels:
+					try:
+						await channel.send(embed=embed)
+						message_sent = True
+						break
+					except:
+						pass
+
+				if message_sent:
+					return
+
+				try:
+					embed.description = f"I don't have the proper permissions to run correctly! \
+						Please kick me from `{ctx.guild.name}` & re-invite me using \
+						[this]({self.utils.invite}) link to fix this issue."
+
+					await ctx.guild.owner.send(embed=embed)
+				except: # We can't tell the user to tell an admin to fix our permissions, we can't DM the owner to fix it, we might as well leave.
+					await ctx.guild.leave()
+
 			else:
 				raise error
 

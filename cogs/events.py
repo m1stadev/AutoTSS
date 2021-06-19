@@ -1,5 +1,4 @@
 from aioify import aioify
-from discord.enums import NotificationLevel
 from discord.ext import commands, tasks
 import aiohttp
 import aiosqlite
@@ -44,7 +43,6 @@ class Events(commands.Cog):
 			return
 
 		invalid_devices = dict()
-
 		async with aiohttp.ClientSession() as session:
 			for userinfo in data:
 				userid = userinfo[0]
@@ -52,7 +50,11 @@ class Events(commands.Cog):
 				invalid_devices[userid] = list()
 
 				for device in devices:
-					if device['apnonce'] == device['generator']:
+					if (device['apnonce'] is not None) and (await self.utils.check_apnonce(device['apnonce']) == False):
+						invalid_devices[userid].append(device)
+						continue
+
+					if (device['generator'] is not None) and (await self.utils.check_generator(device['generator']) == False):
 						invalid_devices[userid].append(device)
 						continue
 
@@ -60,9 +62,7 @@ class Events(commands.Cog):
 					if (32800 <= cpid < 35072) and (device['apnonce'] is None):
 						invalid_devices[userid].append(device)
 
-		for userid in invalid_devices.keys():
-			user = await self.bot.fetch_user(userid)
-
+		for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:
 			embed = discord.Embed(title='Hey!')
 			embed.description = 'One or more of your devices were added incorrectly to AutoTSS, and are saving **non-working SHSH blobs**. \
 				To fix this, remove these devices then re-add them with custom apnonces:'
@@ -81,6 +81,8 @@ class Events(commands.Cog):
 					device_info.append(f"Custom ApNonce: `{device['apnonce']}`")
 
 				embed.add_field(name=f"`{device['name']}`", value='\n'.join(device_info), inline=False)
+
+				user = await self.bot.fetch_user(userid)
 
 				try:
 					await user.send(embed=embed)

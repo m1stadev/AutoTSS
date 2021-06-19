@@ -102,7 +102,6 @@ class Device(commands.Cog):
 				# Make sure given information is valid
 				if x == 0:
 					device['name'] = answer
-
 					name_check = await self.utils.check_name(device['name'], ctx.author.id)
 					if name_check != True:
 						embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
@@ -118,9 +117,7 @@ class Device(commands.Cog):
 
 				elif x == 1:
 					device['identifier'] = 'P'.join(answer.split('p'))
-
-					identifier_check = await self.utils.check_identifier(session, device['identifier'])
-					if identifier_check is False:
+					if await self.utils.check_identifier(session, device['identifier']) is False:
 						embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
@@ -149,9 +146,7 @@ class Device(commands.Cog):
 
 				else:
 					device['boardconfig'] = answer
-
-					boardconfig_check = await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig'])
-					if boardconfig_check is False:
+					if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
 						embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
@@ -207,9 +202,7 @@ class Device(commands.Cog):
 
 				else:
 					device['generator'] = answer
-
-					generator_check = await self.utils.check_generator(device['generator'])
-					if generator_check is False:
+					if await self.utils.check_generator(device['generator']) is False:
 						embed = discord.Embed(title='Error', description=f"Device Generator `{device['generator']}` is not valid.")
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
@@ -281,9 +274,7 @@ class Device(commands.Cog):
 
 				else:
 					device['apnonce'] = answer
-
-					apnonce_check = await self.utils.check_apnonce(cpid, device['apnonce'])
-					if apnonce_check is False:
+					if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
 						embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await message.edit(embed=embed)
@@ -343,9 +334,7 @@ class Device(commands.Cog):
 
 					else:
 						device['apnonce'] = answer
-
-						apnonce_check = await self.utils.check_apnonce(device['apnonce'])
-						if apnonce_check is False:
+						if await self.utils.check_apnonce(device['apnonce']) is False:
 							embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
 							embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 							await message.edit(embed=embed)

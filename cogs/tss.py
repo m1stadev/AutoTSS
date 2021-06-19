@@ -323,7 +323,7 @@ class TSS(commands.Cog):
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
-			except IndexError:
+			except TypeError:
 				devices = list()
 
 		if len(devices) == 0:

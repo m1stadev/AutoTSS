@@ -35,9 +35,12 @@ class Events(commands.Cog):
 		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@tasks.loop(hours=72)
-	async def auto_invalid_device_check(self, ctx): # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
+	async def auto_invalid_device_check(self): # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM autotss') as cursor:
 			data = await cursor.fetchall()
+
+		if len(data) == 0:
+			return
 
 		invalid_devices = dict()
 

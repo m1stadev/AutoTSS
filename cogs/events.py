@@ -50,7 +50,8 @@ class Events(commands.Cog):
 				invalid_devices[userid] = list()
 
 				for device in devices:
-					if (device['apnonce'] is not None) and (await self.utils.check_apnonce(device['apnonce']) == False):
+					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
+					if (device['apnonce'] is not None) and (await self.utils.check_apnonce(cpid, device['apnonce']) == False):
 						invalid_devices[userid].append(device)
 						continue
 
@@ -58,7 +59,6 @@ class Events(commands.Cog):
 						invalid_devices[userid].append(device)
 						continue
 
-					cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
 					if (32800 <= cpid < 35072) and (device['apnonce'] is None):
 						invalid_devices[userid].append(device)
 

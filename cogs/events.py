@@ -17,7 +17,7 @@ class Events(commands.Cog):
 		self.auto_invalid_device_check.start()
 
 	@tasks.loop(minutes=5)
-	async def auto_clean_db(self):
+	async def auto_clean_db(self) -> None:
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
 			data = await cursor.fetchall()
 
@@ -30,12 +30,12 @@ class Events(commands.Cog):
 					await db.commit()
 
 	@auto_clean_db.before_loop
-	async def before_auto_clean_db(self):
+	async def before_auto_clean_db(self) -> None:
 		await self.bot.wait_until_ready()
 		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@tasks.loop(hours=72)
-	async def auto_invalid_device_check(self): # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
+	async def auto_invalid_device_check(self) -> None: # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM autotss') as cursor:
 			data = await cursor.fetchall()
 
@@ -99,12 +99,12 @@ class Events(commands.Cog):
 						await db.commit()
 
 	@auto_invalid_device_check.before_loop
-	async def before_invalid_device_check(self):
+	async def before_invalid_device_check(self) -> None:
 		await self.bot.wait_until_ready()
 		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@commands.Cog.listener()
-	async def on_guild_join(self, guild):
+	async def on_guild_join(self, guild: discord.Guild) -> None:
 		await self.bot.wait_until_ready()
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
@@ -134,7 +134,7 @@ class Events(commands.Cog):
 				pass
 
 	@commands.Cog.listener()
-	async def on_guild_remove(self, guild):
+	async def on_guild_remove(self, guild: discord.Guild) -> None:
 		await self.bot.wait_until_ready()
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
@@ -142,7 +142,7 @@ class Events(commands.Cog):
 			await db.commit()
 
 	@commands.Cog.listener()
-	async def on_member_join(self, member):
+	async def on_member_join(self, member: discord.Member) -> None:
 		await self.bot.wait_until_ready()
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
@@ -158,7 +158,7 @@ class Events(commands.Cog):
 		await self.utils.update_device_count()
 
 	@commands.Cog.listener()
-	async def on_member_remove(self, member):
+	async def on_member_remove(self, member: discord.Member) -> None:
 		await self.bot.wait_until_ready()
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
@@ -175,7 +175,7 @@ class Events(commands.Cog):
 			await self.utils.update_device_count()
 
 	@commands.Cog.listener()
-	async def on_message(self, message):
+	async def on_message(self, message: discord.Message) -> None:
 		await self.bot.wait_until_ready()
 
 		if message.channel.type == discord.ChannelType.private:
@@ -189,7 +189,7 @@ class Events(commands.Cog):
 			await message.channel.send(embed=embed)
 
 	@commands.Cog.listener()
-	async def on_ready(self):
+	async def on_ready(self) -> None:
 		await self.os.makedirs('Data', exist_ok=True)
 
 		async with aiosqlite.connect('Data/autotss.db') as db:
@@ -214,7 +214,7 @@ class Events(commands.Cog):
 		print('AutoTSS is now online.')
 
 	@commands.Cog.listener()
-	async def on_command_error(self, ctx, error):
+	async def on_command_error(self, ctx: commands.Context, error) -> None:
 		await self.bot.wait_until_ready()
 
 		embed = discord.Embed(title='Error')

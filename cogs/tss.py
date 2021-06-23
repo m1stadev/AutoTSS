@@ -22,7 +22,7 @@ class TSS(commands.Cog):
 		self.blobs_loop = None
 		self.auto_blob_saver.start()
 
-	async def save_blob(self, device, version, manifest):
+	async def save_blob(self, device: dict, version: str, manifest: str) -> bool:
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 			base_args = ('tsschecker', '-d', device['identifier'], '-B', device['boardconfig'], '-e', '0x' + device['ecid'], '-m', manifest, '-s', '--save-path', tmpdir)
 			generators = ['0x1111111111111111', '0xbd34a880be0b53f3']
@@ -132,7 +132,7 @@ class TSS(commands.Cog):
 		return True
 
 	@tasks.loop(minutes=30)
-	async def auto_blob_saver(self):
+	async def auto_blob_saver(self) -> None:
 		if self.blobs_loop == True:
 			print('[AUTO] Manual blob saving currently running, not saving blobs.')
 			return
@@ -211,13 +211,13 @@ class TSS(commands.Cog):
 		self.blobs_loop = False
 
 	@auto_blob_saver.before_loop
-	async def before_auto_blob_saver(self):
+	async def before_auto_blob_saver(self) -> None:
 		await self.bot.wait_until_ready()
 		await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
 	@commands.group(name='tss', invoke_without_command=True)
 	@commands.guild_only()
-	async def tss_cmd(self, ctx):
+	async def tss_cmd(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='TSS Commands')
@@ -236,7 +236,7 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='download')
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def download_blobs(self, ctx):
+	async def download_blobs(self, ctx: commands.Context) -> None:
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
@@ -276,7 +276,7 @@ class TSS(commands.Cog):
 
 	@tss_cmd.command(name='list')
 	@commands.guild_only()
-	async def list_blobs(self, ctx):
+	async def list_blobs(self, ctx: commands.Context) -> None:
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = json.loads((await cursor.fetchone())[0])
@@ -313,7 +313,7 @@ class TSS(commands.Cog):
 	@tss_cmd.command(name='save')
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def save_blobs(self, ctx):
+	async def save_blobs(self, ctx: commands.Context) -> None:
 		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
 			await ctx.send(embed=embed)
@@ -394,7 +394,7 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def download_all_blobs(self, ctx):
+	async def download_all_blobs(self, ctx: commands.Context) -> None:
 		await ctx.message.delete()
 
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
@@ -437,7 +437,7 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.is_owner()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def save_all_blobs(self, ctx):
+	async def save_all_blobs(self, ctx: commands.Context) -> None:
 		if self.blobs_loop:
 			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
 			await ctx.send(embed=embed)

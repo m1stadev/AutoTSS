@@ -1,4 +1,8 @@
 # AutoTSS
+[![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
+[![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)]((https://github.com/m1stadev/AutoTSS))
+[![LoC](https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
+
 AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices.
 
 *Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
@@ -16,7 +20,7 @@ To locally host, follow these steps:
 0. Create a [Discord Bot](https://discord.com/developers/applications).
     - Under the bot menu, make sure to enable the 'Server Members Intent'.
 
-1. Build and install [tsschecker](https://github.com/DanTheMann15/tsschecker) and its dependencies.
+1. Build and install [tsschecker](https://github.com/1Conan/tsschecker) and its dependencies.
 
 2. Install the required libraries:
 `pip3 install -r requirements.txt`

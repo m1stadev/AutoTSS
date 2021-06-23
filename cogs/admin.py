@@ -15,7 +15,7 @@ class Admin(commands.Cog):
 
 	@commands.group(invoke_without_command=True)
 	@commands.is_owner()
-	async def module(self, ctx):
+	async def module(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Module Commands')
@@ -30,7 +30,7 @@ class Admin(commands.Cog):
 	@module.command()
 	@commands.is_owner()
 	@commands.guild_only()
-	async def edit(self, ctx, *modules):
+	async def edit(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = [module.lower() for module in modules]
 
@@ -115,7 +115,7 @@ class Admin(commands.Cog):
 	@module.command(name='list')
 	@commands.guild_only()
 	@commands.is_owner()
-	async def _list(self, ctx):
+	async def _list(self, ctx: commands.Context) -> None:
 		local_modules = await self.get_modules()
 
 		embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(local_modules)}`")
@@ -125,7 +125,7 @@ class Admin(commands.Cog):
 	@module.command()
 	@commands.is_owner()
 	@commands.guild_only()
-	async def load(self, ctx, *modules):
+	async def load(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		
@@ -185,7 +185,7 @@ class Admin(commands.Cog):
 	@module.command(name='reload')
 	@commands.is_owner()
 	@commands.guild_only()
-	async def _reload(self, ctx, *modules):
+	async def _reload(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		
@@ -249,7 +249,7 @@ class Admin(commands.Cog):
 	@module.command()
 	@commands.is_owner()
 	@commands.guild_only()
-	async def unload(self, ctx, *modules):
+	async def unload(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
 		

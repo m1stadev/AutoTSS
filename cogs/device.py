@@ -17,7 +17,7 @@ class Device(commands.Cog):
 
 	@commands.group(name='device', invoke_without_command=True)
 	@commands.guild_only()
-	async def device_cmd(self, ctx):
+	async def device_cmd(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Device Commands')
@@ -32,7 +32,7 @@ class Device(commands.Cog):
 	@device_cmd.command(name='add')
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def add_device(self, ctx):
+	async def add_device(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
@@ -364,7 +364,7 @@ class Device(commands.Cog):
 	@device_cmd.command(name='remove')
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
-	async def remove_device(self, ctx):
+	async def remove_device(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
@@ -497,7 +497,7 @@ class Device(commands.Cog):
 
 	@device_cmd.command(name='list')
 	@commands.guild_only()
-	async def list_devices(self, ctx):
+	async def list_devices(self, ctx: commands.Context) -> None:
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
 				devices = json.loads((await cursor.fetchone())[0])

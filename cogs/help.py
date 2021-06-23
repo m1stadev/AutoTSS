@@ -9,7 +9,7 @@ class Help(commands.Cog):
 
 	@commands.group(name='help', invoke_without_command=True)
 	@commands.guild_only()
-	async def help_command(self, ctx):
+	async def help_command(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Commands')
@@ -25,7 +25,7 @@ class Help(commands.Cog):
 
 	@help_command.command(name='device')
 	@commands.guild_only()
-	async def device_commands(self, ctx):
+	async def device_commands(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Device Commands')
@@ -37,7 +37,7 @@ class Help(commands.Cog):
 
 	@help_command.command(name='tss')
 	@commands.guild_only()
-	async def tss_commands(self, ctx):
+	async def tss_commands(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='TSS Commands')
@@ -54,7 +54,7 @@ class Help(commands.Cog):
 
 	@help_command.command(name='misc')
 	@commands.guild_only()
-	async def misc_commands(self, ctx):
+	async def misc_commands(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Miscellaneous Commands')
@@ -68,7 +68,7 @@ class Help(commands.Cog):
 	@help_command.command(name='admin')
 	@commands.guild_only()
 	@commands.is_owner()
-	async def admin_commands(self, ctx):
+	async def admin_commands(self, ctx: commands.Context) -> None:
 		prefix = await self.utils.get_prefix(ctx.guild.id)
 
 		embed = discord.Embed(title='Admin Commands')

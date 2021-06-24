@@ -8,7 +8,7 @@ AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theip
 *Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
 
 ## Disclaimer
-- This should NOT be your main reliance for saving blobs. I am not at fault for any issues you may experience with AutoTSS.
+- I am not at fault for any issues you may experience with AutoTSS.
 
 ## Features
 - Automatic blob saving

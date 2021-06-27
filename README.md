@@ -12,8 +12,9 @@ AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theip
 
 ## Features
 - Automatic blob saving
-- Custom apnonce+generator support
 - Beta SHSH blob saving support
+- Custom apnonce + generator support
+- Support for saving for multiple devices
 
 ## Setup
 To locally host, follow these steps:

@@ -95,7 +95,7 @@ class Device(commands.Cog):
 				except discord.errors.NotFound:
 					pass
 
-				if answer.lower() == 'cancel' or answer.startswith(prefix):
+				if 'cancel' in answer.lower() or answer.startswith(prefix):
 					await message.edit(embed=cancelled_embed)
 					return
 
@@ -196,7 +196,7 @@ class Device(commands.Cog):
 				except discord.errors.NotFound:
 					pass
 
-				if answer == 'cancel' or answer.startswith(prefix):
+				if 'cancel' in answer or answer.startswith(prefix):
 					await message.edit(embed=cancelled_embed)
 					return
 
@@ -208,7 +208,7 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
-			elif answer == 'cancel' or answer.startswith(prefix):
+			elif 'cancel' in answer or answer.startswith(prefix):
 				await message.edit(embed=cancelled_embed)
 				return
 			else:
@@ -268,7 +268,7 @@ class Device(commands.Cog):
 				except discord.errors.NotFound:
 					pass
 
-				if answer == 'cancel' or answer.startswith(prefix):
+				if 'cancel' in answer or answer.startswith(prefix):
 					await message.edit(embed=cancelled_embed)
 					return
 
@@ -280,7 +280,7 @@ class Device(commands.Cog):
 						await message.edit(embed=embed)
 						return
 
-			elif answer == 'cancel' or answer.startswith(prefix):
+			elif 'cancel' in answer or answer.startswith(prefix):
 				await message.edit(embed=cancelled_embed)
 				return
 			else:
@@ -328,7 +328,7 @@ class Device(commands.Cog):
 					except discord.errors.NotFound:
 						pass
 
-					if answer == 'cancel' or answer.startswith(prefix):
+					if 'cancel' in answer or answer.startswith(prefix):
 						await message.edit(embed=cancelled_embed)
 						return
 
@@ -340,7 +340,7 @@ class Device(commands.Cog):
 							await message.edit(embed=embed)
 							return
 
-				elif answer == 'cancel' or answer.startswith(prefix):
+				elif 'cancel' in answer or answer.startswith(prefix):
 					await message.edit(embed=cancelled_embed)
 					return
 				else:
@@ -414,7 +414,7 @@ class Device(commands.Cog):
 		except:
 			pass
 
-		if answer == 'cancel' or answer.startswith(prefix):
+		if 'cancel' in answer or answer.startswith(prefix):
 			await message.edit(embed=cancelled_embed)
 			return
 

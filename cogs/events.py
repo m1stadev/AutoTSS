@@ -23,7 +23,6 @@ class Events(commands.Cog):
 
 		for user_devices in data:
 			devices = json.loads(user_devices[0])
-			
 			if devices == list():
 				async with aiosqlite.connect('Data/autotss.db') as db:
 					await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices[0],))
@@ -231,7 +230,7 @@ class Events(commands.Cog):
 
 			embed.description = f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run."
 			await ctx.send(embed=embed)
-		
+
 		elif isinstance(error, commands.MaxConcurrencyReached):
 			embed.description = f"You can't run `{prefix + ctx.command.qualified_name}` more than once at the same time!"
 			await ctx.send(embed=embed)

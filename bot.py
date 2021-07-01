@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 
-def bot_token(): 
+def bot_token():
 	if os.getenv('AUTOTSS_TOKEN') is not None:
 		return os.getenv('AUTOTSS_TOKEN')
 	else:

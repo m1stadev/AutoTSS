@@ -128,7 +128,7 @@ class Admin(commands.Cog):
 	async def load(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
-		
+
 		if len(modules) > 1 or modules[0] == 'all':
 			embed = discord.Embed(title='Load Module')
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -188,7 +188,7 @@ class Admin(commands.Cog):
 	async def _reload(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
-		
+
 		if len(modules) > 1 or modules[0] == 'all':
 			embed = discord.Embed(title='Reload Module')
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -220,7 +220,6 @@ class Admin(commands.Cog):
 			embed.add_field(name='Finished', value=f"**{successful_reloads}** module{'s' if successful_reloads != 1 else ''} successfully reloaded, **{failed_reloads}** module{'s' if failed_reloads != 1 else ''} failed to reload.")
 			await message.edit(embed=embed)
 			return
-		
 
 		if modules[0] not in local_modules:
 			embed = discord.Embed(title='Reload Module')
@@ -252,7 +251,7 @@ class Admin(commands.Cog):
 	async def unload(self, ctx: commands.Context, *modules: list) -> None:
 		local_modules = await self.get_modules()
 		modules = sorted([module.lower() for module in modules])
-		
+
 		if len(modules) > 1 or modules[0] == 'all':
 			embed = discord.Embed(title='Unload Module')
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

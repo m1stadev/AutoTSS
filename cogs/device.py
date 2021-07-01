@@ -141,7 +141,6 @@ class Device(commands.Cog):
 						embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 						await asyncio.sleep(5)
 						await message.edit(embed=embed)
-						
 						return
 
 				else:

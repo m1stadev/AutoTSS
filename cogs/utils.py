@@ -72,7 +72,7 @@ class Utils(commands.Cog):
 		else:
 			return True
 
-	async def check_ecid(self, ecid: str, user: str) -> Union[int, bool]:
+	async def check_ecid(self, ecid: str) -> Union[int, bool]:
 		if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
 			return 0
 
@@ -82,11 +82,15 @@ class Utils(commands.Cog):
 			return 0
 
 		async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
-			async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-				devices = (await cursor.fetchone())[0]
+			async with db.execute('SELECT devices from autotss') as cursor:
+				try:
+					devices = [device[0] for device in (await cursor.fetchall())]
+				except TypeError:
+					return 0
 
-		if ecid in devices: # There's no need to convert the json string to a dict here
-			return -1
+		for device_info in devices:
+			if ecid in device_info: # There's no need to convert the json string to a dict here
+				return -1
 
 		return True
 

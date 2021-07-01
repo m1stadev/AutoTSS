@@ -129,7 +129,7 @@ class Device(commands.Cog):
 					else:
 						device['ecid'] = answer
 
-					ecid_check = await self.utils.check_ecid(device['ecid'], ctx.author.id)
+					ecid_check = await self.utils.check_ecid(device['ecid'])
 					if ecid_check != True:
 						embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
 						embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))

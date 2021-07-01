@@ -88,9 +88,8 @@ class Utils(commands.Cog):
 				except TypeError:
 					return 0
 
-		for device_info in devices:
-			if ecid in device_info: # There's no need to convert the json string to a dict here
-				return -1
+		if any(ecid in device_info for device_info in devices): # There's no need to convert the json string to a dict here
+			return -1
 
 		return True
 

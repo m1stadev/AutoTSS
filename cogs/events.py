@@ -6,12 +6,14 @@ import asyncio
 import discord
 import json
 import os
+import shutil
 
 
 class Events(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.os = aioify(os, name='os')
+		self.shutil = aioify(shutil, name='shutil')
 		self.utils = self.bot.get_cog('Utils')
 		self.auto_clean_db.start()
 		self.auto_invalid_device_check.start()

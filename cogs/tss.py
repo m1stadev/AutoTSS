@@ -22,13 +22,13 @@ class TSS(commands.Cog):
 		self.blobs_loop = None
 		self.auto_blob_saver.start()
 
-	async def save_blob(self, device: dict, version: str, manifest: str) -> bool:
+	async def save_blob(self, device: dict, version: str, buildid: str, manifest: str) -> bool:
 		async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
 			base_args = ('tsschecker', '-d', device['identifier'], '-B', device['boardconfig'], '-e', '0x' + device['ecid'], '-m', manifest, '-s', '--save-path', tmpdir)
 			generators = ['0x1111111111111111', '0xbd34a880be0b53f3']
 
-			apnonce_save_path = ('Data', 'Blobs', device['ecid'], version, device['apnonce'])
-			normal_save_path = ('Data', 'Blobs', device['ecid'], version, 'no-apnonce')
+			apnonce_save_path = ('Data', 'Blobs', device['ecid'], version, buildid, device['apnonce'])
+			normal_save_path = ('Data', 'Blobs', device['ecid'], version, buildid, 'no-apnonce')
 
 			if device['generator'] is None: #TODO: Make this less shit
 				if device['apnonce'] is not None: # If only ApNonce specified, only save specified apnonce blobs
@@ -179,7 +179,7 @@ class TSS(commands.Cog):
 							if manifest == False:
 								saved_blob = False
 							else:
-								saved_blob = await self.save_blob(device, firm['version'], manifest)
+								saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest)
 
 						if saved_blob is True:
 							saved_versions.append({
@@ -357,7 +357,7 @@ class TSS(commands.Cog):
 						if manifest == False:
 							saved_blob = False
 						else:
-							saved_blob = await self.save_blob(device, firm['version'], manifest)
+							saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest)
 
 					if saved_blob is True:
 						saved_versions.append({
@@ -491,7 +491,7 @@ class TSS(commands.Cog):
 							if manifest == False:
 								saved_blob = False
 							else:
-								saved_blob = await self.save_blob(device, firm['version'], manifest)
+								saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest)
 
 						if saved_blob is True:
 							saved_versions.append({

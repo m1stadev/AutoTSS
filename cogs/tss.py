@@ -314,11 +314,6 @@ class TSS(commands.Cog):
 	@commands.guild_only()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def save_blobs(self, ctx: commands.Context) -> None:
-		if self.blobs_loop:
-			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
-			await ctx.send(embed=embed)
-			return
-
 		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
 			try:
@@ -328,6 +323,11 @@ class TSS(commands.Cog):
 
 		if len(devices) == 0:
 			embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
+			await ctx.send(embed=embed)
+			return
+
+		if self.blobs_loop:
+			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
 			await ctx.send(embed=embed)
 			return
 
@@ -438,28 +438,26 @@ class TSS(commands.Cog):
 	@commands.is_owner()
 	@commands.max_concurrency(1, per=commands.BucketType.user)
 	async def save_all_blobs(self, ctx: commands.Context) -> None:
-		if self.blobs_loop:
-			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
-			await ctx.send(embed=embed)
-			return
-
-		self.blobs_loop = True
-
 		start_time = await self.time.time()
 		async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
 			all_devices = await cursor.fetchall()
 
 		num_devices = int()
 		for user_devices in all_devices:
-			devices = json.loads(user_devices[1])
-
-			num_devices += len(devices)
+			num_devices += len(json.loads(user_devices[1]))
 
 		if num_devices == 0:
 			embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
 			await ctx.send(embed=embed)
 			self.blobs_loop = False
 			return
+
+		if self.blobs_loop:
+			embed = discord.Embed(title='Error', description="I'm already saving blobs right now!")
+			await ctx.send(embed=embed)
+			return
+
+		self.blobs_loop = True
 
 		embed = discord.Embed(title='Save Blobs', description='Saving blobs for all devices...')
 		embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

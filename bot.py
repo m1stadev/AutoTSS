@@ -6,7 +6,7 @@ import discord
 import glob
 import os
 import platform
-import subprocess
+import shutil
 import sys
 
 
@@ -18,8 +18,7 @@ def bot_token():
 
 
 def check_tsschecker():
-	tsschecker_check = subprocess.run('which tsschecker', stdout=subprocess.DEVNULL, shell=True)
-	if tsschecker_check.returncode != 0:
+	if shutil.which('tsschecker') is None:
 		sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
 

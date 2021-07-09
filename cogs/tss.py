@@ -293,12 +293,12 @@ class TSS(commands.Cog):
 
 		blobs_saved = int()
 		for device in devices:
-			blobs = device['saved_blobs']
+			blobs = sorted(device['saved_blobs'], key=lambda firm: firm['buildid'])
 			blobs_saved += len(blobs)
 
 			blobs_list = list()
-			for blob in blobs:
-				blobs_list.append(f"`iOS {blob['version']} | {blob['buildid']}`")
+			for firm in blobs:
+				blobs_list.append(f"`iOS {firm['version']} | {firm['buildid']}`")
 
 			if len(blobs_list) == 0:
 				embed.add_field(name=device['name'], value='No blobs saved.', inline=False)

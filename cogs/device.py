@@ -531,7 +531,7 @@ class Device(commands.Cog):
 		await asyncio.sleep(10)
 
 		for x in range(len(embed.fields)):
-			field_values = [value for value in embed.fields[x].value.split('\n') if 'ECID' not in value]
+			field_values = [value for value in embed.fields[x].value.splitlines() if 'ECID' not in value]
 			embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values), inline=False)
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 

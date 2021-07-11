@@ -260,8 +260,13 @@ class TSS(commands.Cog):
 			ecids = [device['ecid'] for device in devices]
 			url = await self.utils.backup_blobs(tmpdir, *ecids)
 
-		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
+		if url is None:
+			embed = discord.Embed(title='Error', description='Currently, you do not have any saved blobs in AutoTSS. Please wait for AutoTSS to save blobs for you before attempting to download them.')
+			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+			await message.edit(embed=embed)
+			return
 
+		embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
 		if message.channel.type == discord.ChannelType.private:
 			embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

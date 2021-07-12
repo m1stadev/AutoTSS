@@ -139,7 +139,7 @@ class TSS(commands.Cog):
 							if manifest == False:
 								saved_blob = False
 							else:
-								saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest)
+								saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
 						if saved_blob is True:
 							saved_versions.append({
@@ -322,7 +322,7 @@ class TSS(commands.Cog):
 						if manifest == False:
 							saved_blob = False
 						else:
-							saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest)
+							saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
 					if saved_blob is True:
 						saved_versions.append({

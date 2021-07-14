@@ -514,7 +514,8 @@ class Device(commands.Cog):
 			device_info = [
 				f"Device Identifier: `{device['identifier']}`",
 				f"ECID: ||`{device['ecid']}`||",
-				f"Boardconfig: `{device['boardconfig']}`"
+				f"Boardconfig: `{device['boardconfig']}`",
+				f"Blobs saved: **{len(device['saved_blobs'])}**"
 			]
 
 			if device['generator'] is not None:

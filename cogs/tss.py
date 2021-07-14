@@ -422,8 +422,6 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        self.blobs_loop = True
-
         embed = discord.Embed(title='Save Blobs', description='Saving blobs for all devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
@@ -431,6 +429,7 @@ class TSS(commands.Cog):
         blobs_saved = int()
         devices_saved_for = int()
         cached_signed_buildids = dict()
+        self.blobs_loop = True
 
         async with aiohttp.ClientSession() as session:
             for user_devices in all_devices:
@@ -478,6 +477,8 @@ class TSS(commands.Cog):
                     await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                     await db.commit()
 
+        self.blobs_loop = False
+
         if blobs_saved == 0:
             description = 'No new blobs were saved.'
         else:
@@ -486,8 +487,6 @@ class TSS(commands.Cog):
 
         embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
-
-        self.blobs_loop = False
 
 def setup(bot):
     bot.add_cog(TSS(bot))

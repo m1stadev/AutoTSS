@@ -151,8 +151,6 @@ class Device(commands.Cog):
                         await message.edit(embed=embed)
                         return
 
-                    cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-
             generator_description = [
                 'Would you like to save blobs with a custom generator?',
                 '*If being ran on A12+ devices, you **will** need to provide a matching apnonce for SHSH blobs to be saved correctly.*',
@@ -220,6 +218,7 @@ class Device(commands.Cog):
             if device['generator'] is not None:
                 apnonce_description.append(f"This custom apnonce MUST match with your custom generator `{device['generator']}`, or else your SHSH blobs **will be invalid**.")
 
+            cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
             if cpid >= 32800:
                 if len(apnonce_description) == 2:
                     a12_apnonce_desc = 'This also MUST be done for your device, or else your SHSH blobs **will be invalid**. More info \
@@ -333,7 +332,7 @@ class Device(commands.Cog):
 
                     else:
                         device['apnonce'] = answer
-                        if await self.utils.check_apnonce(device['apnonce']) is False:
+                        if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
                             embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
                             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                             await message.edit(embed=embed)

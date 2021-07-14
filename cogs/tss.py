@@ -91,13 +91,12 @@ class TSS(commands.Cog):
 
         return True
 
-    @tasks.loop(minutes=30)
+    @tasks.loop()
     async def auto_blob_saver(self) -> None:
         if self.blobs_loop == True:
             print('[AUTO] Manual blob saving currently running, not saving blobs.')
             return
 
-        self.blobs_loop = True
         start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = await cursor.fetchall()
@@ -114,6 +113,7 @@ class TSS(commands.Cog):
         blobs_saved = int()
         devices_saved_for = int()
         cached_signed_buildids = dict()
+        self.blobs_loop = True
 
         async with aiohttp.ClientSession() as session:
             for user_devices in all_devices:
@@ -160,13 +160,15 @@ class TSS(commands.Cog):
                         await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                         await db.commit()
 
+        self.blobs_loop = False
+
         if blobs_saved == 0:
             print('[AUTO] No new blobs were saved.')
         else:
             total_time = round(await self.time.time() - start_time)
             print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''} in {total_time} second{'s' if total_time != 1 else ''}.")
 
-        self.blobs_loop = False
+        await asyncio.sleep(1800)
 
     @auto_blob_saver.before_loop
     async def before_auto_blob_saver(self) -> None:

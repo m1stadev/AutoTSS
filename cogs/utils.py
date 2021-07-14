@@ -122,7 +122,10 @@ class Utils(commands.Cog):
 
         async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
             async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-                devices = json.loads((await cursor.fetchone())[0])
+                try:
+                    devices = json.loads((await cursor.fetchone())[0])
+                except:
+                    return True
 
         if any(x['name'] == name.lower() for x in devices):
             return -1

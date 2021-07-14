@@ -30,7 +30,7 @@ class Admin(commands.Cog):
     @module.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def edit(self, ctx: commands.Context, *cogs) -> None:
+    async def edit(self, ctx: commands.Context, *cogs: str) -> None:
         local_modules = await self.get_modules()
         modules = [cog.lower() for cog in cogs]
 
@@ -125,7 +125,7 @@ class Admin(commands.Cog):
     @module.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def load(self, ctx: commands.Context, *cogs) -> None:
+    async def load(self, ctx: commands.Context, *cogs: str) -> None:
         local_modules = await self.get_modules()
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -185,7 +185,7 @@ class Admin(commands.Cog):
     @module.command(name='reload')
     @commands.is_owner()
     @commands.guild_only()
-    async def _reload(self, ctx: commands.Context, *cogs) -> None:
+    async def _reload(self, ctx: commands.Context, *cogs: str) -> None:
         local_modules = await self.get_modules()
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -248,7 +248,7 @@ class Admin(commands.Cog):
     @module.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def unload(self, ctx: commands.Context, *cogs) -> None:
+    async def unload(self, ctx: commands.Context, *cogs: str) -> None:
         local_modules = await self.get_modules()
         modules = sorted([cog.lower() for cog in cogs])
 

@@ -538,7 +538,5 @@ class Device(commands.Cog):
 
         await message.edit(embed=embed)
 
-
-
 def setup(bot):
     bot.add_cog(Device(bot))

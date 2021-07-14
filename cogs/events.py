@@ -187,7 +187,10 @@ class Events(commands.Cog):
         if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
             embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
             embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
-            await message.channel.send(embed=embed)
+            try:
+                await message.channel.send(embed=embed)
+            except:
+                pass
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:

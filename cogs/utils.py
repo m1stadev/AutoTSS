@@ -198,6 +198,61 @@ class Utils(commands.Cog):
 
         return buildids
 
+    async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
+        notes = (
+            'There is a limit of 10 devices per user.',
+            "You must share a server with AutoTSS, or else AutoTSS won't automatically save SHSH blobs for you.",
+            'AutoTSS checks for SHSH blobs that need to be saved every 30 minutes.'
+        )
+
+        embed = {
+            'title': "Hey, I'm AutoTSS!",
+            'thumbnail': {
+                'url': str(self.bot.user.avatar_url_as(static_format='png'))
+            },
+            'fields': [{
+                'name': 'What do I do?',
+                'value': 'I can automatically save SHSH blobs for all of your iOS devices!',
+                'inline': False
+            },
+            {
+                'name': 'Disclaimer',
+                'value': 'I am not at fault for any issues you may experience with AutoTSS',
+                'inline': False
+            },
+            {
+                'name': 'Support',
+                'value': 'For AutoTSS support, join my [Discord](https://m1sta.xyz/discord)',
+                'inline': False
+            },
+            {
+                'name': 'Prefix',
+                'value': f'My prefix is `{prefix}`',
+                'inline': True
+            },
+            {
+                'name': 'Add Device',
+                'value': f'`{prefix}devices add`',
+                'inline': True
+            },
+            {
+                'name': 'Save Blobs',
+                'value': f'`{prefix}tss save`',
+                'inline': True
+            },
+            {
+                'name': 'Notes',
+                'value': '- '+ '\n- '.join(notes),
+                'inline': False
+            }],
+            'footer': {
+                'text': member.display_name,
+                'icon_url': str(member.avatar_url_as(static_format='png'))
+            }
+        }
+
+        return discord.Embed.from_dict(embed)
+
     async def update_device_count(self) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = (await cursor.fetchall())

@@ -226,6 +226,11 @@ class Utils(commands.Cog):
                 'inline': False
             },
             {
+                'name': 'All Commands',
+                'value': f'`{prefix}help`',
+                'inline': True
+            },
+            {
                 'name': 'Add Device',
                 'value': f'`{prefix}devices add`',
                 'inline': True
@@ -233,11 +238,6 @@ class Utils(commands.Cog):
             {
                 'name': 'Save Blobs',
                 'value': f'`{prefix}tss save`',
-                'inline': True
-            },
-            {
-                'name': 'Commands',
-                'value': f'`{prefix}help`',
                 'inline': True
             },
             {

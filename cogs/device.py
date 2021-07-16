@@ -523,7 +523,7 @@ class Device(commands.Cog):
             if device['apnonce'] is not None:
                 device_info.append(f"Custom ApNonce: `{device['apnonce']}`")
 
-            embed.add_field(name=f"`{device['name']}`", value='\n'.join(device_info), inline=False)
+            embed.add_field(name=f"`{device['name']}`", value='\n'.join(device_info))
 
         embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
@@ -532,7 +532,7 @@ class Device(commands.Cog):
 
         for x in range(len(embed.fields)):
             field_values = [value for value in embed.fields[x].value.splitlines() if 'ECID' not in value]
-            embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values), inline=False)
+            embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values))
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)

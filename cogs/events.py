@@ -177,7 +177,7 @@ class Events(commands.Cog):
         prefix = await self.utils.get_prefix(message.guild.id)
 
         if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
-            embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see what I can do, run `{prefix}help`!')
+            embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see all of my commands, run `{prefix}help`.')
             embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
             try:
                 await message.channel.send(embed=embed)

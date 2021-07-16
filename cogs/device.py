@@ -27,8 +27,8 @@ class Device(commands.Cog):
         embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
         if await ctx.bot.is_owner(ctx.author):
             embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
 

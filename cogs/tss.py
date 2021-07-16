@@ -183,16 +183,14 @@ class TSS(commands.Cog):
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='TSS Commands')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
         embed.add_field(name='Download all blobs saved for your devices', value=f'`{prefix}tss download`', inline=False)
         embed.add_field(name='List all blobs saved for your devices', value=f'`{prefix}tss list`', inline=False)
         embed.add_field(name='Save blobs for all of your devices', value=f'`{prefix}tss save`', inline=False)
-
         if await ctx.bot.is_owner(ctx.author):
             embed.add_field(name='Download blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
             embed.add_field(name='Save blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
     @tss_cmd.command(name='download')

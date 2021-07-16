@@ -24,6 +24,7 @@ class Admin(commands.Cog):
         embed.add_field(name='Load', value=f'`{prefix}module load <module 1> <module 2>`', inline=False)
         embed.add_field(name='Reload', value=f'`{prefix}module reload <all/module 1> <module 2>`', inline=False)
         embed.add_field(name='Unload', value=f'`{prefix}module unload <module 1> <module 2>`', inline=False)
+
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 

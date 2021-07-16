@@ -33,6 +33,8 @@ class Help(commands.Cog):
         embed.add_field(name='Add a device', value=f'`{prefix}devices add`', inline=False)
         embed.add_field(name='Remove a device', value=f'`{prefix}devices remove`', inline=False)
         embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
+        if await ctx.bot.is_owner(ctx.author):
+            embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
         await ctx.send(embed=embed)
 
     @help_command.command(name='tss')

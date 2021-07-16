@@ -1,5 +1,6 @@
 from aioify import aioify
 from discord.ext import commands
+from typing import Union
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -24,6 +25,8 @@ class Device(commands.Cog):
         embed.add_field(name='Add a device', value=f'`{prefix}devices add`', inline=False)
         embed.add_field(name='Remove a device', value=f'`{prefix}devices remove`', inline=False)
         embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
+        if await ctx.bot.is_owner(ctx.author):
+            embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         await ctx.send(embed=embed)
@@ -535,6 +538,96 @@ class Device(commands.Cog):
             embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values))
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
+        await message.edit(embed=embed)
+
+    @device_cmd.command(name='transfer')
+    @commands.guild_only()
+    @commands.is_owner()
+    @commands.max_concurrency(1, per=commands.BucketType.user)
+    async def transfer_devices(self, ctx: commands.Context, old_member: Union[discord.User, int], new_member: Union[discord.User, int]) -> None:
+        prefix = await self.utils.get_prefix(ctx.guild.id)
+
+        cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
+        invalid_embed = discord.Embed(title='Error')
+        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 1 minute, cancelling.')
+
+        for x in (cancelled_embed, invalid_embed, timeout_embed):
+            x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+
+        if self.bot.get_cog('TSS').blobs_loop == True: # Avoid any potential conflict with transferring devices while blobs are being saved
+            invalid_embed.description = "I'm currently automatically saving blobs, please wait until I'm finished to transfer devices."
+            await ctx.send(embed=invalid_embed)
+            return
+
+        if type(old_member) == int:
+            old_member = await self.bot.fetch_user(old_member)
+            if old_member is None:
+                invalid_embed.description = "The member specified to transfer devices from doesn't exist!"
+                await ctx.send(embed=invalid_embed)
+                return
+
+        if type(new_member) == int:
+            new_member = await self.bot.fetch_user(new_member)
+            if new_member is None:
+                invalid_embed.description = "The member specified to transfer devices to doesn't exist!"
+                await ctx.send(embed=invalid_embed)
+                return
+
+        if old_member.id == new_member.id:
+            invalid_embed.description = "Silly goose, you can't transfer devices between the same user!"
+            await ctx.send(embed=invalid_embed)
+            return
+
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT devices from autotss WHERE user = ?', (old_member.id,)) as cursor:
+                try:
+                    old_devices = json.loads((await cursor.fetchone())[0])
+                except TypeError:
+                    old_devices = list()
+
+            async with db.execute('SELECT devices from autotss WHERE user = ?', (new_member.id,)) as cursor:
+                try:
+                    new_devices = json.loads((await cursor.fetchone())[0])
+                except TypeError:
+                    new_devices = list()
+
+        if len(old_devices) == 0:
+            invalid_embed.description = f'{old_member.mention} has no devices added to AutoTSS!'
+            await ctx.send(embed=invalid_embed)
+            return
+
+        if len(new_devices) > 0:
+            invalid_embed.description = f'{new_member.mention} has devices added to AutoTSS already.'
+            await ctx.send(embed=invalid_embed)
+            return
+
+        embed = discord.Embed(title='Transfer Devices')
+        embed.description = f"Are you sure you'd like to transfer {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}?\n\
+                            Type `yes` to transfer the devices, or anything else to cancel."
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        message = await ctx.send(embed=embed)
+
+        try:
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+            answer = response.content.lower()
+        except asyncio.exceptions.TimeoutError:
+            await message.edit(embed=timeout_embed)
+            return
+
+        try:
+            await response.delete()
+        except:
+            pass
+
+        if answer != 'yes' or answer.startswith(prefix):
+            await message.edit(embed=cancelled_embed)
+            return
+
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            await db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new_member.id, old_member.id))
+            await db.commit()
+
+        embed.description = f"Successfully transferred {old_member.mention}'s {len(old_devices)} device{'s' if len(old_devices) != 1 else ''} to {new_member.mention}."
         await message.edit(embed=embed)
 
 def setup(bot):

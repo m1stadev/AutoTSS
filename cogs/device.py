@@ -15,15 +15,15 @@ class Device(commands.Cog):
         self.shutil = aioify(shutil, name='shutil')
         self.utils = self.bot.get_cog('Utils')
 
-    @commands.group(name='device', invoke_without_command=True)
+    @commands.group(name='devices', aliases=('device',), invoke_without_command=True)
     @commands.guild_only()
     async def device_cmd(self, ctx: commands.Context) -> None:
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='Device Commands')
-        embed.add_field(name='Add a device', value=f'`{prefix}device add`', inline=False)
-        embed.add_field(name='Remove a device', value=f'`{prefix}device remove`', inline=False)
-        embed.add_field(name='List your devices', value=f'`{prefix}device list`', inline=False)
+        embed.add_field(name='Add a device', value=f'`{prefix}devices add`', inline=False)
+        embed.add_field(name='Remove a device', value=f'`{prefix}devices remove`', inline=False)
+        embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         await ctx.send(embed=embed)

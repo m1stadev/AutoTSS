@@ -30,9 +30,9 @@ class Help(commands.Cog):
 
         embed = discord.Embed(title='Device Commands')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        embed.add_field(name='Add a device', value=f'`{prefix}device add`', inline=False)
-        embed.add_field(name='Remove a device', value=f'`{prefix}device remove`', inline=False)
-        embed.add_field(name='List your devices', value=f'`{prefix}device list`', inline=False)
+        embed.add_field(name='Add a device', value=f'`{prefix}devices add`', inline=False)
+        embed.add_field(name='Remove a device', value=f'`{prefix}devices remove`', inline=False)
+        embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
         await ctx.send(embed=embed)
 
     @help_command.command(name='tss')

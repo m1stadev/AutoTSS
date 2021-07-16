@@ -200,9 +200,9 @@ class Utils(commands.Cog):
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (
-            'There is a limit of 10 devices per user.',
-            "You must share a server with AutoTSS, or else AutoTSS won't automatically save SHSH blobs for you.",
-            'AutoTSS checks for SHSH blobs that need to be saved every 30 minutes.'
+            'There is a limit of **10 devices per user**.',
+            "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
+            'AutoTSS checks for new versions to save SHSH blobs for **every 30 minutes**.'
         )
 
         embed = {
@@ -226,11 +226,6 @@ class Utils(commands.Cog):
                 'inline': False
             },
             {
-                'name': 'Prefix',
-                'value': f'My prefix is `{prefix}`',
-                'inline': True
-            },
-            {
                 'name': 'Add Device',
                 'value': f'`{prefix}devices add`',
                 'inline': True
@@ -238,6 +233,11 @@ class Utils(commands.Cog):
             {
                 'name': 'Save Blobs',
                 'value': f'`{prefix}tss save`',
+                'inline': True
+            },
+            {
+                'name': 'Commands',
+                'value': f'`{prefix}help`',
                 'inline': True
             },
             {

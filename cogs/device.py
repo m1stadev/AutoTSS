@@ -578,6 +578,11 @@ class Device(commands.Cog):
             await ctx.send(embed=invalid_embed)
             return
 
+        if new_member.bot == True:
+            invalid_embed.description = 'You cannot transfer devices to a bot account.'
+            await ctx.send(embed=invalid_embed)
+            return
+   
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT devices from autotss WHERE user = ?', (old_member.id,)) as cursor:
                 try:

@@ -262,7 +262,8 @@ class Events(commands.Cog):
             else:
                 raise error
 
-        elif isinstance(error, commands.errors.NotOwner):
+        elif (isinstance(error, commands.errors.NotOwner)) or \
+        (isinstance(error, commands.MissingPermissions)):
             return
 
         else:

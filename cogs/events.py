@@ -206,6 +206,15 @@ class Events(commands.Cog):
                 ''')
             await db.commit()
 
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS whitelist(
+                guild INTEGER,
+                channel INTEGER,
+                enabled BOOLEAN
+                )
+                ''')
+            await db.commit()
+
         await self.utils.update_device_count()
         print('AutoTSS is now online.')
 

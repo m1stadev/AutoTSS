@@ -1,6 +1,6 @@
 from aioify import aioify
 from discord.ext import commands
-from typing import Union
+from typing import Optional, Union
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -197,6 +197,15 @@ class Utils(commands.Cog):
                 })
 
         return buildids
+
+    async def get_whitelist(self, guild) -> Optional[bool]:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT enabled FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+            data = await cursor.fetchone()
+
+        if data == None:
+            return data
+        else:
+            return data[2]
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (

@@ -229,7 +229,7 @@ class Events(commands.Cog):
             await ctx.send(embed=embed)
 
         elif isinstance(error, commands.MaxConcurrencyReached):
-            embed.description = f"You can't run `{prefix + ctx.command.qualified_name}` more than once at the same time!"
+            embed.description = f"`{prefix + ctx.command.qualified_name}` cannot be ran more than once at the same time!"
             await ctx.send(embed=embed)
 
         elif isinstance(error, commands.errors.CommandInvokeError):

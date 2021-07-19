@@ -198,11 +198,14 @@ class Utils(commands.Cog):
 
         return buildids
 
-    async def get_whitelist(self, guild) -> Optional[bool]:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT enabled FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+    async def get_whitelist(self, guild) -> Optional[Union[bool, discord.TextChannel]]:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
-        return None if data == None else data[2]
+        if (data == None) or (data[2] == False):
+            return None
+
+        return await self.bot.fetch_channel(data[1])
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (

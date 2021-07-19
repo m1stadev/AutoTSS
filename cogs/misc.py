@@ -13,6 +13,13 @@ class Misc(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def prefix(self, ctx: commands.Context, *, prefix: str = None) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         if prefix is None:
             prefix = await self.utils.get_prefix(ctx.guild.id)
             embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
@@ -37,6 +44,13 @@ class Misc(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def invite(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         embed = discord.Embed(title='Invite', description=f'[Click here]({await self.utils.invite}).')
         embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -46,6 +60,13 @@ class Misc(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def ping(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         num = random.randint(0, 1500)
 
         if num == 69: # nothing like some easter eggs, right?
@@ -66,6 +87,13 @@ class Misc(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def info(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
         embed = await self.utils.info_embed(prefix, ctx.author)
         await ctx.send(embed=embed)

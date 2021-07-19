@@ -202,10 +202,7 @@ class Utils(commands.Cog):
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT enabled FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
-        if data == None:
-            return data
-        else:
-            return data[2]
+        return None if data == None else data[2]
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (

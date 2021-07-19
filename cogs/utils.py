@@ -205,7 +205,10 @@ class Utils(commands.Cog):
         if (data == None) or (data[2] == False):
             return None
 
-        return await self.bot.fetch_channel(data[1])
+        try:
+            return await self.bot.fetch_channel(data[1])
+        except discord.errors.NotFound:
+            return None
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (

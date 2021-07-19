@@ -20,7 +20,7 @@ class TSS(commands.Cog):
         self.time = aioify(time, name='time')
         self.utils = self.bot.get_cog('Utils')
         self.blobs_loop = None
-        self.auto_blob_saver.start()
+        #self.auto_blob_saver.start()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()
@@ -180,6 +180,13 @@ class TSS(commands.Cog):
     @commands.group(name='tss', invoke_without_command=True)
     @commands.guild_only()
     async def tss_cmd(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='TSS Commands')
@@ -197,6 +204,13 @@ class TSS(commands.Cog):
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
@@ -242,6 +256,13 @@ class TSS(commands.Cog):
     @tss_cmd.command(name='list')
     @commands.guild_only()
     async def list_blobs(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
@@ -279,6 +300,13 @@ class TSS(commands.Cog):
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
@@ -360,6 +388,13 @@ class TSS(commands.Cog):
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_all_blobs(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         await ctx.message.delete()
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
@@ -403,6 +438,13 @@ class TSS(commands.Cog):
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_all_blobs(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = await cursor.fetchall()

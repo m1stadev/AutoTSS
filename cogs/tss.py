@@ -111,6 +111,8 @@ class TSS(commands.Cog):
             self.blobs_loop = False
             return
 
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving blobs!'))
+
         blobs_saved = int()
         devices_saved_for = int()
         cached_signed_buildids = dict()
@@ -171,6 +173,7 @@ class TSS(commands.Cog):
             for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''} \
             in {total_time} second{'s' if total_time != 1 else ''}.")
 
+        await self.utils.update_device_count()
         await asyncio.sleep(1800)
 
     @auto_blob_saver.before_loop
@@ -446,6 +449,8 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving blobs!'))
+
         start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = await cursor.fetchall()
@@ -527,6 +532,8 @@ class TSS(commands.Cog):
         else:
             total_time = round(await self.time.time() - start_time)
             description = f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}** in **{total_time} second{'s' if total_time != 1 else ''}**."
+
+        await self.utils.update_device_count()
 
         embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)

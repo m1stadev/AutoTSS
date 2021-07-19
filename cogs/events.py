@@ -236,7 +236,6 @@ class Events(commands.Cog):
         whitelist = await self.utils.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.send(embed=embed)
             return
 
@@ -281,6 +280,10 @@ class Events(commands.Cog):
 
             else:
                 raise error
+
+        elif isinstance(error, commands.ChannelNotFound):
+            embed = discord.Embed(title='Error', description='That channel does not exist.')
+            await ctx.send(embed=embed)
 
         elif (isinstance(error, commands.errors.NotOwner)) or \
         (isinstance(error, commands.MissingPermissions)):

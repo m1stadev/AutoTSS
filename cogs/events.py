@@ -174,9 +174,13 @@ class Events(commands.Cog):
         if message.channel.type == discord.ChannelType.private:
             return
 
-        prefix = await self.utils.get_prefix(message.guild.id)
-
         if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
+            whitelist = await self.utils.get_whitelist(message.guild.id)
+            if (whitelist is not None) and (whitelist.id != message.channel.id):
+                return
+
+            prefix = await self.utils.get_prefix(message.guild.id)
+
             embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see all of my commands, run `{prefix}help`.')
             embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
             try:
@@ -227,6 +231,10 @@ class Events(commands.Cog):
         if ctx.message.channel.type == discord.ChannelType.private:
             embed.description = 'AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
             await ctx.send(embed=embed)
+            return
+
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)

@@ -60,10 +60,11 @@ class TSS(commands.Cog):
             generators.append(device['generator'])
 
         path = '/'.join(save_path)
-        if (await self.os.path.isdir(path)) and (len(glob.glob(f'{path}/*.shsh*')) > 0):
-            return True
-        else:
+        if not await self.os.path.isdir(path):
             await self.os.makedirs(path)
+
+        if len(glob.glob(f'{path}/*.shsh*')) > 0:
+            return True
 
         if len(generators) == 0:
             cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)

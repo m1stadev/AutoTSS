@@ -19,6 +19,13 @@ class Device(commands.Cog):
     @commands.group(name='devices', aliases=('device',), invoke_without_command=True)
     @commands.guild_only()
     async def device_cmd(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='Device Commands')
@@ -36,6 +43,13 @@ class Device(commands.Cog):
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def add_device(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
@@ -366,6 +380,13 @@ class Device(commands.Cog):
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def remove_device(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
@@ -499,6 +520,13 @@ class Device(commands.Cog):
     @device_cmd.command(name='list')
     @commands.guild_only()
     async def list_devices(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
@@ -545,6 +573,13 @@ class Device(commands.Cog):
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def transfer_devices(self, ctx: commands.Context, old_member: Union[discord.User, int], new_member: Union[discord.User, int]) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')

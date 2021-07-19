@@ -63,10 +63,10 @@ class Whitelist(commands.Cog):
 
                     embed = discord.Embed(title='Whitelist')
                     embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for {self.bot.user.mention} to {channel.mention}."
+                    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             else:
                 embed = discord.Embed(title='Error', description='No whitelist channel is set.')
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
 
 def setup(bot):

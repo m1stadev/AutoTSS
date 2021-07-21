@@ -305,7 +305,7 @@ class Device(commands.Cog):
                 embed = discord.Embed(title='Add Device')
                 apnonce_warning = (
                     'You are attempting to add an A12+ device while choosing to not specify a custom apnonce.',
-                    'This will save **non-working SHSH blobs**.',
+                    'This will save **invalid SHSH blobs**.',
                     'Are you sure you want to do this?'
                 )
 

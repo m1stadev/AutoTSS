@@ -73,9 +73,6 @@ class TSS(commands.Cog):
             if 'Saved shsh blobs!' not in stdout.decode():
                 return False
 
-            for blob in glob.glob(f"{tmpdir}/*.shsh*"):
-                await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
-
         else:
             args.append('-g')
             for gen in generators:
@@ -86,9 +83,10 @@ class TSS(commands.Cog):
                 if 'Saved shsh blobs!' not in stdout.decode():
                     return False
 
-                for blob in glob.glob(f'{tmpdir}/*.shsh*'):
-                    await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
                 args.pop(-1)
+
+        for blob in glob.glob(f'{tmpdir}/*.shsh*'):
+            await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
 
         return True
 

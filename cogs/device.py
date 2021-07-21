@@ -169,7 +169,7 @@ class Device(commands.Cog):
                         return
 
             generator_description = [
-                'Would you like to save blobs with a custom generator?',
+                'Would you like to save SHSH blobs with a custom generator?',
                 '*If being ran on A12+ devices, you **will** need to provide a matching apnonce for SHSH blobs to be saved correctly.*',
                 'Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-web#getting-generator-and-apnonce-jailbroken-a12-only)',
                 'Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-computer#get-your-device-specific-apnonce-and-generator)',
@@ -194,7 +194,7 @@ class Device(commands.Cog):
                 pass
 
             if answer == 'yes':
-                embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save blobs with.\nType `cancel` to cancel.')
+                embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
 
@@ -229,7 +229,7 @@ class Device(commands.Cog):
                 device['generator'] = None
 
             apnonce_description = [
-                'Would you like to save blobs with a custom apnonce?',
+                'Would you like to save SHSH blobs with a custom apnonce?',
             ]
 
             if device['generator'] is not None:
@@ -267,7 +267,7 @@ class Device(commands.Cog):
                 pass
 
             if answer == 'yes':
-                embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
+                embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
 
@@ -327,7 +327,7 @@ class Device(commands.Cog):
                     pass
 
                 if answer == 'yes':
-                    embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save blobs with.\nType `cancel` to cancel.')
+                    embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                     await message.edit(embed=embed)
 
@@ -451,7 +451,7 @@ class Device(commands.Cog):
             return
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
-        embed.add_field(name='Options', value='Type **yes** to delete your device & blobs from AutoTSS, or anything else to cancel.', inline=False)
+        embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         await message.edit(embed=embed)
@@ -485,7 +485,7 @@ class Device(commands.Cog):
                 await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
 
                 embed = discord.Embed(title='Remove Device')
-                embed.description = f"Blobs from `{devices[num]['name']}`: [Click here]({url})"
+                embed.description = f"SHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
                 try:
@@ -493,7 +493,7 @@ class Device(commands.Cog):
                     embed.description = f"Device `{devices[num]['name']}` removed."
                     await message.edit(embed=embed)
                 except:
-                    embed.description = f"Device `{devices[num]['name']}` removed.\nBlobs from `{devices[num]['name']}`: [Click here]({url})"
+                    embed.description = f"Device `{devices[num]['name']}` removed.\nSHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
                     embed.set_footer(
                         text=f'{ctx.author.display_name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
                         icon_url=ctx.author.avatar_url_as(static_format='png')
@@ -545,7 +545,7 @@ class Device(commands.Cog):
                 f"Device Identifier: `{device['identifier']}`",
                 f"ECID: ||`{device['ecid']}`||",
                 f"Boardconfig: `{device['boardconfig']}`",
-                f"Blobs saved: **{len(device['saved_blobs'])}**"
+                f"SHSH Blobs saved: **{len(device['saved_blobs'])}**"
             ]
 
             if device['generator'] is not None:
@@ -590,7 +590,7 @@ class Device(commands.Cog):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         if self.bot.get_cog('TSS').blobs_loop == True: # Avoid any potential conflict with transferring devices while blobs are being saved
-            invalid_embed.description = "I'm currently automatically saving blobs, please wait until I'm finished to transfer devices."
+            invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
             await ctx.send(embed=invalid_embed)
             return
 

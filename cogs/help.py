@@ -90,9 +90,10 @@ class Help(commands.Cog):
 
         embed = discord.Embed(title='Miscellaneous Commands')
         embed.add_field(name='AutoTSS Info & Help', value=f'`{prefix}info`', inline=False)
-        embed.add_field(name='Change the command prefix for AutoTSS', value=f'`{prefix}prefix <prefix>`', inline=False)
         embed.add_field(name='AutoTSS invite', value=f'`{prefix}invite`', inline=False)
         embed.add_field(name='AutoTSS ping', value=f'`{prefix}ping`', inline=False)
+        if ctx.author.guild_permissions.administrator:
+            embed.add_field(name="Change AutoTSS's prefix", value=f'`{prefix}prefix <prefix>`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)

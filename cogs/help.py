@@ -89,10 +89,10 @@ class Help(commands.Cog):
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='Miscellaneous Commands')
-        embed.add_field(name='Change the command prefix for AutoTSS', value=f'`{prefix}prefix <prefix>`', inline=False)
-        embed.add_field(name='Get the invite for this bot', value=f'`{prefix}invite`', inline=False)
-        embed.add_field(name='See the latency of this bot', value=f'`{prefix}ping`', inline=False)
         embed.add_field(name='AutoTSS Info & Help', value=f'`{prefix}info`', inline=False)
+        embed.add_field(name='Change the command prefix for AutoTSS', value=f'`{prefix}prefix <prefix>`', inline=False)
+        embed.add_field(name='AutoTSS invite', value=f'`{prefix}invite`', inline=False)
+        embed.add_field(name='AutoTSS ping', value=f'`{prefix}ping`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)

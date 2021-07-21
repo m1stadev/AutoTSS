@@ -84,21 +84,21 @@ class Events(commands.Cog):
 
                 embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
 
-                user = await self.bot.fetch_user(userid)
+            user = await self.bot.fetch_user(userid)
 
-                try:
-                    await user.send(embed=embed)
-                except: # The device is already saving invalid blobs, so no point in continuing to save blobs for it if we can't contact the user about it.
-                    await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
+            try:
+                await user.send(embed=embed)
+            except: # The device is already saving invalid blobs, so no point in continuing to save blobs for it if we can't contact the user about it.
+                await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
 
-                    async with aiosqlite.connect('Data/autotss.db') as db:
-                        async with db.execute('SELECT devices FROM autotss WHERE user = ?', (userid,)) as cursor:
-                            devices = json.loads((await cursor.fetchone())[0])
+                async with aiosqlite.connect('Data/autotss.db') as db:
+                    async with db.execute('SELECT devices FROM autotss WHERE user = ?', (userid,)) as cursor:
+                        devices = json.loads((await cursor.fetchone())[0])
 
-                        devices.pop(next(devices.index(x) for x in devices if x['ecid'] == device['ecid']))
+                    devices.pop(next(devices.index(x) for x in devices if x['ecid'] == device['ecid']))
 
-                        await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), userid))
-                        await db.commit()
+                    await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), userid))
+                    await db.commit()
 
     @auto_invalid_device_check.before_loop
     async def before_invalid_device_check(self) -> None:

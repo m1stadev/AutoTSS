@@ -274,7 +274,7 @@ class Utils(commands.Cog):
             devices = json.loads(user_devices[0])
             num_devices += len(devices)
 
-        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}"))
+        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def upload_file(self, file: str, name: str) -> str:
         async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:

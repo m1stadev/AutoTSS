@@ -94,10 +94,9 @@ class Events(commands.Cog):
             except:
                 pass
 
-            for device in invalid_devices[userid]:
-                await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
-
-                async with aiosqlite.connect('Data/autotss.db') as db:
+            async with aiosqlite.connect('Data/autotss.db') as db:
+                for device in invalid_devices[userid]:
+                    await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
                     async with db.execute('SELECT devices FROM autotss WHERE user = ?', (userid,)) as cursor:
                         devices = json.loads((await cursor.fetchone())[0])
 

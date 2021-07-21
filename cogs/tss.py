@@ -93,7 +93,7 @@ class TSS(commands.Cog):
     @tasks.loop()
     async def auto_blob_saver(self) -> None:
         if self.blobs_loop == True:
-            print('[AUTO] Manual blob saving currently running, not saving blobs.')
+            print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
             return
 
         start_time = await self.time.time()
@@ -105,11 +105,11 @@ class TSS(commands.Cog):
             num_devices += len(json.loads(user_devices[1]))
 
         if num_devices == 0:
-            print('[AUTO] No blobs need to be saved.')
+            print('[AUTO] No SHSH blobs need to be saved.')
             self.blobs_loop = False
             return
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving blobs!'))
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
 
         blobs_saved = int()
         devices_saved_for = int()
@@ -150,7 +150,7 @@ class TSS(commands.Cog):
                             blobs_saved += 1
                         else:
                             failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                            print(f"Failed to save blobs for '{failed_info}'.")
+                            print(f"Failed to save SHSH blobs for '{failed_info}'.")
 
                     if blobs_saved > current_blobs_saved:
                         devices_saved_for += 1
@@ -164,11 +164,11 @@ class TSS(commands.Cog):
         self.blobs_loop = False
 
         if blobs_saved == 0:
-            print('[AUTO] No new blobs were saved.')
+            print('[AUTO] No new SHSH blobs were saved.')
         else:
             total_time = round(await self.time.time() - start_time)
             output = (
-                f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''}",
+                f"[AUTO] Saved {blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}",
                 f"for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}",
                 f"in {total_time} second{'s' if total_time != 1 else ''}."
             )
@@ -195,12 +195,12 @@ class TSS(commands.Cog):
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='TSS Commands')
-        embed.add_field(name='Download all blobs saved for your devices', value=f'`{prefix}tss download`', inline=False)
-        embed.add_field(name='List all blobs saved for your devices', value=f'`{prefix}tss list`', inline=False)
-        embed.add_field(name='Save blobs for all of your devices', value=f'`{prefix}tss save`', inline=False)
+        embed.add_field(name='Download all SHSH blobs saved for your devices', value=f'`{prefix}tss download`', inline=False)
+        embed.add_field(name='List all SHSH blobs saved for your devices', value=f'`{prefix}tss list`', inline=False)
+        embed.add_field(name='Save SHSH blobs for all of your devices', value=f'`{prefix}tss save`', inline=False)
         if await ctx.bot.is_owner(ctx.author):
-            embed.add_field(name='Download blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
-            embed.add_field(name='Save blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
+            embed.add_field(name='Download SHSH blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
+            embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
@@ -227,7 +227,7 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Download Blobs', description='Uploading blobs...')
+        embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         try:
             message = await ctx.author.send(embed=embed)
@@ -240,7 +240,7 @@ class TSS(commands.Cog):
             url = await self.utils.backup_blobs(tmpdir, *ecids)
 
         if url is None:
-            embed = discord.Embed(title='Error', description='Currently, you do not have any saved blobs in AutoTSS. Please wait for AutoTSS to save blobs for you before attempting to download them.')
+            embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
             return
@@ -279,7 +279,7 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved Blobs")
+        embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved SHSH Blobs")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         blobs_saved = int()
@@ -292,12 +292,12 @@ class TSS(commands.Cog):
                 blobs_list.append(f"`iOS {firm['version']} | {firm['buildid']}`")
 
             if len(blobs_list) == 0:
-                embed.add_field(name=device['name'], value='No blobs saved.', inline=False)
+                embed.add_field(name=device['name'], value='No SHSH blobs saved.', inline=False)
             else:
                 embed.add_field(name=device['name'], value=', '.join(blobs_list), inline=False)
 
         num_devices = len(devices)
-        embed.description = f"**{blobs_saved} blob{'s' if blobs_saved != 1 else ''}** saved for **{num_devices} device{'s' if num_devices != 1 else ''}**."
+        embed.description = f"**{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}** saved for **{num_devices} device{'s' if num_devices != 1 else ''}**."
 
         await ctx.send(embed=embed)
 
@@ -325,11 +325,11 @@ class TSS(commands.Cog):
             return
 
         if self.blobs_loop:
-            embed = discord.Embed(title='Error', description="I'm automatically saving blobs right now, please wait until I'm finished to manually save blobs.")
+            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Save Blobs', description='Saving blobs for all of your devices...')
+        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 
@@ -367,7 +367,7 @@ class TSS(commands.Cog):
                         blobs_saved += 1
                     else:
                         failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                        embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
+                        embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
                         await message.edit(embed=embed)
 
                 if blobs_saved > current_blobs_saved:
@@ -380,11 +380,11 @@ class TSS(commands.Cog):
                 await db.commit()
 
         if blobs_saved == 0:
-            description = 'No new blobs were saved.'
+            description = 'No new SHSH blobs were saved.'
         else:
             total_time = round(await self.time.time() - start_time)
             output = (
-                f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}**",
+                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
                 f"for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**",
                 f"in **{total_time} second{'s' if total_time != 1 else ''}**."
             )
@@ -421,7 +421,7 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Download All Blobs', description='Uploading blobs...')
+        embed = discord.Embed(title='Download All Blobs', description='Uploading SHSH blobs...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
         try:
@@ -436,7 +436,7 @@ class TSS(commands.Cog):
             url = await self.utils.backup_blobs(tmpdir, *ecids)
 
         if url is None:
-            embed = discord.Embed(title='Error', description='There are no blobs saved in AutoTSS.')
+            embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
         else:
             embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -455,7 +455,7 @@ class TSS(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving blobs!'))
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
 
         start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
@@ -472,11 +472,11 @@ class TSS(commands.Cog):
             return
 
         if self.blobs_loop:
-            embed = discord.Embed(title='Error', description="I'm automatically saving blobs right now, please wait until I'm finished to manually save blobs.")
+            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Save Blobs', description='Saving blobs for all devices...')
+        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 
@@ -519,7 +519,7 @@ class TSS(commands.Cog):
                             blobs_saved += 1
                         else:
                             failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                            embed.add_field(name='Error', value=f'Failed to save blobs for `{failed_info}`.', inline=False)
+                            embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
                             await message.edit(embed=embed)
 
                     if blobs_saved > current_blobs_saved:
@@ -534,11 +534,11 @@ class TSS(commands.Cog):
         self.blobs_loop = False
 
         if blobs_saved == 0:
-            description = 'No new blobs were saved.'
+            description = 'No new SHSH blobs were saved.'
         else:
             total_time = round(await self.time.time() - start_time)
             output = (
-                f"Saved **{blobs_saved} blob{'s' if blobs_saved != 1 else ''}**",
+                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
                 f"for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**",
                 f"in **{total_time} second{'s' if total_time != 1 else ''}**."
             )

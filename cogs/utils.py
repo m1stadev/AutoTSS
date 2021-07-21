@@ -229,12 +229,12 @@ class Utils(commands.Cog):
             },
             {
                 'name': 'Disclaimer',
-                'value': 'I am not at fault for any issues you may experience with AutoTSS',
+                'value': 'I am not at fault for any issues you may experience with AutoTSS.',
                 'inline': False
             },
             {
                 'name': 'Support',
-                'value': 'For AutoTSS support, join my [Discord](https://m1sta.xyz/discord)',
+                'value': 'For AutoTSS support, join my [Discord](https://m1sta.xyz/discord).',
                 'inline': False
             },
             {

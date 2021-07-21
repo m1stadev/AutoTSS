@@ -10,6 +10,7 @@ class Whitelist(commands.Cog):
 
     @commands.group(name='whitelist', invoke_without_command=True)
     @commands.guild_only()
+    @commands.has_permissions(administrator=True)
     async def whitelist_cmd(self, ctx: commands.Context) -> None:
         prefix = await self.utils.get_prefix(ctx.guild.id)
 

@@ -73,7 +73,7 @@ class Events(commands.Cog):
                     f"Device Identifier: `{device['identifier']}`",
                     f"ECID: `{device['ecid']}`",
                     f"Boardconfig: `{device['boardconfig']}`",
-                    f"Blobs saved: **{len(device['saved_blobs'])}**"
+                    f"SHSH Blobs saved: **{len(device['saved_blobs'])}**"
                 ]
 
                 if device['generator'] is not None:

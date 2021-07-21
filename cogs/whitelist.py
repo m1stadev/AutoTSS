@@ -15,7 +15,7 @@ class Whitelist(commands.Cog):
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
         embed = discord.Embed(title='Whitelist Commands')
-        embed.add_field(name='Set an allowed channel to use AutoTSS in', value=f'`{prefix}whitelist set <channel>`', inline=False)
+        embed.add_field(name='Set whitelist channel', value=f'`{prefix}whitelist set <channel>`', inline=False)
         embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

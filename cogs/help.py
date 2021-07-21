@@ -23,10 +23,11 @@ class Help(commands.Cog):
         embed.add_field(name='AutoTSS Info & Help', value=f'`{prefix}info`', inline=False)
         if await ctx.bot.is_owner(ctx.author):
             embed.add_field(name='Admin Commands', value=f'`{prefix}help admin`', inline=False)
-
         embed.add_field(name='Device Commands', value=f'`{prefix}help device`', inline=False)
         embed.add_field(name='TSS Commands', value=f'`{prefix}help tss`', inline=False)
         embed.add_field(name='Miscellaneous Commands', value=f'`{prefix}help misc`', inline=False)
+        if ctx.author.guild_permissions.administrator:
+            embed.add_field(name='Whitelist Commands', value=f'`{prefix}help whitelist`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)
@@ -94,6 +95,26 @@ class Help(commands.Cog):
         embed.add_field(name='AutoTSS ping', value=f'`{prefix}ping`', inline=False)
         if ctx.author.guild_permissions.administrator:
             embed.add_field(name="Change AutoTSS's prefix", value=f'`{prefix}prefix <prefix>`', inline=False)
+
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        await ctx.send(embed=embed)
+
+    @help_command.command(name='whitelist')
+    @commands.guild_only()
+    @commands.has_permissions(administrator=True)
+    async def whitelist_commands(self, ctx: commands.Context) -> None:
+        whitelist = await self.utils.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            await ctx.send(embed=embed)
+            return
+
+        prefix = await self.utils.get_prefix(ctx.guild.id)
+
+        embed = discord.Embed(title='Whitelist Commands')
+        embed.add_field(name='Set whitelist channel', value=f'`{prefix}whitelist set <channel>`', inline=False)
+        embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.send(embed=embed)

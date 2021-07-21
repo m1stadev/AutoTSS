@@ -20,7 +20,7 @@ class TSS(commands.Cog):
         self.time = aioify(time, name='time')
         self.utils = self.bot.get_cog('Utils')
         self.blobs_loop = None
-        #self.auto_blob_saver.start()
+        self.auto_blob_saver.start()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()

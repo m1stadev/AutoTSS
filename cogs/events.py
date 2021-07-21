@@ -35,7 +35,7 @@ class Events(commands.Cog):
         await self.bot.wait_until_ready()
         await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
-    @tasks.loop(hours=72)
+    @tasks.loop()
     async def auto_invalid_device_check(self) -> None: # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM autotss') as cursor:
             data = await cursor.fetchall()
@@ -65,15 +65,18 @@ class Events(commands.Cog):
 
         for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:
             embed = discord.Embed(title='Hey!')
-            embed.description = 'One or more of your devices were added incorrectly to AutoTSS, and are saving **invalid SHSH blobs**. \
-                To fix this, remove these devices then re-add them with custom apnonces:'
+            msg = (
+                'One or more of your devices were added incorrectly to AutoTSS, and are saving **invalid SHSH blobs**.',
+                'Due to this, they have been removed from AutoTSS so they are no longer continuing to save invalid SHSH blobs.'
+                'To fix this, please re-add the following devices to AutoTSS:'
+            )
+            embed.description = '\n'.join(msg)
 
             for device in invalid_devices[userid]:
                 device_info = [
                     f"Device Identifier: `{device['identifier']}`",
                     f"ECID: `{device['ecid']}`",
-                    f"Boardconfig: `{device['boardconfig']}`",
-                    f"SHSH Blobs saved: **{len(device['saved_blobs'])}**"
+                    f"Boardconfig: `{device['boardconfig']}`"
                 ]
 
                 if device['generator'] is not None:
@@ -88,7 +91,10 @@ class Events(commands.Cog):
 
             try:
                 await user.send(embed=embed)
-            except: # The device is already saving invalid blobs, so no point in continuing to save blobs for it if we can't contact the user about it.
+            except:
+                pass
+
+            for device in invalid_devices[userid]:
                 await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
 
                 async with aiosqlite.connect('Data/autotss.db') as db:
@@ -99,6 +105,8 @@ class Events(commands.Cog):
 
                     await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), userid))
                     await db.commit()
+
+        await asyncio.sleep(259200)
 
     @auto_invalid_device_check.before_loop
     async def before_invalid_device_check(self) -> None:

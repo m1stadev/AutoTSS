@@ -167,9 +167,12 @@ class TSS(commands.Cog):
             print('[AUTO] No new blobs were saved.')
         else:
             total_time = round(await self.time.time() - start_time)
-            print(f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''} \
-            for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''} \
-            in {total_time} second{'s' if total_time != 1 else ''}.")
+            output = (
+                f"[AUTO] Saved {blobs_saved} blob{'s' if blobs_saved != 1 else ''}",
+                f"for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}",
+                f"in {total_time} second{'s' if total_time != 1 else ''}."
+            )
+            print(' '.join(output))
 
         await self.utils.update_device_count()
         await asyncio.sleep(1800)

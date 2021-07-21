@@ -65,7 +65,7 @@ class Events(commands.Cog):
 
         for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:
             embed = discord.Embed(title='Hey!')
-            embed.description = 'One or more of your devices were added incorrectly to AutoTSS, and are saving **non-working SHSH blobs**. \
+            embed.description = 'One or more of your devices were added incorrectly to AutoTSS, and are saving **invalid SHSH blobs**. \
                 To fix this, remove these devices then re-add them with custom apnonces:'
 
             for device in invalid_devices[userid]:

@@ -72,16 +72,17 @@ class Events(commands.Cog):
                 device_info = [
                     f"Device Identifier: `{device['identifier']}`",
                     f"ECID: `{device['ecid']}`",
-                    f"Boardconfig: `{device['boardconfig']}`"
+                    f"Boardconfig: `{device['boardconfig']}`",
+                    f"Blobs saved: **{len(device['saved_blobs'])}**"
                 ]
 
                 if device['generator'] is not None:
-                    device_info.append(f"Custom generator: `{device['generator']}`")
+                    device_info.insert(-1, f"Custom generator: `{device['generator']}`")
 
                 if device['apnonce'] is not None:
-                    device_info.append(f"Custom ApNonce: `{device['apnonce']}`")
+                    device_info.insert(-1, f"Custom ApNonce: `{device['apnonce']}`")
 
-                embed.add_field(name=f"`{device['name']}`", value='\n'.join(device_info), inline=False)
+                embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
 
                 user = await self.bot.fetch_user(userid)
 

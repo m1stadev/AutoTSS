@@ -18,7 +18,7 @@ class Events(commands.Cog):
         self.auto_clean_db.start()
         self.auto_invalid_device_check.start()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop()
     async def auto_clean_db(self) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
             data = await cursor.fetchall()
@@ -29,6 +29,8 @@ class Events(commands.Cog):
                 async with aiosqlite.connect('Data/autotss.db') as db:
                     await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices[0],))
                     await db.commit()
+
+        await asyncio.sleep(300)
 
     @auto_clean_db.before_loop
     async def before_auto_clean_db(self) -> None:

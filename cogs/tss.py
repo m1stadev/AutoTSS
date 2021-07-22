@@ -56,7 +56,7 @@ class TSS(commands.Cog):
             generators.append('0xbd34a880be0b53f3')
             save_path.append('no-apnonce')
 
-        if device['generator'] is not None:
+        if device['generator'] is not None and device['generator'] not in generators:
             generators.append(device['generator'])
 
         path = '/'.join(save_path)

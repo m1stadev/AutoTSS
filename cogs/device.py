@@ -495,13 +495,13 @@ class Device(commands.Cog):
                 except:
                     embed.description = f"Device `{devices[num]['name']}` removed.\nSHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
                     embed.set_footer(
-                        text=f'{ctx.author.display_name} | This message will automatically be deleted in 15 seconds to protect your ECID(s).',
+                        text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).',
                         icon_url=ctx.author.avatar_url_as(static_format='png')
                         )
 
                     await message.edit(embed=embed)
 
-                    await asyncio.sleep(15)
+                    await asyncio.sleep(5)
                     await ctx.message.delete()
                     await message.delete()
 
@@ -556,10 +556,10 @@ class Device(commands.Cog):
 
             embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
 
-        embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
         for x in range(len(embed.fields)):
             field_values = [value for value in embed.fields[x].value.splitlines() if 'ECID' not in value]

@@ -251,10 +251,10 @@ class TSS(commands.Cog):
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
         else:
-            embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 10 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
             await ctx.message.delete()
             await message.delete()
 

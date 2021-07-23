@@ -276,6 +276,17 @@ class Utils(commands.Cog):
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
+    async def update_auto_saver_frequency(self, time: int=1800) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT time FROM auto_frequency') as cursor:
+                if await cursor.fetchone() is None:
+                    sql = 'INSERT INTO auto_frequency(time) VALUES(?)'
+                else:
+                    sql = 'UPDATE auto_frequency SET time = ?'
+
+            await db.execute(sql, (time,))
+            await db.commit()
+
     async def upload_file(self, file: str, name: str) -> str:
         async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:
             resp = await response.text()

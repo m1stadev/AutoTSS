@@ -16,6 +16,7 @@ class Events(commands.Cog):
         self.shutil = aioify(shutil, name='shutil')
         self.utils = self.bot.get_cog('Utils')
         self.auto_clean_db.start()
+        self.signing_party_detection.start()
         self.auto_invalid_device_check.start()
 
     @tasks.loop()
@@ -34,6 +35,61 @@ class Events(commands.Cog):
 
     @auto_clean_db.before_loop
     async def before_auto_clean_db(self) -> None:
+        await self.bot.wait_until_ready()
+        await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
+
+    @tasks.loop()
+    async def signing_party_detection(self) -> None:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.ipsw.me/v4/devices') as resp:
+                devices = await resp.json()
+
+            devices = [d for d in devices if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
+            api = dict()
+            for device in [d['identifier'] for d in devices]:
+                async with session.get(f'https://api.ipsw.me/v4/device/{device}?type=ipsw') as resp:
+                    firms = await resp.json()
+
+                api[device] = firms['firmwares']
+                async with session.get(f'https://api.m1sta.xyz/betas/{device}') as resp:
+                    if resp.status == 200:
+                        beta_firms = await resp.json()
+
+                        for firm in beta_firms:
+                            api[device].append(firm)
+
+            try:
+                self._api
+            except AttributeError:
+                self._api = api
+                return
+
+            for device in self._api.keys():
+                for firm in [x for x in self._api[device] if x['signed'] == False]:
+                    if any(new_firm['signed'] == True for new_firm in api[device] if new_firm['buildid'] == firm['buildid']):
+                        print(f"[SIGN] Detected resigned firmware for: {device}, iOS {firm['version']}")
+                        await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
+                        tss = self.bot.get_cog('TSS') # Get TSS class
+
+                        tss.auto_blob_saver.cancel() # Restart auto blob saver
+                        await asyncio.sleep(1)
+                        tss.auto_blob_saver.start()
+
+                        await asyncio.sleep(600) # Wait 10 minutes
+
+                        await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 30 minutes
+                        tss.auto_blob_saver.cancel() # Restart auto blob saver
+                        await asyncio.sleep(1)
+                        tss.auto_blob_saver.start()
+
+                        return
+                else:
+                    self._api[device] = api[device]
+
+        await asyncio.sleep(300)
+
+    @signing_party_detection.before_loop
+    async def before_signing_party_detection(self) -> None:
         await self.bot.wait_until_ready()
         await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
@@ -229,7 +285,15 @@ class Events(commands.Cog):
                 ''')
             await db.commit()
 
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS auto_frequency(
+                time INTEGER
+                )
+                ''')
+            await db.commit()
+
         await self.utils.update_device_count()
+        await self.utils.update_auto_saver_frequency()
         print('AutoTSS is now online.')
 
     @commands.Cog.listener()

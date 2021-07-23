@@ -96,9 +96,15 @@ class TSS(commands.Cog):
             print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
             return
 
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
         start_time = await self.time.time()
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = await cursor.fetchall()
+        self.blobs_loop = True
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+                all_devices = await cursor.fetchall()
+
+            async with db.execute('SELECT time FROM auto_frequency') as cursor:
+                sleep = (await cursor.fetchone())[0]
 
         num_devices = int()
         for user_devices in all_devices:
@@ -107,14 +113,13 @@ class TSS(commands.Cog):
         if num_devices == 0:
             print('[AUTO] No SHSH blobs need to be saved.')
             self.blobs_loop = False
+            await self.utils.update_device_count()
+            await asyncio.sleep(sleep)
             return
-
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
 
         blobs_saved = int()
         devices_saved_for = int()
         cached_signed_buildids = dict()
-        self.blobs_loop = True
 
         async with aiohttp.ClientSession() as session:
             for user_devices in all_devices:
@@ -175,7 +180,7 @@ class TSS(commands.Cog):
             print(' '.join(output))
 
         await self.utils.update_device_count()
-        await asyncio.sleep(1800)
+        await asyncio.sleep(sleep)
 
     @auto_blob_saver.before_loop
     async def before_auto_blob_saver(self) -> None:

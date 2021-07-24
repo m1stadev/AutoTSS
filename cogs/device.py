@@ -52,7 +52,7 @@ class Device(commands.Cog):
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
 
-        timeout_embed = discord.Embed(title='Add Device', description='No response given in 1 minute, cancelling.')
+        timeout_embed = discord.Embed(title='Add Device', description='No response given in 2 minutes, cancelling.')
         cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
 
         for embed in (timeout_embed, cancelled_embed):
@@ -92,9 +92,9 @@ class Device(commands.Cog):
                     await message.edit(embed=embed)
 
 
-                # Wait for a response from the user, and error out if the user takes over 1 minute to respond
+                # Wait for a response from the user, and error out if the user takes over 2 minutes to respond
                 try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                     if x == 0:
                         answer = response.content # Don't make the device's name lowercase
                     else:
@@ -180,7 +180,7 @@ class Device(commands.Cog):
             await message.edit(embed=embed)
 
             try:
-                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                 answer = response.content.lower()
             except asyncio.exceptions.TimeoutError:
                 await message.edit(embed=timeout_embed)
@@ -197,7 +197,7 @@ class Device(commands.Cog):
                 await message.edit(embed=embed)
 
                 try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                     answer = response.content.lower()
                 except asyncio.exceptions.TimeoutError:
                     await message.edit(embed=timeout_embed)
@@ -250,7 +250,7 @@ class Device(commands.Cog):
             await message.edit(embed=embed)
 
             try:
-                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                 answer = response.content.lower()
             except asyncio.exceptions.TimeoutError:
                 await message.edit(embed=timeout_embed)
@@ -267,7 +267,7 @@ class Device(commands.Cog):
                 await message.edit(embed=embed)
 
                 try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                     answer = response.content.lower()
                 except asyncio.exceptions.TimeoutError:
                     await message.edit(embed=timeout_embed)
@@ -310,7 +310,7 @@ class Device(commands.Cog):
                 await message.edit(embed=embed)
 
                 try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                     answer = response.content.lower()
                 except asyncio.exceptions.TimeoutError:
                     await message.edit(embed=timeout_embed)
@@ -327,7 +327,7 @@ class Device(commands.Cog):
                     await message.edit(embed=embed)
 
                     try:
-                        response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+                        response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
                         answer = response.content.lower()
                     except asyncio.exceptions.TimeoutError:
                         await message.edit(embed=timeout_embed)
@@ -386,7 +386,7 @@ class Device(commands.Cog):
 
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
-        timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
+        timeout_embed = discord.Embed(title='Remove Device', description='No response given in 2 minutes, cancelling.')
 
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -420,7 +420,7 @@ class Device(commands.Cog):
         message = await ctx.send(embed=embed)
 
         try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
             answer = response.content.lower()
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)
@@ -452,7 +452,7 @@ class Device(commands.Cog):
         await message.edit(embed=embed)
 
         try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
             answer = response.content.lower()
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)
@@ -579,7 +579,7 @@ class Device(commands.Cog):
 
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error')
-        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 1 minute, cancelling.')
+        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 2 minutes, cancelling.')
 
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -646,7 +646,7 @@ class Device(commands.Cog):
         message = await ctx.send(embed=embed)
 
         try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120)
             answer = response.content.lower()
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)

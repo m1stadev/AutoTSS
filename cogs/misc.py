@@ -1,11 +1,13 @@
+from aioify import aioify
+from datetime import datetime
 from discord.ext import commands
 import aiosqlite
 import discord
 
-
 class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.datetime = aioify(datetime, name='datetime')
         self.utils = self.bot.get_cog('Utils')
 
     @commands.command()
@@ -66,9 +68,15 @@ class Misc(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title='Pong!', description=f'Ping: `{round(self.bot.latency * 1000)}ms`')
+        embed = discord.Embed(title='Pong!', description='Testing ping...')
+        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+
+        time = await self.datetime.utcnow()
+        message = await ctx.send(embed=embed)
+
+        embed.description = f'Ping: `{round((await self.datetime.utcnow() - time).total_seconds() * 1000)}ms`'
+        await message.edit(embed=embed)
 
     @commands.command()
     @commands.guild_only()

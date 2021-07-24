@@ -80,9 +80,7 @@ class Device(commands.Cog):
                     'Enter a name for your device',
                     "Enter your device's identifier (e.g. `iPhone6,1`)",
                     "Enter your device's ECID (hex)",
-                    "Enter your device's Board Config (e.g. `n51ap`). \
-                    This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) \
-                    under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+                    "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
                 )
 
                 embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
@@ -238,14 +236,11 @@ class Device(commands.Cog):
             cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
             if cpid >= 32800:
                 if len(apnonce_description) == 2:
-                    a12_apnonce_desc = 'This also MUST be done for your device, or else your SHSH blobs **will be invalid**. More info \
-                        [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).'
-
+                    a12_apnonce_desc = 'This also '
                 else:
-                    a12_apnonce_desc = 'This MUST be done for your device, or else your SHSH blobs **will be invalid**. More info \
-                        [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).'
+                    a12_apnonce_desc = 'This '
 
-                apnonce_description.append(a12_apnonce_desc)
+                apnonce_description.append(a12_apnonce_desc + 'MUST be done for your device, or else your SHSH blobs **will be invalid**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).')
 
             apnonce_description.append('NOTE: This is **NOT** the same as your **generator**, which is hex, begins with `0x`, and is 16 characters long.')
 
@@ -642,8 +637,11 @@ class Device(commands.Cog):
             return
 
         embed = discord.Embed(title='Transfer Devices')
-        embed.description = f"Are you sure you'd like to transfer {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}?\n\
-                            Type `yes` to transfer the devices, or anything else to cancel."
+        msg = (
+            f"Are you sure you'd like to transfer {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}?",
+            'Type `yes` to transfer the devices, or anything else to cancel.'
+        )
+        embed.description = '\n'.join(msg)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.send(embed=embed)
 

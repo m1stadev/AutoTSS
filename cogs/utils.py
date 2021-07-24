@@ -108,13 +108,14 @@ class Utils(commands.Cog):
         return True
 
     async def check_identifier(self, session, identifier: str) -> bool:
+        identifier = 'P'.join(identifier.replace(' ', '').split('p'))
         async with session.get('https://api.ipsw.me/v4/devices') as resp:
             api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
             return False
-        else:
-            return True
+
+        return True
 
     async def check_name(self, name: str, user: str) -> Union[bool, int]: # This function will return different values based on where it errors out at
         if not 4 <= len(name) <= 20: # Length check

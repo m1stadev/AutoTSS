@@ -131,7 +131,7 @@ class Device(commands.Cog):
                         return
 
                 elif x == 1:
-                    device['identifier'] = 'P'.join(answer.lower().split('p'))
+                    device['identifier'] = answer
                     if await self.utils.check_identifier(session, device['identifier']) is False:
                         embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
                         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

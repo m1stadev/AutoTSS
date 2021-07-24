@@ -229,6 +229,11 @@ class Utils(commands.Cog):
                 'inline': False
             },
             {
+                'name': 'What are SHSH blobs?',
+                'value': 'A great explanation that takes an in-depth look at what SHSH blobs are, what they can be used for, and more can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).',
+                'inline': False
+            },
+            {
                 'name': 'Disclaimer',
                 'value': 'I am not at fault for any issues you may experience with AutoTSS.',
                 'inline': False

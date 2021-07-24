@@ -215,7 +215,7 @@ class Utils(commands.Cog):
         notes = (
             'There is a limit of **10 devices per user**.',
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
-            'AutoTSS checks for new versions to save SHSH blobs for **every 30 minutes**.'
+            'AutoTSS checks for new versions to save SHSH blobs for **every 3 hours**.'
         )
 
         embed = {
@@ -282,7 +282,7 @@ class Utils(commands.Cog):
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
-    async def update_auto_saver_frequency(self, time: int=1800) -> None:
+    async def update_auto_saver_frequency(self, time: int=10800) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT time FROM auto_frequency') as cursor:
                 if await cursor.fetchone() is None:

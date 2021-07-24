@@ -77,7 +77,7 @@ class Events(commands.Cog):
 
                         await asyncio.sleep(600) # Wait 10 minutes
 
-                        await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 30 minutes
+                        await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 3 hours
                         tss.auto_blob_saver.cancel() # Restart auto blob saver
                         await asyncio.sleep(1)
                         tss.auto_blob_saver.start()

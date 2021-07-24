@@ -10,11 +10,21 @@ AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theip
 ## Disclaimer
 - I am not at fault for any issues you may experience with AutoTSS.
 
-## Features
-- Automatic blob saving
-- Beta SHSH blob saving support
-- Custom apnonce + generator support
-- Support for saving for multiple devices
+## Feature comparison with similar tools
+| Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/1Conan/tsschecker) | [shshd](https://github.com/diatrus/shshdaemon) |
+|-|-|-|-|-|-|-|
+| A12+ support | ✅* | ✅* | ✅* | ✅ | ✅ | ✅ |
+| Doesn't require a jailbreak | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Saves SHSH blobs automatically | ✅ | ❌ | ❌ | ✅** | ❌ | ✅ |
+| Doesn't use local system resources | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Saves SHSH blobs for beta iOS versions | ✅ | ✅ | ❌ | ❌ | ❌ | ✅*** |
+| Detect signing parties | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+<sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).</sup>
+
+<sup>** Requires users to leave blobsaver always running.</sup>
+
+<sup>*** Requires users to manually specify a BuildManifest from a beta IPSW.</sup>
 
 ## Setup
 To locally host, follow these steps:

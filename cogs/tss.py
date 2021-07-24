@@ -194,7 +194,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -208,7 +208,7 @@ class TSS(commands.Cog):
             embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @tss_cmd.command(name='download')
     @commands.guild_only()
@@ -218,7 +218,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
@@ -229,7 +229,7 @@ class TSS(commands.Cog):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
@@ -238,7 +238,7 @@ class TSS(commands.Cog):
             message = await ctx.author.send(embed=embed)
             await ctx.message.delete()
         except:
-            message = await ctx.send(embed=embed)
+            message = await ctx.reply(embed=embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             ecids = [device['ecid'] for device in devices]
@@ -270,7 +270,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
@@ -281,7 +281,7 @@ class TSS(commands.Cog):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved SHSH Blobs")
@@ -304,7 +304,7 @@ class TSS(commands.Cog):
         num_devices = len(devices)
         embed.description = f"**{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}** saved for **{num_devices} device{'s' if num_devices != 1 else ''}**."
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @tss_cmd.command(name='save')
     @commands.guild_only()
@@ -314,7 +314,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         start_time = await self.time.time()
@@ -326,17 +326,17 @@ class TSS(commands.Cog):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         if self.blobs_loop:
             embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         blobs_saved = int()
         devices_saved_for = int()
@@ -407,7 +407,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         await ctx.message.delete()
@@ -423,7 +423,7 @@ class TSS(commands.Cog):
 
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Download All Blobs', description='Uploading SHSH blobs...')
@@ -433,7 +433,7 @@ class TSS(commands.Cog):
             message = await ctx.author.send(embed=embed)
         except:
             embed = discord.Embed(title='Error', description="You don't have DMs enabled.")
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
@@ -457,7 +457,7 @@ class TSS(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
@@ -472,18 +472,18 @@ class TSS(commands.Cog):
 
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             self.blobs_loop = False
             return
 
         if self.blobs_loop:
             embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         blobs_saved = int()
         devices_saved_for = int()

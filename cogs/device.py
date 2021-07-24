@@ -23,7 +23,7 @@ class Device(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -36,7 +36,7 @@ class Device(commands.Cog):
             embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
     @device_cmd.command(name='add')
@@ -47,7 +47,7 @@ class Device(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -70,7 +70,7 @@ class Device(commands.Cog):
 
         if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             embed = discord.Embed(title='Error', description=f'You cannot add over {max_devices} devices to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         device = dict()
@@ -87,7 +87,7 @@ class Device(commands.Cog):
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
                 if x == 0:
-                    message = await ctx.send(embed=embed)
+                    message = await ctx.reply(embed=embed)
                 else:
                     await message.edit(embed=embed)
 
@@ -379,7 +379,7 @@ class Device(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -399,7 +399,7 @@ class Device(commands.Cog):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
@@ -417,7 +417,7 @@ class Device(commands.Cog):
 
             embed.add_field(name=x + 1, value='\n'.join(device_info), inline=False)
 
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -519,7 +519,7 @@ class Device(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
@@ -530,7 +530,7 @@ class Device(commands.Cog):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title=f"{ctx.author.display_name}'s Devices")
@@ -552,7 +552,7 @@ class Device(commands.Cog):
             embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
 
         embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         await asyncio.sleep(5)
 
@@ -572,7 +572,7 @@ class Device(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -586,31 +586,31 @@ class Device(commands.Cog):
 
         if self.bot.get_cog('TSS').blobs_loop == True: # Avoid any potential conflict with transferring devices while blobs are being saved
             invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
-            await ctx.send(embed=invalid_embed)
+            await ctx.reply(embed=invalid_embed)
             return
 
         if type(old_member) == int:
             old_member = await self.bot.fetch_user(old_member)
             if old_member is None:
                 invalid_embed.description = "The member specified to transfer devices from doesn't exist!"
-                await ctx.send(embed=invalid_embed)
+                await ctx.reply(embed=invalid_embed)
                 return
 
         if type(new_member) == int:
             new_member = await self.bot.fetch_user(new_member)
             if new_member is None:
                 invalid_embed.description = "The member specified to transfer devices to doesn't exist!"
-                await ctx.send(embed=invalid_embed)
+                await ctx.reply(embed=invalid_embed)
                 return
 
         if old_member.id == new_member.id:
             invalid_embed.description = "Silly goose, you can't transfer devices between the same user!"
-            await ctx.send(embed=invalid_embed)
+            await ctx.reply(embed=invalid_embed)
             return
 
         if new_member.bot == True:
             invalid_embed.description = 'You cannot transfer devices to a bot account.'
-            await ctx.send(embed=invalid_embed)
+            await ctx.reply(embed=invalid_embed)
             return
    
         async with aiosqlite.connect('Data/autotss.db') as db:
@@ -628,12 +628,12 @@ class Device(commands.Cog):
 
         if len(old_devices) == 0:
             invalid_embed.description = f'{old_member.mention} has no devices added to AutoTSS!'
-            await ctx.send(embed=invalid_embed)
+            await ctx.reply(embed=invalid_embed)
             return
 
         if len(new_devices) > 0:
             invalid_embed.description = f'{new_member.mention} has devices added to AutoTSS already.'
-            await ctx.send(embed=invalid_embed)
+            await ctx.reply(embed=invalid_embed)
             return
 
         embed = discord.Embed(title='Transfer Devices')
@@ -643,7 +643,7 @@ class Device(commands.Cog):
         )
         embed.description = '\n'.join(msg)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)

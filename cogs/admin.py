@@ -26,7 +26,7 @@ class Admin(commands.Cog):
         embed.add_field(name='Unload', value=f'`{prefix}module unload <module 1> <module 2>`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @module.command()
     @commands.is_owner()
@@ -39,7 +39,7 @@ class Admin(commands.Cog):
             embed = discord.Embed(title='Edit Module')
             embed.add_field(name='Error', description='You can only edit one module at a time!')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         if modules[0] not in local_modules:
@@ -47,12 +47,12 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', description=f'Module `{modules[0]}` does not exist!')
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`")
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Edit Module', description=f'Send a link to the raw code you wish to update the `{modules[0]}` module to.')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         try:
             answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and message.channel == ctx.channel, timeout=60)
@@ -121,7 +121,7 @@ class Admin(commands.Cog):
 
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(local_modules)}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png')) 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @module.command()
     @commands.is_owner()
@@ -133,7 +133,7 @@ class Admin(commands.Cog):
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Load Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            message = await ctx.send(embed=embed)
+            message = await ctx.reply(embed=embed)
             successful_loads = int()
             failed_loads = int()
 
@@ -167,7 +167,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         try:
@@ -181,7 +181,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` has an error, cannot load!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @module.command(name='reload')
     @commands.is_owner()
@@ -193,7 +193,7 @@ class Admin(commands.Cog):
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Reload Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            message = await ctx.send(embed=embed)
+            message = await ctx.reply(embed=embed)
             successful_reloads = int()
             failed_reloads = int()
 
@@ -227,7 +227,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         try:
@@ -244,7 +244,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` has an error, cannot load!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @module.command()
     @commands.is_owner()
@@ -256,7 +256,7 @@ class Admin(commands.Cog):
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Unload Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            message = await ctx.send(embed=embed)
+            message = await ctx.reply(embed=embed)
             successful_unloads = int()
             failed_unloads = int()
 
@@ -292,7 +292,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         try:
@@ -303,7 +303,7 @@ class Admin(commands.Cog):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` is already unloaded!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 def setup(bot):
     bot.add_cog(Admin(bot))

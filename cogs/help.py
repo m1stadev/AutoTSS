@@ -14,7 +14,7 @@ class Help(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -30,7 +30,7 @@ class Help(commands.Cog):
             embed.add_field(name='Whitelist Commands', value=f'`{prefix}help whitelist`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @help_command.command(name='devices', aliases=('device',))
     @commands.guild_only()
@@ -39,7 +39,7 @@ class Help(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -52,7 +52,7 @@ class Help(commands.Cog):
             embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @help_command.command(name='tss')
     @commands.guild_only()
@@ -61,7 +61,7 @@ class Help(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -75,7 +75,7 @@ class Help(commands.Cog):
             embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @help_command.command(name='misc')
     @commands.guild_only()
@@ -84,7 +84,7 @@ class Help(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -97,7 +97,7 @@ class Help(commands.Cog):
             embed.add_field(name="Change AutoTSS's prefix", value=f'`{prefix}prefix <prefix>`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @help_command.command(name='whitelist')
     @commands.guild_only()
@@ -107,7 +107,7 @@ class Help(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -117,7 +117,7 @@ class Help(commands.Cog):
         embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @help_command.command(name='admin')
     @commands.guild_only()
@@ -129,7 +129,7 @@ class Help(commands.Cog):
         embed.add_field(name='See module subcommands', value=f'`{prefix}module`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
 def setup(bot):

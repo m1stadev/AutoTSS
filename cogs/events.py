@@ -304,13 +304,13 @@ class Events(commands.Cog):
 
         if ctx.message.channel.type == discord.ChannelType.private:
             embed.description = 'AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         whitelist = await self.utils.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -319,11 +319,11 @@ class Events(commands.Cog):
                 return
 
             embed.description = f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run."
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
 
         elif isinstance(error, commands.MaxConcurrencyReached):
             embed.description = f"`{prefix + ctx.command.qualified_name}` cannot be ran more than once at the same time!"
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
 
         elif isinstance(error, commands.errors.CommandInvokeError):
             if isinstance(error.original, discord.errors.Forbidden):
@@ -357,7 +357,7 @@ class Events(commands.Cog):
 
         elif isinstance(error, commands.ChannelNotFound):
             embed = discord.Embed(title='Error', description='That channel does not exist.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
 
         elif (isinstance(error, commands.errors.NotOwner)) or \
         (isinstance(error, commands.MissingPermissions)):

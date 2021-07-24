@@ -19,7 +19,7 @@ class Whitelist(commands.Cog):
         embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @whitelist_cmd.command(name='set')
     @commands.guild_only()
@@ -37,7 +37,7 @@ class Whitelist(commands.Cog):
 
         embed = discord.Embed(title='Whitelist', description=f'Enabled AutoTSS whitelisting and set to {channel.mention}.')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @whitelist_cmd.command(name='toggle')
     @commands.guild_only()
@@ -62,7 +62,7 @@ class Whitelist(commands.Cog):
             else:
                 embed = discord.Embed(title='Error', description='No whitelist channel is set.')
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 def setup(bot):
     bot.add_cog(Whitelist(bot))

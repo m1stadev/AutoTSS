@@ -18,19 +18,19 @@ class Misc(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         if prefix is None:
             prefix = await self.utils.get_prefix(ctx.guild.id)
             embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         if len(prefix) > 4:
             embed = discord.Embed(title='Error', description='Prefixes are limited to 4 characters or less.')
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         async with aiosqlite.connect('Data/autotss.db') as db:
@@ -40,7 +40,7 @@ class Misc(commands.Cog):
         embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -49,14 +49,14 @@ class Misc(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Invite', description=f'[Click here]({await self.utils.invite}).')
         embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -65,7 +65,7 @@ class Misc(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Pong!', description='Testing ping...')
@@ -73,7 +73,7 @@ class Misc(commands.Cog):
         embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
 
         time = await self.datetime.utcnow()
-        message = await ctx.send(embed=embed)
+        message = await ctx.reply(embed=embed)
 
         embed.description = f'Ping: `{round((await self.datetime.utcnow() - time).total_seconds() * 1000)}ms`'
         await message.edit(embed=embed)
@@ -85,12 +85,12 @@ class Misc(commands.Cog):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
         embed = await self.utils.info_embed(prefix, ctx.author)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 def setup(bot):
     bot.add_cog(Misc(bot))

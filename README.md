@@ -11,7 +11,7 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 
 ### Comparison with similar tools
 
-| Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/1Conan/tsschecker) | [shshd](https://github.com/diatrus/shshdaemon) |
+| Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/DanTheMann15/tsschecker) | [shshd](https://github.com/Diatrus/shshdaemon) |
 |-|-|-|-|-|-|-|
 | A12+ support | ✅* | ✅* | ✅* | ✅ | ✅ | ✅ |
 | Doesn't require a jailbreak | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
@@ -30,7 +30,7 @@ While you can run your own instances, it's prefered for you to simply use the al
 
 To locally host your own instance, create a Discord bot and follow these steps...
 
-1. Build and in install [`tsschecker`]() and its dependencies
+1. Build and in install [`tsschecker`](https://github.com/DanTheMann15/tsschecker) and its dependencies
 
 2. Create a virtual env and install dependencies
 

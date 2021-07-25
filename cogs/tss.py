@@ -96,9 +96,6 @@ class TSS(commands.Cog):
             print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
             return
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
-        start_time = await self.time.time()
-        self.blobs_loop = True
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                 all_devices = await cursor.fetchall()
@@ -113,9 +110,12 @@ class TSS(commands.Cog):
         if num_devices == 0:
             print('[AUTO] No SHSH blobs need to be saved.')
             self.blobs_loop = False
-            await self.utils.update_device_count()
             await asyncio.sleep(sleep)
             return
+
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+        self.blobs_loop = True
+        start_time = await self.time.time()
 
         blobs_saved = int()
         devices_saved_for = int()
@@ -460,9 +460,11 @@ class TSS(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+        if self.blobs_loop:
+            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            await ctx.reply(embed=embed)
+            return
 
-        start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = await cursor.fetchall()
 
@@ -473,22 +475,19 @@ class TSS(commands.Cog):
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
             await ctx.reply(embed=embed)
-            self.blobs_loop = False
-            return
-
-        if self.blobs_loop:
-            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
-            await ctx.reply(embed=embed)
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         message = await ctx.reply(embed=embed)
 
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+        self.blobs_loop = True
+        start_time = await self.time.time()
+
         blobs_saved = int()
         devices_saved_for = int()
         cached_signed_buildids = dict()
-        self.blobs_loop = True
 
         async with aiohttp.ClientSession() as session:
             for user_devices in all_devices:

@@ -42,12 +42,7 @@ def main():
 
     check_tsschecker()
 
-    mentions = discord.AllowedMentions(
-        **dict.fromkeys([
-            "roles",
-            "everyone"
-        ], False)
-    )
+    mentions = discord.AllowedMentions(everyone=False, roles=False)
 
     # Neato trick for intents in one line
     (intents := discord.Intents.default()).members = True

@@ -56,6 +56,9 @@ class Events(commands.Cog):
                         beta_firms = await resp.json()
 
                         for firm in beta_firms:
+                            if any(firm['buildid'] == f['buildid'] for f in api[device]):
+                                continue
+
                             api[device].append(firm)
 
             try:
@@ -70,6 +73,7 @@ class Events(commands.Cog):
                         print(f"[SIGN] Detected resigned firmware for: {device}, iOS {firm['version']}")
                         await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
                         tss = self.bot.get_cog('TSS') # Get TSS class
+                        tss.blobs_loop = False
 
                         tss.auto_blob_saver.cancel() # Restart auto blob saver
                         await asyncio.sleep(1)

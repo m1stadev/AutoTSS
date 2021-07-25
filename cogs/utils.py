@@ -188,12 +188,14 @@ class Utils(commands.Cog):
             return buildids
 
         for firm in [x for x in beta_api if x['signed'] == True]:
+            if any(firm['buildid'] == f['buildid'] for f in buildids):
+                continue
+
             buildids.append({
                     'version': firm['version'],
                     'buildid': firm['buildid'],
                     'url': firm['url'],
                     'type': 'Beta'
-
                 })
 
         return buildids

@@ -45,8 +45,7 @@ def main():
     mentions = discord.AllowedMentions(
         **dict.fromkeys([
             "roles",
-            "everyone",
-            "replied_user"
+            "everyone"
         ], False)
     )
 

@@ -254,7 +254,7 @@ class Events(commands.Cog):
             embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see all of my commands, run `{prefix}help`.')
             embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
             try:
-                await message.channel.send(embed=embed)
+                await message.reply(embed=embed)
             except:
                 pass
 

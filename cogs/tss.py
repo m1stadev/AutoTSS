@@ -92,10 +92,6 @@ class TSS(commands.Cog):
 
     @tasks.loop()
     async def auto_blob_saver(self) -> None:
-        if self.blobs_loop == True:
-            print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
-            return
-
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                 all_devices = await cursor.fetchall()
@@ -103,13 +99,17 @@ class TSS(commands.Cog):
             async with db.execute('SELECT time FROM auto_frequency') as cursor:
                 sleep = (await cursor.fetchone())[0]
 
+        if self.blobs_loop == True:
+            print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
+            await asyncio.sleep(sleep)
+            return
+
         num_devices = int()
         for user_devices in all_devices:
             num_devices += len(json.loads(user_devices[1]))
 
         if num_devices == 0:
             print('[AUTO] No SHSH blobs need to be saved.')
-            self.blobs_loop = False
             await asyncio.sleep(sleep)
             return
 

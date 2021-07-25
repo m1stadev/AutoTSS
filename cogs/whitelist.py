@@ -57,7 +57,7 @@ class Whitelist(commands.Cog):
                     await db.commit()
 
                     embed = discord.Embed(title='Whitelist')
-                    embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for {self.bot.user.mention} to {channel.mention}."
+                    embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for AutoTSS to {channel.mention}."
                     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             else:
                 embed = discord.Embed(title='Error', description='No whitelist channel is set.')

@@ -362,7 +362,13 @@ class Device(commands.Cog):
         devices.append(device)
 
         async with aiosqlite.connect('Data/autotss.db') as db:
-            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
+            async with db.execute('SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+                if await cursor.fetchone() is None:
+                    sql = 'INSERT INTO autotss(devices, enabled, user) VALUES(?,?,?)'
+                else:
+                    sql = 'UPDATE autotss SET devices = ?, enabled = ? WHERE user = ?'
+
+            await db.execute(sql, (json.dumps(devices), True,  ctx.author.id))
             await db.commit()
 
         embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")

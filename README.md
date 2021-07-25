@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
 [![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)]((https://github.com/m1stadev/AutoTSS))
 [![LoC](https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
-[![Discord Invite](https://img.shields.io/badge/Invite%20AutoTSS%20to%20Discord-%237289DA)](https://m1sta.xyz/autotss)
+[![AutoTSS Invite](https://img.shields.io/badge/Discord-Invite%20AutoTSS-%237289DA)](https://m1sta.xyz/autotss)
 
 Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices through Discord. *Want an automatic CLI blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
 

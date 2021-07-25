@@ -42,10 +42,23 @@ def main():
 
     check_tsschecker()
 
-    intents = discord.Intents.default()
-    intents.members = True
+    mentions = discord.AllowedMentions(
+        **dict.fromkeys([
+            "roles",
+            "everyone",
+            "replied_user"
+        ], False)
+    )
 
-    client = commands.AutoShardedBot(command_prefix=get_prefix, help_command=None, intents=intents)
+    # Neato trick for intents in one line
+    (intents := discord.Intents.default()).members = True
+    
+    client = commands.AutoShardedBot(
+        help_command=None,
+        command_prefix=get_prefix,
+        intents=intents,
+        allowed_mentions=mentions
+    )
 
     client.load_extension('cogs.utils') # Load utils cog first
 

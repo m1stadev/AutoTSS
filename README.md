@@ -26,9 +26,9 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 
 ## Running
 
-While you can run your own instances, it's prefered for you to simply use the already hosted instance. Support for your own instance will not be provided.
+While you can run your own instances, it's prefered for you to simply use the already hosted instance. Support for your own instance will not be provided. Windows is not supported!
 
-To locally host your own instance, create a Discord bot and follow these steps...
+To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps...
 
 1. Build and in install [`tsschecker`](https://github.com/DanTheMann15/tsschecker) and its dependencies
 

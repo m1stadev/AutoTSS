@@ -108,7 +108,6 @@ class Utils(commands.Cog):
         return True
 
     async def check_identifier(self, session, identifier: str) -> bool:
-        identifier = 'P'.join(identifier.replace(' ', '').split('p'))
         async with session.get('https://api.ipsw.me/v4/devices') as resp:
             api = await resp.json()
 

@@ -43,7 +43,7 @@ To locally host, follow these steps:
 `python3 bot.py`
 
 ## Invite
-AutoTSS can be invited into any Discord server using [this](https://discord.com/oauth2/authorize?client_id=804072225723383818&scope=bot&permissions=93184) link.
+AutoTSS can be invited into any Discord server using [this](https://m1sta.xyz/autotss) link.
 
 ## Support
 For any questions/issues you have, join my [Discord](https://m1sta.xyz/discord).

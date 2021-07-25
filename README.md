@@ -1,16 +1,16 @@
 # AutoTSS
+
 [![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
 [![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)]((https://github.com/m1stadev/AutoTSS))
 [![LoC](https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
+[![Discord Invite](https://img.shields.io/badge/Invite%20AutoTSS%20to%20Discord-%237289DA)](https://m1sta.xyz/autotss)
 
-AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices.
+Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all of your iOS devices through Discord. *Want an automatic CLI blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
 
-*Want a CLI automatic blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
+*Disclaimer: I'm not at fault for any issues you may experience with AutoTSS.*
 
-## Disclaimer
-- I am not at fault for any issues you may experience with AutoTSS.
+### Comparison with similar tools
 
-## Feature comparison with similar tools
 | Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/1Conan/tsschecker) | [shshd](https://github.com/diatrus/shshdaemon) |
 |-|-|-|-|-|-|-|
 | A12+ support | ✅* | ✅* | ✅* | ✅ | ✅ | ✅ |
@@ -20,30 +20,31 @@ AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theip
 | Saves SHSH blobs for beta iOS versions | ✅ | ✅ | ❌ | ✅*** | ✅*** | ❌ |
 | Detects signing parties | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-<sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).</sup>
-
-<sup>** Requires users to leave blobsaver always running.</sup>
-
+<sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).</sup><br>
+<sup>** Requires users to leave blobsaver always running.</sup><br>
 <sup>*** Requires users to manually specify a BuildManifest from a beta IPSW.</sup>
 
-## Setup
-To locally host, follow these steps:
+## Running
 
-0. Create a [Discord Bot](https://discord.com/developers/applications).
-    - Under the bot menu, make sure to enable the 'Server Members Intent'.
+While you can run your own instances, it's prefered for you to simply use the already hosted instance. Support for your own instance will not be provided.
 
-1. Build and install [tsschecker](https://github.com/1Conan/tsschecker) and its dependencies.
+To locally host your own instance, create a Discord bot and follow these steps...
 
-2. Install the required libraries:
-`pip3 install -r requirements.txt`
+1. Build and in install [`tsschecker`]() and its dependencies
 
-3. Set the `AUTOTSS_TOKEN` environment variable to the bot token you got in Step 0.
+2. Create a virtual env and install dependencies
 
-4. Run `bot.py`:
-`python3 bot.py`
+        python3 -m venv --upgrade-deps env; source env/bin/activate
+        pip3 install -U -r requirements.txt
 
-## Invite
-AutoTSS can be invited into any Discord server using [this](https://m1sta.xyz/autotss) link.
+3.  Set the `AUTOTSS_TOKEN` environment variable to the bot token you got from your Discord bot application
+
+4. Start your instance
+
+        python3 bot.py
+
+AutoTSS needs the members intent to be enabled. This can be done by going to the bot menu in your Discord bot application, and enabling the "Server Members Intent".
 
 ## Support
+
 For any questions/issues you have, join my [Discord](https://m1sta.xyz/discord).

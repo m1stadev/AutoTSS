@@ -154,8 +154,8 @@ class TSS(commands.Cog):
 
                             blobs_saved += 1
                         else:
-                            failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                            print(f"Failed to save SHSH blobs for '{failed_info}'.")
+                            failed_info = f"{device['name']}, iOS {firm['version']} | {firm['buildid']}"
+                            print(f"[AUTO] Failed to save SHSH blobs for: {failed_info}.")
 
                     if blobs_saved > current_blobs_saved:
                         devices_saved_for += 1

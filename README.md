@@ -19,7 +19,7 @@ AutoTSS is a Discord bot that automatically saves [SHSH blobs](https://www.theip
 | Doesn't use local system resources | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Saves SHSH blobs for beta iOS versions | ✅ | ✅ | ❌ | ✅*** | ✅*** | ❌ |
 | Automatically grabs generator-apnonce combo | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Detects signing parties | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Detects "signing parties" | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 <sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).</sup>
 

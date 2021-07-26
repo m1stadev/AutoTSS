@@ -294,7 +294,12 @@ class TSS(commands.Cog):
 
             blobs_list = list()
             for firm in blobs:
-                blobs_list.append(f"`iOS {firm['version']} | {firm['buildid']}`")
+                if firm['type'] == 'Beta':
+                    version = f"`iOS {firm['version']} Beta | {firm['buildid']}`"
+                else:
+                    version = f"`iOS {firm['version']} | {firm['buildid']}`"
+
+                blobs_list.append(version)
 
             if len(blobs_list) == 0:
                 embed.add_field(name=device['name'], value='No SHSH blobs saved.', inline=False)

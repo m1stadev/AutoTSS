@@ -34,17 +34,12 @@ class TSS(commands.Cog):
 
         args = [
             'tsschecker',
-            '-d',
-            device['identifier'],
-            '-B',
-            device['boardconfig'],
-            '-e',
-            f"0x{device['ecid']}",
-            '-m',
-            manifest,
-            '-s',
-            '--save-path',
-            tmpdir
+            '-d', device['identifier'],
+            '-B', device['boardconfig'],
+            '-e', f"0x{device['ecid']}",
+            '-m', manifest,
+            '--save-path', tmpdir,
+            '-s'
         ]
 
         if device['apnonce'] is not None:

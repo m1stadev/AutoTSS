@@ -156,7 +156,12 @@ class TSS(commands.Cog):
 
                             blobs_saved += 1
                         else:
-                            failed_info = f"{device['name']}, iOS {firm['version']} | {firm['buildid']}"
+                            if firm['type'] == 'Beta':
+                                version = f"iOS {firm['version']} Beta | {firm['buildid']}"
+                            else:
+                                version = f"iOS {firm['version']} | {firm['buildid']}"
+
+                            failed_info = f"{device['name']}, {version}"
                             print(f"[AUTO] Failed to save SHSH blobs for: {failed_info}.")
 
                     if blobs_saved > current_blobs_saved:
@@ -376,7 +381,12 @@ class TSS(commands.Cog):
 
                         blobs_saved += 1
                     else:
-                        failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
+                        if firm['type'] == 'Beta':
+                            version = f"iOS {firm['version']} Beta | {firm['buildid']}"
+                        else:
+                            version = f"iOS {firm['version']} | {firm['buildid']}"
+
+                        failed_info = f"{device['name']} - {version}"
                         embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
                         await message.edit(embed=embed)
 
@@ -523,7 +533,12 @@ class TSS(commands.Cog):
 
                             blobs_saved += 1
                         else:
-                            failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
+                            if firm['type'] == 'Beta':
+                                version = f"iOS {firm['version']} Beta | {firm['buildid']}"
+                            else:
+                                version = f"iOS {firm['version']} | {firm['buildid']}"
+
+                            failed_info = f"{device['name']} - {version}"
                             embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
                             await message.edit(embed=embed)
 

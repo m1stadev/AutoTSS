@@ -337,7 +337,7 @@ class TSS(commands.Cog):
     @tss_cmd.command(name='downloadall')
     @commands.guild_only()
     @commands.is_owner()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
+    @commands.max_concurrency(1, per=commands.BucketType.default)
     async def download_all_blobs(self, ctx: commands.Context) -> None:
         whitelist = await self.utils.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
@@ -387,7 +387,7 @@ class TSS(commands.Cog):
     @tss_cmd.command(name='saveall')
     @commands.guild_only()
     @commands.is_owner()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
+    @commands.max_concurrency(1, per=commands.BucketType.default)
     async def save_all_blobs(self, ctx: commands.Context) -> None:
         whitelist = await self.utils.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):

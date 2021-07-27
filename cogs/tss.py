@@ -140,11 +140,8 @@ class TSS(commands.Cog):
                                 saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
-                            device['saved_blobs'].append({
-                                'version': firm['version'],
-                                'buildid': firm['buildid'],
-                                'type': firm['type']
-                            })
+                            del firm['url']
+                            device['saved_blobs'].append(firm)
 
                             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                             await db.commit()
@@ -365,11 +362,8 @@ class TSS(commands.Cog):
                             saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                     if saved_blob is True:
-                        device['saved_blobs'].append({
-                            'version': firm['version'],
-                            'buildid': firm['buildid'],
-                            'type': firm['type']
-                        })
+                        del firm['url']
+                        device['saved_blobs'].append(firm)
 
                         await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
                         await db.commit()
@@ -517,11 +511,8 @@ class TSS(commands.Cog):
                                 saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
-                            device['saved_blobs'].append({
-                                'version': firm['version'],
-                                'buildid': firm['buildid'],
-                                'type': firm['type']
-                            })
+                            del firm['url']
+                            device['saved_blobs'].append(firm)
 
                             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                             await db.commit()

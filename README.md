@@ -30,7 +30,7 @@ While you can run your own instances, it's prefered for you to simply use the al
 
 To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps...
 
-1. Build and in install [`tsschecker`](https://github.com/DanTheMann15/tsschecker) and its dependencies
+1. Build and install [`tsschecker`](https://github.com/1Conan/tsschecker) and its dependencies
 
 2. Create a virtual env and install dependencies
 

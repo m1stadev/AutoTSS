@@ -54,6 +54,7 @@ class Device(commands.Cog):
 
         timeout_embed = discord.Embed(title='Add Device', description='No response given in 5 minutes, cancelling.')
         cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
+        invalid_embed = discord.Embed(title='Error')
 
         for embed in (timeout_embed, cancelled_embed):
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -69,8 +70,8 @@ class Device(commands.Cog):
                 await db.commit()
 
         if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
-            embed = discord.Embed(title='Error', description=f'You cannot add over {max_devices} devices to AutoTSS.')
-            await ctx.reply(embed=embed)
+            invalid_embed.description = f'You cannot add over {max_devices} devices to AutoTSS.'
+            await ctx.reply(embed=invalid_embed)
             return
 
         device = dict()
@@ -119,23 +120,21 @@ class Device(commands.Cog):
                     device['name'] = answer
                     name_check = await self.utils.check_name(device['name'], ctx.author.id)
                     if name_check != True:
-                        embed = discord.Embed(title='Error', description = f"Device name `{device['name']}` is not valid.")
-
                         if name_check == 0:
-                            embed.description += " A device's name must be between 4 and 20 characters."
+                            invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name must be between 4 and 20 characters."
                         elif name_check == -1:
-                            embed.description += " You cannot use a device's name more than once."
+                            invalid_embed.description = f"Device name `{device['name']}` is not valid. You cannot use a device's name more than once."
 
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                        await message.edit(embed=embed)
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
                         return
 
                 elif x == 1:
                     device['identifier'] = 'P'.join(answer.replace(' ', '').split('p'))
                     if await self.utils.check_identifier(session, device['identifier']) is False:
-                        embed = discord.Embed(title='Error', description=f"Device Identifier `{device['identifier']}` is not valid.")
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                        await message.edit(embed=embed)
+                        invalid_embed.description = f"Device Identifier `{device['identifier']}` is not valid."
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
                         return
 
                 elif x == 2:
@@ -146,24 +145,24 @@ class Device(commands.Cog):
 
                     ecid_check = await self.utils.check_ecid(device['ecid'])
                     if ecid_check != True:
-                        embed = discord.Embed(title='Error', description=f"Device ECID `{device['ecid']}` is not valid.")
-                        embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        invalid_embed.description = f"Device ECID `{device['ecid']}` is not valid."
+                        invalid_embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
                         if ecid_check == -1:
-                            embed.description += ' This ECID has already been added to AutoTSS.'
+                            invalid_embed.description += ' This ECID has already been added to AutoTSS.'
 
-                        await message.edit(embed=embed)
-                        embed.description = embed.description.replace(f"`{device['ecid']}` ", '')
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
+                        invalid_embed.description = invalid_embed.description.replace(f"`{device['ecid']}` ", '')
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await asyncio.sleep(5)
-                        await message.edit(embed=embed)
+                        await message.edit(embed=invalid_embed)
                         return
 
                 else:
                     device['boardconfig'] = answer
                     if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
-                        embed = discord.Embed(title='Error', description=f"Device boardconfig `{device['boardconfig']}` is not valid.")
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                        await message.edit(embed=embed)
+                        invalid_embed.description = f"Device boardconfig `{device['boardconfig']}` is not valid."
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
                         return
 
             generator_description = [
@@ -215,9 +214,9 @@ class Device(commands.Cog):
                 else:
                     device['generator'] = answer
                     if await self.utils.check_generator(device['generator']) is False:
-                        embed = discord.Embed(title='Error', description=f"Device Generator `{device['generator']}` is not valid.")
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                        await message.edit(embed=embed)
+                        invalid_embed.description = f"Device Generator `{device['generator']}` is not valid."
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
                         return
 
             elif 'cancel' in answer or answer.startswith(prefix):
@@ -285,9 +284,9 @@ class Device(commands.Cog):
                 else:
                     device['apnonce'] = answer
                     if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
-                        embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
-                        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                        await message.edit(embed=embed)
+                        invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
+                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                        await message.edit(embed=invalid_embed)
                         return
 
             elif 'cancel' in answer or answer.startswith(prefix):
@@ -345,9 +344,9 @@ class Device(commands.Cog):
                     else:
                         device['apnonce'] = answer
                         if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
-                            embed = discord.Embed(title='Error', description=f"Device ApNonce `{device['apnonce']}` is not valid.")
-                            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                            await message.edit(embed=embed)
+                            invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
+                            invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                            await message.edit(embed=invalid_embed)
                             return
 
                 elif 'cancel' in answer or answer.startswith(prefix):

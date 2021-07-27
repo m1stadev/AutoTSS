@@ -180,12 +180,9 @@ class Utils(commands.Cog):
         beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
         async with session.get(beta_api_url) as resp:
             if resp.status != 200:
-                beta_api = None
+                return buildids
             else:
                 beta_api = await resp.json()
-
-        if beta_api is None:
-            return buildids
 
         for firm in [x for x in beta_api if x['signed'] == True]:
             if any(firm['buildid'] == f['buildid'] for f in buildids):

@@ -22,68 +22,6 @@ class TSS(commands.Cog):
         self.blobs_loop = None
         self.auto_blob_saver.start()
 
-    async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
-        generators = list()
-        save_path = [
-            'Data',
-            'Blobs',
-            device['ecid'],
-            version,
-            buildid
-        ]
-
-        args = [
-            'tsschecker',
-            '-d', device['identifier'],
-            '-B', device['boardconfig'],
-            '-e', f"0x{device['ecid']}",
-            '-m', manifest,
-            '--save-path', tmpdir,
-            '-s'
-        ]
-
-        if device['apnonce'] is not None:
-            args.append('--apnonce')
-            args.append(device['apnonce'])
-            save_path.append(device['apnonce'])
-        else:
-            generators.append('0x1111111111111111')
-            generators.append('0xbd34a880be0b53f3')
-            save_path.append('no-apnonce')
-
-        if device['generator'] is not None and device['generator'] not in generators:
-            generators.append(device['generator'])
-
-        path = '/'.join(save_path)
-        if not await self.os.path.isdir(path):
-            await self.os.makedirs(path)
-
-        if len(glob.glob(f'{path}/*.shsh*')) > 0:
-            return True
-
-        if len(generators) == 0:
-            cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
-            stdout = (await cmd.communicate())[0]
-
-            if 'Saved shsh blobs!' not in stdout.decode():
-                return False
-
-        else:
-            args.append('-g')
-            for gen in generators:
-                args.append(gen)
-                cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
-                stdout = (await cmd.communicate())[0]
-
-                if 'Saved shsh blobs!' not in stdout.decode():
-                    return False
-
-                args.pop(-1)
-
-        for blob in glob.glob(f'{tmpdir}/*.shsh*'):
-            await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
-
-        return True
 
     @tasks.loop()
     async def auto_blob_saver(self) -> None:
@@ -137,7 +75,7 @@ class TSS(commands.Cog):
                             if manifest == False:
                                 saved_blob = False
                             else:
-                                saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
+                                saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
                             del firm['url']
@@ -359,7 +297,7 @@ class TSS(commands.Cog):
                         if manifest == False:
                             saved_blob = False
                         else:
-                            saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
+                            saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                     if saved_blob is True:
                         del firm['url']
@@ -508,7 +446,7 @@ class TSS(commands.Cog):
                             if manifest == False:
                                 saved_blob = False
                             else:
-                                saved_blob = await self.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
+                                saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
                             del firm['url']

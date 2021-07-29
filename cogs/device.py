@@ -80,7 +80,7 @@ class Device(commands.Cog):
                     'Enter a name for your device',
                     "Enter your device's identifier (e.g. `iPhone6,1`)",
                     "Enter your device's ECID (hex)",
-                    "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [AIDA64](https://geo.itunes.apple.com/us/app/aida64/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+                    "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [AIDA64](https://aida64.com/goto/?p=iosapp) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
                 )
 
                 embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))

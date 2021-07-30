@@ -78,10 +78,10 @@ class Device(commands.Cog):
         async with aiohttp.ClientSession() as session:
             for x in range(4): # Loop that gets all of the required information to save blobs with from the user
                 descriptions = (
-                    'Enter a name for your device',
-                    "Enter your device's identifier (e.g. `iPhone6,1`). This can be found with [AIDA64](https://aida64.com/goto/?p=iosapp) under the `Device` section (as `Device String`)",
-                    "Enter your device's ECID (hex)",
-                    "Enter your device's Board Config (e.g. `n51ap`). This value ends in `ap`, and can be found with [AIDA64](https://aida64.com/goto/?p=iosapp) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+                    'Enter a name for your device.',
+                    "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
+                    "Enter your device's ECID (hex).",
+                    "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
                 )
 
                 embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))

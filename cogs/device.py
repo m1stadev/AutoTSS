@@ -121,7 +121,7 @@ class Device(commands.Cog):
                     name_check = await self.utils.check_name(device['name'], ctx.author.id)
                     if name_check != True:
                         if name_check == 0:
-                            invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name must be between 4 and 20 characters."
+                            invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name cannot be over 20 characters long."
                         elif name_check == -1:
                             invalid_embed.description = f"Device name `{device['name']}` is not valid. You cannot use a device's name more than once."
 

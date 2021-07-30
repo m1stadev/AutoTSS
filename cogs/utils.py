@@ -118,7 +118,7 @@ class Utils(commands.Cog):
         return True
 
     async def check_name(self, name: str, user: str) -> Union[bool, int]: # This function will return different values based on where it errors out at
-        if not 4 <= len(name) <= 20: # Length check
+        if not len(name) <= 20: # Length check
             return 0
 
         async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added

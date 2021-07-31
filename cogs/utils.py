@@ -20,8 +20,14 @@ class Utils(commands.Cog):
         self.shutil = aioify(shutil, name='shutil')
 
     @property
-    async def invite(self) -> str:
-        return f'https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=93184'
+    def invite(self) -> str:
+        """ Returns an invite URL for the bot.
+
+        This is a much better implementation that utilizes
+        available tools in the discord library rather than
+        being lazy and using a long string. """
+        perms = discord.Permissions(93184)
+        return discord.utils.oauth_url(self.bot.user.id, perms)
 
     async def backup_blobs(self, tmpdir: str, *ecids: list):
         await self.os.mkdir(f'{tmpdir}/Blobs')

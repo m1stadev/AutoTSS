@@ -158,7 +158,7 @@ class Device(commands.Cog):
                         return
 
                 else:
-                    device['boardconfig'] = answer
+                    device['boardconfig'] = answer.lower()
                     if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
                         invalid_embed.description = f"Device boardconfig `{device['boardconfig']}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

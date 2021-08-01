@@ -333,7 +333,7 @@ class Events(commands.Cog):
             if isinstance(error.original, discord.errors.Forbidden):
                 embed.description = f"I don't have the proper permissions to run correctly! \
                     Please ping an Administrator and tell them to kick & re-invite me using \
-                    [this]({await self.utils.invite}) link to fix this issue."
+                    [this]({self.utils.invite}) link to fix this issue."
 
                 message_sent = False
                 for channel in ctx.guild.text_channels:
@@ -350,7 +350,7 @@ class Events(commands.Cog):
                 try:
                     embed.description = f"I don't have the proper permissions to run correctly! \
                         Please kick me from `{ctx.guild.name}` & re-invite me using \
-                        [this]({await self.utils.invite}) link to fix this issue."
+                        [this]({self.utils.invite}) link to fix this issue."
 
                     await ctx.guild.owner.send(embed=embed)
                 except: # We can't tell the user to tell an admin to fix our permissions, we can't DM the owner to fix it, we might as well leave.

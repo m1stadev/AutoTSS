@@ -10,11 +10,7 @@ class Help(commands.Cog):
     @commands.group(name='help', invoke_without_command=True)
     @commands.guild_only()
     async def help_command(self, ctx: commands.Context) -> None:
-        whitelist = await self.utils.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.reply(embed=embed)
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -35,11 +31,7 @@ class Help(commands.Cog):
     @help_command.command(name='devices', aliases=('device',))
     @commands.guild_only()
     async def device_commands(self, ctx: commands.Context) -> None:
-        whitelist = await self.utils.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.reply(embed=embed)
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -57,11 +49,7 @@ class Help(commands.Cog):
     @help_command.command(name='tss')
     @commands.guild_only()
     async def tss_commands(self, ctx: commands.Context) -> None:
-        whitelist = await self.utils.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.reply(embed=embed)
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -80,11 +68,7 @@ class Help(commands.Cog):
     @help_command.command(name='misc')
     @commands.guild_only()
     async def misc_commands(self, ctx: commands.Context) -> None:
-        whitelist = await self.utils.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.reply(embed=embed)
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -103,11 +87,7 @@ class Help(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def whitelist_commands(self, ctx: commands.Context) -> None:
-        whitelist = await self.utils.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await ctx.reply(embed=embed)
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
         prefix = await self.utils.get_prefix(ctx.guild.id)

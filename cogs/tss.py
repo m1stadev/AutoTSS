@@ -78,8 +78,7 @@ class TSS(commands.Cog):
                                 saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
-                            del firm['url']
-                            device['saved_blobs'].append(firm)
+                            device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
 
                             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                             await db.commit()
@@ -300,8 +299,7 @@ class TSS(commands.Cog):
                             saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                     if saved_blob is True:
-                        del firm['url']
-                        device['saved_blobs'].append(firm)
+                        device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
 
                         await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
                         await db.commit()
@@ -449,8 +447,7 @@ class TSS(commands.Cog):
                                 saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
 
                         if saved_blob is True:
-                            del firm['url']
-                            device['saved_blobs'].append(firm)
+                            device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
 
                             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
                             await db.commit()

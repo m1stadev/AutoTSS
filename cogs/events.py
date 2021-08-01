@@ -47,19 +47,7 @@ class Events(commands.Cog):
             devices = [d for d in devices if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
             api = dict()
             for device in [d['identifier'] for d in devices]:
-                async with session.get(f'https://api.ipsw.me/v4/device/{device}?type=ipsw') as resp:
-                    firms = await resp.json()
-
-                api[device] = firms['firmwares']
-                async with session.get(f'https://api.m1sta.xyz/betas/{device}') as resp:
-                    if resp.status == 200:
-                        beta_firms = await resp.json()
-
-                        for firm in beta_firms:
-                            if any(firm['buildid'] == f['buildid'] for f in api[device]):
-                                continue
-
-                            api[device].append(firm)
+                api[device] = await self.utils.get_firms(session, device)
 
             try:
                 self._api
@@ -74,6 +62,7 @@ class Events(commands.Cog):
                         await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
                         tss = self.bot.get_cog('TSS') # Get TSS class
                         tss.blobs_loop = False
+                        await self.utils.update_device_count()
 
                         tss.auto_blob_saver.cancel() # Restart auto blob saver
                         await asyncio.sleep(1)

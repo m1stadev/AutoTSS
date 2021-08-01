@@ -52,7 +52,7 @@ class Misc(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title='Invite', description=f'[Click here]({await self.utils.invite}).')
+        embed = discord.Embed(title='Invite', description=f'[Click here]({self.utils.invite}).')
         embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 

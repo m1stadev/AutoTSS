@@ -168,19 +168,20 @@ class Utils(commands.Cog):
 
         return guild_prefix
 
-    async def get_signed_buildids(self, session, identifier: str) -> list:
+    async def get_firms(self, session, identifier: str) -> list:
         api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
         async with session.get(api_url) as resp:
             api = await resp.json()
 
         buildids = list()
 
-        for firm in [x for x in api['firmwares'] if x['signed'] == True]:
+        for firm in api['firmwares']:
             buildids.append({
                     'version': firm['version'],
                     'buildid': firm['buildid'],
                     'url': firm['url'],
-                    'type': 'Release'
+                    'type': 'Release',
+                    'signed': firm['signed']
 
                 })
 
@@ -191,7 +192,7 @@ class Utils(commands.Cog):
             else:
                 beta_api = await resp.json()
 
-        for firm in [x for x in beta_api if x['signed'] == True]:
+        for firm in beta_api:
             if any(firm['buildid'] == f['buildid'] for f in buildids):
                 continue
 
@@ -199,7 +200,8 @@ class Utils(commands.Cog):
                     'version': firm['version'],
                     'buildid': firm['buildid'],
                     'url': firm['url'],
-                    'type': 'Beta'
+                    'type': 'Beta',
+                    'signed': firm['signed']
                 })
 
         return buildids
@@ -339,17 +341,6 @@ class Utils(commands.Cog):
 
         return True
 
-    async def update_device_count(self) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = (await cursor.fetchall())
-
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-            num_devices += len(devices)
-
-        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
-
     async def update_auto_saver_frequency(self, time: int=10800) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT time FROM auto_frequency') as cursor:
@@ -360,6 +351,17 @@ class Utils(commands.Cog):
 
             await db.execute(sql, (time,))
             await db.commit()
+
+    async def update_device_count(self) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+            all_devices = (await cursor.fetchall())
+
+        num_devices = int()
+        for user_devices in all_devices:
+            devices = json.loads(user_devices[0])
+            num_devices += len(devices)
+
+        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def upload_file(self, file: str, name: str) -> str:
         async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:

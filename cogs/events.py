@@ -62,10 +62,10 @@ class Events(commands.Cog):
                         await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
                         tss = self.bot.get_cog('TSS') # Get TSS class
                         tss.blobs_loop = False
-                        await self.utils.update_device_count()
 
                         tss.auto_blob_saver.cancel() # Restart auto blob saver
                         await asyncio.sleep(1)
+                        await self.utils.update_device_count()
                         tss.auto_blob_saver.start()
 
                         await asyncio.sleep(600) # Wait 10 minutes

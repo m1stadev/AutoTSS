@@ -52,7 +52,7 @@ class TSS(commands.Cog):
 
         blobs_saved = int()
         devices_saved_for = int()
-        cached_signed_buildids = dict()
+        cached_firms = dict()
 
         async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
             for user_devices in all_devices:
@@ -62,10 +62,10 @@ class TSS(commands.Cog):
                 for device in devices:
                     current_blobs_saved = blobs_saved
 
-                    if device['identifier'] not in cached_signed_buildids.keys():
-                        cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+                    if device['identifier'] not in cached_firms.keys():
+                        cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
 
-                    signed_firms = cached_signed_buildids[device['identifier']]
+                    signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
                     for firm in signed_firms:
                         if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
                             continue
@@ -261,16 +261,16 @@ class TSS(commands.Cog):
 
         blobs_saved = int()
         devices_saved_for = int()
-        cached_signed_buildids = dict()
+        cached_firms = dict()
 
         async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
             for device in devices:
                 current_blobs_saved = blobs_saved
 
-                if device['identifier'] not in cached_signed_buildids.keys():
-                    cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+                if device['identifier'] not in cached_firms.keys():
+                    cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
 
-                signed_firms = cached_signed_buildids[device['identifier']]
+                signed_firms = [firm for firm in cached_firms[device['identifier']] if firm['signed'] == True]
                 for firm in signed_firms:
                     if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
                         continue
@@ -397,7 +397,7 @@ class TSS(commands.Cog):
 
         blobs_saved = int()
         devices_saved_for = int()
-        cached_signed_buildids = dict()
+        cached_firms = dict()
 
         async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
             for user_devices in all_devices:
@@ -407,10 +407,10 @@ class TSS(commands.Cog):
                 for device in devices:
                     current_blobs_saved = blobs_saved
 
-                    if device['identifier'] not in cached_signed_buildids.keys():
-                        cached_signed_buildids[device['identifier']] = await self.utils.get_signed_buildids(session, device['identifier'])
+                    if device['identifier'] not in cached_firms.keys():
+                        cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
 
-                    signed_firms = cached_signed_buildids[device['identifier']]
+                    signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
                     for firm in signed_firms:
                         if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
                             continue

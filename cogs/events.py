@@ -79,7 +79,7 @@ class Events(commands.Cog):
                 else:
                     self._api[device] = api[device]
 
-        await asyncio.sleep(300)
+        await asyncio.sleep(30)
 
     @signing_party_detection.before_loop
     async def before_signing_party_detection(self) -> None:

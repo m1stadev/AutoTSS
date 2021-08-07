@@ -122,7 +122,7 @@ class Device(commands.Cog):
                         return
 
                 elif x == 1:
-                    device['identifier'] = 'P'.join(answer.replace(' ', '').split('p'))
+                    device['identifier'] = 'P'.join(answer.replace(' ', '').split('p')).replace('Device String: ', '')
                     if await self.utils.check_identifier(session, device['identifier']) is False:
                         invalid_embed.description = f"Device Identifier `{device['identifier']}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
@@ -150,7 +150,7 @@ class Device(commands.Cog):
                         return
 
                 else:
-                    device['boardconfig'] = answer.lower()
+                    device['boardconfig'] = answer.lower().replace('Device Id: ', '')
                     if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
                         invalid_embed.description = f"Device boardconfig `{device['boardconfig']}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

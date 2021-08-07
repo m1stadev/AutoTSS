@@ -315,36 +315,6 @@ class Events(commands.Cog):
             embed.description = f"`{prefix + ctx.command.qualified_name}` cannot be ran more than once at the same time!"
             await ctx.reply(embed=embed)
 
-        elif isinstance(error, commands.errors.CommandInvokeError):
-            if isinstance(error.original, discord.errors.Forbidden):
-                embed.description = f"I don't have the proper permissions to run correctly! \
-                    Please ping an Administrator and tell them to kick & re-invite me using \
-                    [this]({self.utils.invite}) link to fix this issue."
-
-                message_sent = False
-                for channel in ctx.guild.text_channels:
-                    try:
-                        await channel.send(embed=embed)
-                        message_sent = True
-                        break
-                    except:
-                        pass
-
-                if message_sent:
-                    return
-
-                try:
-                    embed.description = f"I don't have the proper permissions to run correctly! \
-                        Please kick me from `{ctx.guild.name}` & re-invite me using \
-                        [this]({self.utils.invite}) link to fix this issue."
-
-                    await ctx.guild.owner.send(embed=embed)
-                except: # We can't tell the user to tell an admin to fix our permissions, we can't DM the owner to fix it, we might as well leave.
-                    await ctx.guild.leave()
-
-            else:
-                raise error
-
         elif isinstance(error, commands.ChannelNotFound):
             embed = discord.Embed(title='Error', description='That channel does not exist.')
             await ctx.reply(embed=embed)

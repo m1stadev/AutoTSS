@@ -72,7 +72,7 @@ class Device(commands.Cog):
                 descriptions = (
                     'Enter a name for your device.',
                     "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
-                    "Enter your device's ECID (hex).",
+                    "Enter your device's ECID.",
                     "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
                 )
 
@@ -134,6 +134,9 @@ class Device(commands.Cog):
                         device['ecid'] = answer[2:]
                     else:
                         device['ecid'] = answer
+                    
+                    if str(device['ecid'].isdecimal()):
+                        device['ecid'] = hex(int(device['ecid']))
 
                     ecid_check = await self.utils.check_ecid(device['ecid'])
                     if ecid_check != True:

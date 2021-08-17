@@ -11,7 +11,8 @@ class Admin(commands.Cog):
         self.bot = bot
         self.utils = self.bot.get_cog('Utils')
 
-    async def get_modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
+    @property
+    def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
     @commands.group(invoke_without_command=True)
     @commands.is_owner()
@@ -32,7 +33,7 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def edit(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = await self.get_modules()
+        local_modules = self.modules
         modules = [cog.lower() for cog in cogs]
 
         if len(modules) > 1:
@@ -117,7 +118,7 @@ class Admin(commands.Cog):
     @commands.guild_only()
     @commands.is_owner()
     async def _list(self, ctx: commands.Context) -> None:
-        local_modules = await self.get_modules()
+        local_modules = self.modules
 
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(local_modules)}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png')) 
@@ -127,7 +128,7 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def load(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = await self.get_modules()
+        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -187,7 +188,7 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def _reload(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = await self.get_modules()
+        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -250,7 +251,7 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def unload(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = await self.get_modules()
+        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':

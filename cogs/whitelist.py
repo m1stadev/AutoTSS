@@ -26,6 +26,11 @@ class Whitelist(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)
     async def set_whitelist_channel(self, ctx: commands.Context, channel: discord.TextChannel) -> None:
+        if channel.guild != ctx.guild:
+            embed = discord.Embed(title='Error', description=f'{channel.mention} is not a valid channel.')
+            await ctx.reply(embed=embed)
+            return
+
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
             if await cursor.fetchone() is None:
                 sql = 'INSERT INTO whitelist(channel, enabled, guild) VALUES(?,?,?)'

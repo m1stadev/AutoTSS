@@ -69,9 +69,8 @@ class Admin(commands.Cog):
             old_module = await f.read()
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(answer.content) as response:
-                    new_module = await response.text().replace('    ', '    ') # fuck space indents, shifts FTW
+            async with aiohttp.ClientSession() as session, session.get(answer.content) as response:
+                new_module = await response.text()
 
         except aiohttp.client_exceptions.InvalidURL:
             embed = discord.Embed(title='Edit Module')

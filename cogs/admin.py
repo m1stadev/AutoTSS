@@ -33,7 +33,6 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def edit(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = self.modules
         modules = [cog.lower() for cog in cogs]
 
         if len(modules) > 1:
@@ -43,10 +42,10 @@ class Admin(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        if modules[0] not in local_modules:
+        if modules[0] not in self.modules:
             embed = discord.Embed(title='Edit Module')
             embed.add_field(name='Error', description=f'Module `{modules[0]}` does not exist!')
-            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`")
+            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(self.modules)}`")
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.reply(embed=embed)
             return
@@ -118,9 +117,7 @@ class Admin(commands.Cog):
     @commands.guild_only()
     @commands.is_owner()
     async def _list(self, ctx: commands.Context) -> None:
-        local_modules = self.modules
-
-        embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(local_modules)}`")
+        embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(self.modules)}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png')) 
         await ctx.reply(embed=embed)
 
@@ -128,7 +125,6 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def load(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -138,8 +134,8 @@ class Admin(commands.Cog):
             successful_loads = int()
             failed_loads = int()
 
-            for module in (local_modules if modules[0] == 'all' else modules):
-                if not any(module == x for x in local_modules):
+            for module in (self.modules if modules[0] == 'all' else modules):
+                if not any(module == x for x in self.modules):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
                     await message.edit(embed=embed)
                     failed_loads += 1
@@ -163,10 +159,10 @@ class Admin(commands.Cog):
             await message.edit(embed=embed)
             return
 
-        if not any(modules[0] == x for x in local_modules):
+        if not any(modules[0] == x for x in self.modules):
             embed = discord.Embed(title='Unload Module')
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
-            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
+            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(self.modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.reply(embed=embed)
             return
@@ -188,7 +184,6 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def _reload(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -198,8 +193,8 @@ class Admin(commands.Cog):
             successful_reloads = int()
             failed_reloads = int()
 
-            for module in (local_modules if modules[0] == 'all' else modules):
-                if module not in local_modules:
+            for module in (self.modules if modules[0] == 'all' else modules):
+                if module not in self.modules:
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
                     await message.edit(embed=embed)
                     failed_reloads += 1
@@ -223,10 +218,10 @@ class Admin(commands.Cog):
             await message.edit(embed=embed)
             return
 
-        if modules[0] not in local_modules:
+        if modules[0] not in self.modules:
             embed = discord.Embed(title='Reload Module')
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
-            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
+            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(self.modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.reply(embed=embed)
             return
@@ -251,7 +246,6 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def unload(self, ctx: commands.Context, *cogs: str) -> None:
-        local_modules = self.modules
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -261,8 +255,8 @@ class Admin(commands.Cog):
             successful_unloads = int()
             failed_unloads = int()
 
-            for module in (local_modules if modules[0] == 'all' else modules):
-                if not any(module == x for x in local_modules):
+            for module in (self.modules if modules[0] == 'all' else modules):
+                if not any(module == x for x in self.modules):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
                     await message.edit(embed=embed)
                     failed_unloads += 1
@@ -288,10 +282,10 @@ class Admin(commands.Cog):
             await message.edit(embed=embed)
             return
 
-        if not any(modules[0] == x for x in local_modules):
+        if not any(modules[0] == x for x in self.modules):
             embed = discord.Embed(title='Unload Module')
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
-            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(local_modules)}`", inline=False)
+            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(self.modules)}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await ctx.reply(embed=embed)
             return

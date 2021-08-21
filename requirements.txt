@@ -1,5 +1,5 @@
-aiohttp
 aioify
 aiofiles
 aiosqlite
 discord.py
+remotezip

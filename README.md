@@ -1,9 +1,7 @@
 # AutoTSS
 
-# This project is no longer maintained. Thanks for not listening to your users, Discord.
-
-[![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
-[![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)]((https://github.com/m1stadev/AutoTSS))
+[![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/blob/master/LICENSE)
+[![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/stargazers)
 [![LoC](https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)
 [![AutoTSS Invite](https://img.shields.io/badge/Discord-Invite%20AutoTSS-%237289DA)](https://m1sta.xyz/autotss)
 

@@ -11,7 +11,7 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 
 ### Comparison with similar tools
 
-| Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/DanTheMann15/tsschecker) | [shshd](https://github.com/Diatrus/shshdaemon) |
+| Feature | [AutoTSS](https://github.com/m1stadev/AutoTSS) | [shsh.host](https://shsh.host) | [TSSSaver](https://tsssaver.1conan.com/v2/) | [blobsaver](https://github.com/airsquared/blobsaver) | [tsschecker](https://github.com/1Conan/tsschecker) | [shshd](https://github.com/Diatrus/shshdaemon) |
 |-|-|-|-|-|-|-|
 | A12+ support | ✅* | ✅* | ✅* | ✅ | ✅ | ✅ |
 | Doesn't require a jailbreak | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |

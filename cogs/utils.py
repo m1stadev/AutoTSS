@@ -370,6 +370,9 @@ class Utils(commands.Cog):
         return resp.splitlines()[-1].split(':', 1)[1][1:]
 
     async def whitelist_check(self, ctx: commands.Context) -> bool:
+        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+            return True
+
         whitelist = await self.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')

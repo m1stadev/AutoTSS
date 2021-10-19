@@ -164,17 +164,18 @@ class TSS(commands.Cog):
         except:
             message = await ctx.reply(embed=embed)
 
-        async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            ecids = [device['ecid'] for device in devices]
-            url = await self.utils.backup_blobs(tmpdir, *ecids)
+        async with message.channel.typing():
+            async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+                ecids = [device['ecid'] for device in devices]
+                url = await self.utils.backup_blobs(tmpdir, *ecids)
 
-        if url is None:
-            embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-            await message.edit(embed=embed)
-            return
+            if url is None:
+                embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
+                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                await message.edit(embed=embed)
+                return
 
-        embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
+            embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
         if message.channel.type == discord.ChannelType.private:
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

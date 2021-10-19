@@ -371,7 +371,7 @@ class Utils(commands.Cog):
 
                 args.pop(-1)
 
-        if not await os.path.isdir(path):
+        if not await self.os.path.isdir(path):
             await self.os.makedirs(path)
 
         for blob in glob.glob(f'{tmpdir}/*.shsh*'):

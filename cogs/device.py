@@ -121,7 +121,7 @@ class Device(commands.Cog):
                         return
 
                 elif x == 1:
-                    device['identifier'] = 'P'.join(answer.replace(' ', '').split('p')).replace('Device String: ', '')
+                    device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
                     if await self.utils.check_identifier(session, device['identifier']) is False:
                         invalid_embed.description = f"Device Identifier `{device['identifier']}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

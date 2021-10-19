@@ -11,6 +11,7 @@ import json
 import os
 import remotezip
 import shutil
+import time
 
 
 class Utils(commands.Cog):
@@ -18,6 +19,7 @@ class Utils(commands.Cog):
         self.bot = bot
         self.os = aioify(os, name='os')
         self.shutil = aioify(shutil, name='shutil')
+        self.time = aioify(time, name='time')
 
     @property
     def invite(self) -> str:
@@ -280,6 +282,32 @@ class Utils(commands.Cog):
         }
 
         return discord.Embed.from_dict(embed)
+
+    async def watch_pagination(self, embeds: list, message: discord.Message, timeout: int=300) -> None:
+        arrows = ['⬅', '➡'] # [left arrow, right arrow]
+        start_time = await self.time.time()
+        embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
+
+        while round(await self.time.time() - start_time) < timeout:
+            if embed_num > 0:
+                await message.add_reaction(arrows[0])
+
+            if embed_num < (len(embeds) - 1):
+                await message.add_reaction(arrows[1])
+
+            reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author))[0]
+            if reaction.emoji not in arrows:
+                await message.clear_reactions()
+                continue
+
+            if reaction.emoji == arrows[0]:
+                embed_num -= 1
+
+            elif reaction.emoji == arrows[1]:
+                embed_num += 1
+
+            await message.clear_reactions()
+            await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()

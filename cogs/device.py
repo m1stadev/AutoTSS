@@ -34,7 +34,6 @@ class Device(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
         await ctx.reply(embed=embed)
 
-
     @device_cmd.command(name='add')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)

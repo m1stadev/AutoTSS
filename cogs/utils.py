@@ -295,7 +295,7 @@ class Utils(commands.Cog):
             if embed_num < (len(embeds) - 1):
                 await message.add_reaction(arrows[1])
 
-            reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author))[0]
+            reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author and reaction.message == message))[0]
             if reaction.emoji not in arrows:
                 await message.clear_reactions()
                 continue

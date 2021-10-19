@@ -204,32 +204,45 @@ class TSS(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s Saved SHSH Blobs")
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-        blobs_saved = int()
+        device_embeds = list()
         for device in devices:
             blobs = sorted(device['saved_blobs'], key=lambda firm: firm['buildid'])
-            blobs_saved += len(blobs)
 
-            blobs_list = list()
+            device_embed = {
+                'title': f"*{device['name']}*'s Saved SHSH Blobs",
+                'fields': list(),
+                'footer': {
+                    'text': ctx.author.display_name,
+                    'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+                }
+            }
+
+            blobs_list = dict()
             for firm in blobs:
-                if firm['type'] == 'Beta':
-                    version = f"`iOS {firm['version']} Beta | {firm['buildid']}`"
-                else:
-                    version = f"`iOS {firm['version']} | {firm['buildid']}`"
+                major_ver = int(firm['version'].split('.')[0])
+                if major_ver not in blobs_list:
+                    blobs_list[major_ver] = str()
 
-                blobs_list.append(version)
+                blobs_list[major_ver] += f"iOS {firm['version']}, "
 
-            if len(blobs_list) == 0:
-                embed.add_field(name=device['name'], value='No SHSH blobs saved.', inline=False)
-            else:
-                embed.add_field(name=device['name'], value=', '.join(blobs_list), inline=False)
+            for ver in sorted(blobs_list, reverse=True):
+                device_embed['fields'].append({
+                    'name': f'iOS {ver}',
+                    'value': blobs_list[ver][:-2]
+                })
 
-        num_devices = len(devices)
-        embed.description = f"**{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}** saved for **{num_devices} device{'s' if num_devices != 1 else ''}**."
+            if len(device_embed['fields']) == 0:
+                del device_embed['fields']
+                device_embed['description'] = 'No SHSH blobs saved.'
 
-        await ctx.reply(embed=embed)
+            device_embeds.append(device_embed)
+
+        embed_msg = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
+        if len(device_embeds) == 1:
+            return
+
+        await self.utils.watch_pagination(device_embeds, embed_msg)
+
 
     @tss_cmd.command(name='save')
     @commands.guild_only()

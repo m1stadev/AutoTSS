@@ -196,6 +196,9 @@ class Utils(commands.Cog):
             if any(firm['buildid'] == f['buildid'] for f in buildids):
                 continue
 
+            if 'signed' not in firm.keys():
+                continue
+
             buildids.append({
                     'version': firm['version'],
                     'buildid': firm['buildid'],

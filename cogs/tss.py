@@ -264,7 +264,7 @@ class TSS(commands.Cog):
             return
 
         if self.blobs_loop:
-            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
             await ctx.reply(embed=embed)
             return
 
@@ -384,7 +384,7 @@ class TSS(commands.Cog):
             return
 
         if self.blobs_loop:
-            embed = discord.Embed(title='Error', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
             await ctx.reply(embed=embed)
             return
 

@@ -342,13 +342,11 @@ class Utils(commands.Cog):
             generators.append(device['generator'])
 
         path = '/'.join(save_path)
-        if not await self.os.path.isdir(path):
-            await self.os.makedirs(path)
-
-        if len(glob.glob(f'{path}/*.shsh*')) > 0:
-            return True
 
         if len(generators) == 0:
+            if len(glob.glob(f'{path}/*.shsh*')) == 1:
+                return True
+
             cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
             stdout = (await cmd.communicate())[0]
 
@@ -356,6 +354,12 @@ class Utils(commands.Cog):
                 return False
 
         else:
+            if len(glob.glob(f'{path}/*.shsh*')) == len(generators):
+                return True
+
+            elif len(glob.glob(f'{path}/*.shsh*')) > 0:
+                await self.os.remove(*[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
+
             args.append('-g')
             for gen in generators:
                 args.append(gen)
@@ -366,6 +370,9 @@ class Utils(commands.Cog):
                     return False
 
                 args.pop(-1)
+
+        if not await os.path.isdir(path):
+            await self.os.makedirs(path)
 
         for blob in glob.glob(f'{tmpdir}/*.shsh*'):
             await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")

@@ -308,6 +308,8 @@ class Utils(commands.Cog):
 
             await message.clear_reactions()
             await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
+            
+        await message.clear_reactions()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()

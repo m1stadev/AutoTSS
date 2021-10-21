@@ -123,7 +123,7 @@ class Device(commands.Cog):
                 elif x == 1:
                     device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
                     if await self.utils.check_identifier(session, device['identifier']) is False:
-                        invalid_embed.description = f"Device Identifier `{device['identifier']}` is not valid."
+                        invalid_embed.description = f"Device Identifier `{answer}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await message.edit(embed=invalid_embed)
                         return
@@ -136,13 +136,13 @@ class Device(commands.Cog):
 
                     ecid_check = await self.utils.check_ecid(device['ecid'])
                     if ecid_check != True:
-                        invalid_embed.description = f"Device ECID `{device['ecid']}` is not valid."
+                        invalid_embed.description = f"Device ECID `{answer}` is not valid."
                         invalid_embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
                         if ecid_check == -1:
                             invalid_embed.description += ' This ECID has already been added to AutoTSS.'
 
                         await message.edit(embed=invalid_embed)
-                        invalid_embed.description = invalid_embed.description.replace(f"`{device['ecid']}` ", '')
+                        invalid_embed.description = invalid_embed.description.replace(f"`{answer}` ", '')
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await asyncio.sleep(5)
                         await message.edit(embed=invalid_embed)
@@ -151,7 +151,7 @@ class Device(commands.Cog):
                 else:
                     device['boardconfig'] = answer.lower().replace(' ', '').replace('deviceid:', '')
                     if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
-                        invalid_embed.description = f"Device boardconfig `{device['boardconfig']}` is not valid."
+                        invalid_embed.description = f"Device boardconfig `{answer}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await message.edit(embed=invalid_embed)
                         return

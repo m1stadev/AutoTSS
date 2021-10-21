@@ -72,7 +72,7 @@ class TSS(commands.Cog):
                             continue
 
                         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                            manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+                            manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
                             if manifest == False:
                                 saved_blob = False
                             else:
@@ -293,7 +293,7 @@ class TSS(commands.Cog):
                         continue
 
                     async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                        manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+                        manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
                         if manifest == False:
                             saved_blob = False
                         else:
@@ -428,7 +428,7 @@ class TSS(commands.Cog):
                             continue
 
                         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                            manifest = await asyncio.to_thread(self.utils.get_manifest, firm['url'], tmpdir)
+                            manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
                             if manifest == False:
                                 saved_blob = False
                             else:

@@ -110,7 +110,8 @@ class Utils(commands.Cog):
         return True
 
     async def check_identifier(self, session, identifier: str) -> bool:
-        api = await self.fetch_ipswme_api(session, identifier)
+        async with session.get('https://api.ipsw.me/v4/devices') as resp:
+            api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
             return False

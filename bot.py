@@ -46,7 +46,7 @@ def main():
 
     # Neato trick for intents in one line
     (intents := discord.Intents.default()).members = True
-    
+
     client = commands.AutoShardedBot(
         help_command=None,
         command_prefix=get_prefix,

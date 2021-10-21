@@ -248,7 +248,6 @@ class TSS(commands.Cog):
 
         await self.utils.watch_pagination(device_embeds, embed_msg)
 
-
     @tss_cmd.command(name='save')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)

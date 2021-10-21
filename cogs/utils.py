@@ -68,9 +68,7 @@ class Utils(commands.Cog):
         if boardconfig[-2:] != 'ap':
             return False
 
-        async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
-            api = await resp.json()
-
+        api = await self.fetch_ipswme_api(session, identifier)
         if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
             return False
         else:
@@ -112,8 +110,7 @@ class Utils(commands.Cog):
         return True
 
     async def check_identifier(self, session, identifier: str) -> bool:
-        async with session.get('https://api.ipsw.me/v4/devices') as resp:
-            api = await resp.json()
+        api = await self.fetch_ipswme_api(session, identifier)
 
         if identifier not in [device['identifier'] for device in api]:
             return False
@@ -136,10 +133,12 @@ class Utils(commands.Cog):
 
         return True
 
-    async def get_cpid(self, session, identifier: str, boardconfig: str) -> str:
+    async def fetch_ipswme_api(self, session, identifier: str) -> dict:
         async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
-            api = await resp.json()
+            return await resp.json()
 
+    async def get_cpid(self, session, identifier: str, boardconfig: str) -> str:
+        api = await self.fetch_ipswme_api(session, identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
     def get_manifest(self, url: str, dir: str) -> Union[bool, str]:
@@ -166,12 +165,9 @@ class Utils(commands.Cog):
         return guild_prefix
 
     async def get_firms(self, session, identifier: str) -> list:
-        api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-        async with session.get(api_url) as resp:
-            api = await resp.json()
+        api = await self.fetch_ipswme_api(session, identifier)
 
         buildids = list()
-
         for firm in api['firmwares']:
             buildids.append({
                     'version': firm['version'],

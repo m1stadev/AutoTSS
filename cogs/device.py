@@ -524,7 +524,7 @@ class Device(commands.Cog):
         device_embeds = list()
         for device in devices:
             device_embed = {
-                'title': f"*{device['name']} ({devices.index(device) + 1}/{len(devices)})*",
+                'title': f"*{device['name']}*  ({devices.index(device) + 1}/{len(devices)})",
                 'fields': [{
                     'name': 'Device Identifier',
                     'value': f"`{device['identifier']}`",

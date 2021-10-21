@@ -380,8 +380,6 @@ class Device(commands.Cog):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
         timeout_embed = discord.Embed(title='Remove Device', description='No response given in 5 minutes, cancelling.')

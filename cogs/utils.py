@@ -276,16 +276,21 @@ class Utils(commands.Cog):
         return discord.Embed.from_dict(embed)
 
     async def watch_pagination(self, embeds: list, message: discord.Message, *, get_answer: bool=False, timeout: int=300) -> Optional[int]:
-        arrows = ['⬅', '➡'] # [left arrow, right arrow]
+        arrows = ['⏪', '⬅', '➡', '⏩'] # [left arrow, right arrow]
         start_time = await self.time.time()
         embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
 
         while round(await self.time.time() - start_time) < timeout:
-            if embed_num > 0:
+            if embed_num > 1:
                 await message.add_reaction(arrows[0])
+            if embed_num > 0:
+                await message.add_reaction(arrows[1])
 
             if embed_num < (len(embeds) - 1):
-                await message.add_reaction(arrows[1])
+                await message.add_reaction(arrows[2])
+
+            if embed_num < (len(embeds) - 2):
+                await message.add_reaction(arrows[3])
 
             if get_answer:
                 await message.add_reaction('✅')
@@ -304,10 +309,13 @@ class Utils(commands.Cog):
                 continue
 
             if reaction.emoji == arrows[0]:
-                embed_num -= 1
-
+                embed_num = 0
             elif reaction.emoji == arrows[1]:
+                embed_num -= 1
+            elif reaction.emoji == arrows[2]:
                 embed_num += 1
+            elif reaction.emoji == arrows[3]:
+                embed_num = len(embeds) - 1
 
             await message.clear_reactions()
             await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))

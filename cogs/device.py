@@ -398,54 +398,66 @@ class Device(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title='Remove Device', description="Choose the number of the device you'd like to remove.\nType `cancel` to cancel.")
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        device_embeds = list()
+        for device in devices:
+            device_embed = {
+                'title': f"*{device['name']}*  ({devices.index(device) + 1}/{len(devices)})",
+                'fields': [{
+                    'name': 'Device Identifier',
+                    'value': f"`{device['identifier']}`",
+                    'inline': False
+                },
+                {
+                    'name': 'ECID',
+                    'value': f"`{await self.utils.censor_ecid(device['ecid'])}`",
+                    'inline': False
+                },
+                {
+                    'name': 'Board Config',
+                    'value': f"`{device['boardconfig']}`",
+                    'inline': False
+                }],
+                'footer': {
+                    'text': ctx.author.display_name,
+                    'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+                }
+            }
 
-        for x in range(len(devices)):
-            device_info = [
-                f"Name: `{devices[x]['name']}`",
-                f"Device Identifier: `{devices[x]['identifier']}`",
-                f"Boardconfig: `{devices[x]['boardconfig']}`"
-            ]
+            if device['generator'] is not None:
+                device_embed['fields'].append({
+                    'name': 'Custom Generator',
+                    'value': f"`{device['generator']}`",
+                    'inline': False
+                })
 
-            if devices[x]['apnonce'] is not None:
-                device_info.append(f"Custom ApNonce: `{devices[x]['apnonce']}`")
+            if device['apnonce'] is not None:
+                device_embed['fields'].append({
+                    'name': 'Custom ApNonce',
+                    'value': f"`{device['apnonce']}`",
+                    'inline': False
+                })
 
-            embed.add_field(name=x + 1, value='\n'.join(device_info), inline=False)
+            num_blobs = len(device['saved_blobs'])
+            device_embed['fields'].append({
+                'name': 'SHSH Blobs',
+                'value': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
+                'inline': False
+            })
 
-        message = await ctx.reply(embed=embed)
+            device_embeds.append(device_embed)
 
-        try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-            answer = response.content.lower()
-        except asyncio.exceptions.TimeoutError:
+        message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]), content='Navigate to the device you wish to remove and react with "✅" to remove it.')
+        num = await self.utils.watch_pagination(device_embeds, message, get_answer=True)
+
+        if num is None:
             await message.edit(embed=timeout_embed)
-            return
-
-        try:
-            await response.delete()
-        except:
-            pass
-
-        if 'cancel' in answer or answer.startswith(prefix):
-            await message.edit(embed=cancelled_embed)
-            return
-
-        try:
-            num = int(answer) - 1
-        except:
-            await message.edit(embed=invalid_embed)
-            return
-
-        if num not in range(len(devices)):
-            await message.edit(embed=invalid_embed)
             return
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
         embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-        await message.edit(embed=embed)
+        await message.edit(embed=embed, content=None)
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)

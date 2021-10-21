@@ -60,7 +60,7 @@ class Device(commands.Cog):
                 await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
                 await db.commit()
 
-        if len(devices) > max_devices and await ctx.bot.is_owner(ctx.author) == False: # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
+        if (len(devices) >= max_devices) and (await ctx.bot.is_owner(ctx.author) == False): # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             invalid_embed.description = f'You cannot add over {max_devices} devices to AutoTSS.'
             await ctx.reply(embed=invalid_embed)
             return

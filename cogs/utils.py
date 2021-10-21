@@ -291,7 +291,7 @@ class Utils(commands.Cog):
                 await message.add_reaction('✅')
 
             reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: reaction.message == message)
-            if user != message.reference.cached_message.author:
+            if user not in (message.reference.cached_message.author, self.bot.user):
                 await reaction.remove(user)
                 continue
 

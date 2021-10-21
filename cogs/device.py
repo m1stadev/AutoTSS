@@ -450,7 +450,7 @@ class Device(commands.Cog):
         num = await self.utils.watch_pagination(device_embeds, message, get_answer=True)
 
         if num is None:
-            await message.edit(embed=timeout_embed)
+            await message.edit(embed=timeout_embed, content=None)
             return
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")

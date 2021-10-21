@@ -130,9 +130,7 @@ class Device(commands.Cog):
                         await message.edit(embed=invalid_embed)
                         return
 
-                    async with aiohttp.ClientSession() as session:
-                        api = await self.utils.fetch_ipswme_api(session, device['identifier'])
-
+                    api = await self.utils.fetch_ipswme_api(session, device['identifier'])
                     if len(api['boards']) == 1: # If there's only one board for the device, grab the boardconfig now
                         device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
 

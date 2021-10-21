@@ -297,7 +297,7 @@ class Utils(commands.Cog):
 
             reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author and reaction.message == message))[0]
             if reaction.emoji not in arrows:
-                await message.clear_reactions()
+                await reaction.clear()
                 continue
 
             if reaction.emoji == arrows[0]:
@@ -308,6 +308,8 @@ class Utils(commands.Cog):
 
             await message.clear_reactions()
             await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
+            
+        await message.clear_reactions()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()

@@ -36,7 +36,7 @@ class Utils(commands.Cog):
 
         for ecid in ecids:
             try:
-                await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/Blobs/{ecid}')
+                await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
             except FileNotFoundError:
                 pass
 

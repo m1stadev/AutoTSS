@@ -522,18 +522,26 @@ class Device(commands.Cog):
 
     @device_cmd.command(name='list')
     @commands.guild_only()
-    async def list_devices(self, ctx: commands.Context) -> None:
+    async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int, str]=0) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        if type(user) == int:
+            user = ctx.author if user == 0 else self.bot.get_user(user)
+
+        if type(user) in (None, str):
+            embed = discord.Embed(title='Error', description="This user doesn't exist!")
+            await ctx.reply(embed=embed)
+            return
+
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
+            embed = discord.Embed(title='Error', description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.")
             await ctx.reply(embed=embed)
             return
 

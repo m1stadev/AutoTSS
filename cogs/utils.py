@@ -32,7 +32,7 @@ class Utils(commands.Cog):
         return discord.utils.oauth_url(self.bot.user.id, perms)
 
     async def backup_blobs(self, tmpdir: str, *ecids: list):
-        await self.os.mkdir(f'{tmpdir}/Blobs')
+        await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
 
         for ecid in ecids:
             try:
@@ -40,7 +40,7 @@ class Utils(commands.Cog):
             except FileNotFoundError:
                 pass
 
-        if len(glob.glob(f'{tmpdir}/Blobs/*')) == 0:
+        if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
             return
 
         await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)

@@ -275,7 +275,7 @@ class Utils(commands.Cog):
 
         return discord.Embed.from_dict(embed)
 
-    async def watch_pagination(self, embeds: list, message: discord.Message, timeout: int=300) -> None:
+    async def watch_pagination(self, embeds: list, message: discord.Message, *, get_answer: bool=False, timeout: int=300) -> Optional[int]:
         arrows = ['⬅', '➡'] # [left arrow, right arrow]
         start_time = await self.time.time()
         embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
@@ -287,8 +287,15 @@ class Utils(commands.Cog):
             if embed_num < (len(embeds) - 1):
                 await message.add_reaction(arrows[1])
 
+            if get_answer:
+                await message.add_reaction('✅')
+
             reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author and reaction.message == message))[0]
             if reaction.emoji not in arrows:
+                if (reaction.emoji == '✅') and get_answer:
+                    await message.clear_reactions()
+                    return embed_num
+
                 await reaction.clear()
                 continue
 

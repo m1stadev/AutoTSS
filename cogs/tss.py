@@ -210,7 +210,7 @@ class TSS(commands.Cog):
             blobs = sorted(device['saved_blobs'], key=lambda firm: firm['buildid'])
 
             device_embed = {
-                'title': f"*{device['name']}*'s Saved SHSH Blobs",
+                'title': f"*{device['name']}*'s Saved SHSH Blobs ({devices.index(device) + 1}/{len(devices)})",
                 'fields': list(),
                 'footer': {
                     'text': ctx.author.display_name,

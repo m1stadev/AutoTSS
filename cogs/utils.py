@@ -46,13 +46,6 @@ class Utils(commands.Cog):
         await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
         return await self.upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
 
-    async def buildid_to_version(self, identifier: str, buildid: str) -> str:
-        api_url = f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw'
-        async with aiohttp.ClientSession() as session, session.get(api_url) as resp:
-            api = await resp.json()
-
-        return next(x['version'] for x in api['firmwares'] if x['buildid'] == buildid)
-
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
     async def check_apnonce(self, cpid: int, nonce: str) -> bool:

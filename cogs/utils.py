@@ -53,6 +53,8 @@ class Utils(commands.Cog):
 
         return next(x['version'] for x in api['firmwares'] if x['buildid'] == buildid)
 
+    async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
+
     async def check_apnonce(self, cpid: int, nonce: str) -> bool:
         try:
             int(nonce, 16)

@@ -521,35 +521,59 @@ class Device(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s Devices")
-
+        device_embeds = list()
         for device in devices:
-            device_info = [
-                f"Device Identifier: `{device['identifier']}`",
-                f"ECID: ||`{device['ecid']}`||",
-                f"Boardconfig: `{device['boardconfig']}`",
-                f"SHSH Blobs saved: **{len(device['saved_blobs'])}**"
-            ]
+            device_embed = {
+                'title': f"*{device['name']} ({devices.index(device) + 1}/{len(devices)})*",
+                'fields': [{
+                    'name': 'Device Identifier',
+                    'value': f"`{device['identifier']}`",
+                    'inline': False
+                },
+                {
+                    'name': 'ECID',
+                    'value': f"`{await self.utils.censor_ecid(device['ecid'])}`",
+                    'inline': False
+                },
+                {
+                    'name': 'Board Config',
+                    'value': f"`{device['boardconfig']}`",
+                    'inline': False
+                }],
+                'footer': {
+                    'text': ctx.author.display_name,
+                    'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+                }
+            }
 
             if device['generator'] is not None:
-                device_info.insert(-1, f"Custom generator: `{device['generator']}`")
+                device_embed['fields'].append({
+                    'name': 'Custom Generator',
+                    'value': f"`{device['generator']}`",
+                    'inline': False
+                })
 
             if device['apnonce'] is not None:
-                device_info.insert(-1, f"Custom ApNonce: `{device['apnonce']}`")
+                device_embed['fields'].append({
+                    'name': 'Custom ApNonce',
+                    'value': f"`{device['apnonce']}`",
+                    'inline': False
+                })
 
-            embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
+            num_blobs = len(device['saved_blobs'])
+            device_embed['fields'].append({
+                'name': 'SHSH Blobs',
+                'value': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
+                'inline': False
+            })
 
-        embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
-        message = await ctx.reply(embed=embed)
+            device_embeds.append(device_embed)
 
-        await asyncio.sleep(5)
+        embed_msg = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
+        if len(device_embeds) == 1:
+            return
 
-        for x in range(len(embed.fields)):
-            field_values = [value for value in embed.fields[x].value.splitlines() if 'ECID' not in value]
-            embed.set_field_at(index=x, name=embed.fields[x].name, value='\n'.join(field_values))
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-
-        await message.edit(embed=embed)
+        await self.utils.watch_pagination(device_embeds, embed_msg)
 
     @device_cmd.command(name='transfer')
     @commands.guild_only()

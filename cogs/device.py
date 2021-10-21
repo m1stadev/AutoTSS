@@ -78,11 +78,13 @@ class Device(commands.Cog):
                 embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
+                if (x == 3) and ('boardconfig' in device.keys()): # If we got boardconfig from API, no need to get it from user
+                    continue
+
                 if x == 0:
                     message = await ctx.reply(embed=embed)
                 else:
                     await message.edit(embed=embed)
-
 
                 # Wait for a response from the user, and error out if the user takes over 5 minutes to respond
                 try:
@@ -127,6 +129,12 @@ class Device(commands.Cog):
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await message.edit(embed=invalid_embed)
                         return
+
+                    async with aiohttp.ClientSession() as session:
+                        api = await self.utils.fetch_ipswme_api(session, device['identifier'])
+
+                    if len(api['boards']) == 1: # If there's only one board for the device, grab the boardconfig now
+                        device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
 
                 elif x == 2:
                     if answer.startswith('0x'):

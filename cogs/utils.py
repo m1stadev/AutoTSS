@@ -290,11 +290,7 @@ class Utils(commands.Cog):
             if get_answer:
                 await message.add_reaction('✅')
 
-            reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: reaction.message == message)
-            if user not in (message.reference.cached_message.author, self.bot.user):
-                await reaction.remove(user)
-                continue
-
+            reaction = (await self.bot.wait_for('reaction_add', check=lambda reaction, user: user == message.reference.cached_message.author and reaction.message == message))[0]
             if reaction.emoji not in arrows:
                 if (reaction.emoji == '✅') and get_answer:
                     await message.clear_reactions()

@@ -130,8 +130,9 @@ class Device(commands.Cog):
                         await message.edit(embed=invalid_embed)
                         return
 
+                    # If there's only one board for the device, grab the boardconfig now
                     api = await self.utils.fetch_ipswme_api(session, device['identifier'])
-                    if len(api['boards']) == 1: # If there's only one board for the device, grab the boardconfig now
+                    if len([board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]) == 1: # Exclude development boards that may pop up
                         device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
 
                 elif x == 2:

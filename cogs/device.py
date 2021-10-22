@@ -292,67 +292,14 @@ class Device(commands.Cog):
                 await message.edit(embed=cancelled_embed)
                 return
             else:
-                device['apnonce'] = None
-
-            if 32800 <= cpid < 35072 and device['apnonce'] is None: # If A12+ and no apnonce was specified
-                embed = discord.Embed(title='Add Device')
-                apnonce_warning = (
-                    'You are attempting to add an A12+ device while choosing to not specify a custom apnonce.',
-                    'This will save **invalid SHSH blobs**.',
-                    'Are you sure you want to do this?'
-                )
-
-                embed.add_field(name='Warning', value='\n'.join(apnonce_warning), inline=False)
-                embed.add_field(name='Options', value='Type **yes** to go back and add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                await message.edit(embed=embed)
-
-                try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    answer = response.content.lower()
-                except asyncio.exceptions.TimeoutError:
-                    await message.edit(embed=timeout_embed)
-                    return
-
-                try:
-                    await response.delete()
-                except discord.errors.NotFound:
-                    pass
-
-                if answer == 'yes':
-                    embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
+                if 32800 <= cpid < 35072: # If A12+ and no apnonce was specified
+                    embed = discord.Embed(title='Add Device')
+                    embed.add_field(name='Error', value='You cannot add a device with an A12+ SoC without specifying an ApNonce.', inline=False)
                     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                     await message.edit(embed=embed)
-
-                    try:
-                        response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                        answer = response.content.lower()
-                    except asyncio.exceptions.TimeoutError:
-                        await message.edit(embed=timeout_embed)
-                        return
-
-                    try:
-                        await response.delete()
-                    except discord.errors.NotFound:
-                        pass
-
-                    if 'cancel' in answer or answer.startswith(prefix):
-                        await message.edit(embed=cancelled_embed)
-                        return
-
-                    else:
-                        device['apnonce'] = answer
-                        if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
-                            invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
-                            invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
-                            await message.edit(embed=invalid_embed)
-                            return
-
-                elif 'cancel' in answer or answer.startswith(prefix):
-                    await message.edit(embed=cancelled_embed)
                     return
-                else:
-                    device['apnonce'] = None
+
+                device['apnonce'] = None
 
         device['saved_blobs'] = list()
 

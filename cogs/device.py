@@ -166,14 +166,17 @@ class Device(commands.Cog):
 
             generator_description = [
                 'Would you like to save SHSH blobs with a custom generator?',
-                '*If being ran on A12+ devices, you **will** need to provide a matching apnonce for SHSH blobs to be saved correctly.*',
-                'Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-web#getting-generator-and-apnonce-jailbroken-a12-only)',
-                'Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-computer#get-your-device-specific-apnonce-and-generator)',
-                'This value is hexadecimal, 16 characters long, and begins with `0x`.'
+                'This value is hexadecimal, 18 characters long, and begins with `0x`.'
             ]
 
+            cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
+            if 32800 <= cpid < 35072:
+                generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
+                generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-web#getting-generator-and-apnonce-jailbroken-a12-only)*')
+                generator_description.append('*Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-computer#get-your-device-specific-apnonce-and-generator)*')
+
             embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
-            embed.add_field(name='Options', value='Type **yes** to add a custom generator, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
+            embed.add_field(name='Options', value='Type `yes` to add a custom generator, `cancel` to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
@@ -213,7 +216,7 @@ class Device(commands.Cog):
                 else:
                     device['generator'] = answer
                     if await self.utils.check_generator(device['generator']) is False:
-                        invalid_embed.description = f"Device Generator `{device['generator']}` is not valid."
+                        invalid_embed.description = f"Generator `{device['generator']}` is not valid."
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await message.edit(embed=invalid_embed)
                         return
@@ -225,25 +228,15 @@ class Device(commands.Cog):
                 device['generator'] = None
 
             apnonce_description = [
-                'Would you like to save SHSH blobs with a custom apnonce?',
+                'Would you like to save SHSH blobs with a custom ApNonce?',
+                'This is **NOT** the same as your **generator**, which is hexadecimal, begins with `0x`, and is 16 characters long.'
             ]
 
-            if device['generator'] is not None:
-                apnonce_description.append(f"This custom apnonce MUST match with your custom generator `{device['generator']}`, or else your SHSH blobs **will be invalid**.")
-
-            cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-            if cpid >= 32800:
-                if len(apnonce_description) == 2:
-                    a12_apnonce_desc = 'This also '
-                else:
-                    a12_apnonce_desc = 'This '
-
-                apnonce_description.append(a12_apnonce_desc + 'MUST be done for your device, or else your SHSH blobs **will be invalid**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).')
-
-            apnonce_description.append('NOTE: This is **NOT** the same as your **generator**, which is hex, begins with `0x`, and is 16 characters long.')
+            if 32800 <= cpid < 35072:
+                apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
-            embed.add_field(name='Options', value='Type **yes** to add a custom apnonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
+            embed.add_field(name='Options', value='Type **yes** to add a custom ApNonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
             await message.edit(embed=embed)
 
@@ -260,7 +253,7 @@ class Device(commands.Cog):
                 pass
 
             if answer == 'yes':
-                embed = discord.Embed(title='Add Device', description='Please enter the custom apnonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
+                embed = discord.Embed(title='Add Device', description='Please enter the custom ApNonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                 await message.edit(embed=embed)
 

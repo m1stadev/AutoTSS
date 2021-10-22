@@ -148,7 +148,7 @@ class Device(commands.Cog):
                             invalid_embed.description += ' This ECID has already been added to AutoTSS.'
 
                         await message.edit(embed=invalid_embed)
-                        invalid_embed.description = invalid_embed.description.replace(f"`{answer}` ", '')
+                        invalid_embed.description = invalid_embed.description.replace('`{answer}`', f'`{await self.utils.censor_ecid(answer)}`')
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
                         await asyncio.sleep(5)
                         await message.edit(embed=invalid_embed)

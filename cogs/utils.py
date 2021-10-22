@@ -276,7 +276,7 @@ class Utils(commands.Cog):
         return discord.Embed.from_dict(embed)
 
     async def watch_pagination(self, embeds: list, message: discord.Message, *, get_answer: bool=False, timeout: int=300) -> Optional[int]:
-        arrows = ['⏪', '⬅', '➡', '⏩'] # [left arrow, right arrow]
+        arrows = ['⏪', '⬅️', '➡️', '⏩'] # [left arrow, right arrow]
         start_time = await self.time.time()
         embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
 

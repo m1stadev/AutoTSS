@@ -398,60 +398,64 @@ class Device(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        device_embeds = list()
-        for device in devices:
-            device_embed = {
-                'title': f"*{device['name']}*  ({devices.index(device) + 1}/{len(devices)})",
-                'fields': [{
-                    'name': 'Device Identifier',
-                    'value': f"`{device['identifier']}`",
-                    'inline': False
-                },
-                {
-                    'name': 'ECID',
-                    'value': f"`{await self.utils.censor_ecid(device['ecid'])}`",
-                    'inline': False
-                },
-                {
-                    'name': 'Board Config',
-                    'value': f"`{device['boardconfig']}`",
-                    'inline': False
-                }],
-                'footer': {
-                    'text': ctx.author.display_name,
-                    'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+        if len(devices) > 1:
+            device_embeds = list()
+            for device in devices:
+                device_embed = {
+                    'title': f"*{device['name']}*  ({devices.index(device) + 1}/{len(devices)})",
+                    'fields': [{
+                        'name': 'Device Identifier',
+                        'value': f"`{device['identifier']}`",
+                        'inline': False
+                    },
+                    {
+                        'name': 'ECID',
+                        'value': f"`{await self.utils.censor_ecid(device['ecid'])}`",
+                        'inline': False
+                    },
+                    {
+                        'name': 'Board Config',
+                        'value': f"`{device['boardconfig']}`",
+                        'inline': False
+                    }],
+                    'footer': {
+                        'text': ctx.author.display_name,
+                        'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+                    }
                 }
-            }
 
-            if device['generator'] is not None:
+                if device['generator'] is not None:
+                    device_embed['fields'].append({
+                        'name': 'Custom Generator',
+                        'value': f"`{device['generator']}`",
+                        'inline': False
+                    })
+
+                if device['apnonce'] is not None:
+                    device_embed['fields'].append({
+                        'name': 'Custom ApNonce',
+                        'value': f"`{device['apnonce']}`",
+                        'inline': False
+                    })
+
+                num_blobs = len(device['saved_blobs'])
                 device_embed['fields'].append({
-                    'name': 'Custom Generator',
-                    'value': f"`{device['generator']}`",
+                    'name': 'SHSH Blobs',
+                    'value': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
                     'inline': False
                 })
 
-            if device['apnonce'] is not None:
-                device_embed['fields'].append({
-                    'name': 'Custom ApNonce',
-                    'value': f"`{device['apnonce']}`",
-                    'inline': False
-                })
+                device_embeds.append(device_embed)
 
-            num_blobs = len(device['saved_blobs'])
-            device_embed['fields'].append({
-                'name': 'SHSH Blobs',
-                'value': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
-                'inline': False
-            })
+            message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]), content='Navigate to the device you wish to remove and react with "✅" to remove it.')
+            num = await self.utils.watch_pagination(device_embeds, message, get_answer=True)
 
-            device_embeds.append(device_embed)
+            if num is None:
+                await message.edit(embed=timeout_embed, content=None)
+                return
 
-        message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]), content='Navigate to the device you wish to remove and react with "✅" to remove it.')
-        num = await self.utils.watch_pagination(device_embeds, message, get_answer=True)
-
-        if num is None:
-            await message.edit(embed=timeout_embed, content=None)
-            return
+        else:
+            num = 0
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
         embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)

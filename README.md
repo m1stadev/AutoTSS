@@ -27,7 +27,7 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 
 ## Running
 
-While you can run your own instances, it's prefered for you to simply use the already hosted instance. Support for your own instance will not be provided. Windows is not supported!
+While you can run your own instances, it's prefered for you to simply use the already hosted instance. Windows is not supported!
 
 To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps...
 
@@ -35,7 +35,7 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
 
 2. Create a virtual env and install dependencies
 
-        python3 -m venv --upgrade-deps env; source env/bin/activate
+        python3 -m venv --upgrade-deps env && source env/bin/activate
         pip3 install -U -r requirements.txt
 
 3.  Set the `AUTOTSS_TOKEN` environment variable to the bot token you got from your Discord bot application

@@ -101,8 +101,11 @@ class Device(commands.Cog):
                 # Delete the message
                 try:
                     await response.delete()
-                except:
+                except discord.errors.NotFound:
                     pass
+                except discord.errors.Forbidden as error:
+                    if x != 2:
+                        raise error
 
                 answer = discord.utils.remove_markdown(answer)
                 if 'cancel' in answer.lower() or answer.startswith(prefix):

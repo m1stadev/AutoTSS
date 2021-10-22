@@ -104,6 +104,7 @@ class Device(commands.Cog):
                 except discord.errors.NotFound:
                     pass
 
+                answer = discord.utils.remove_markdown(answer)
                 if 'cancel' in answer.lower() or answer.startswith(prefix):
                     await message.edit(embed=cancelled_embed)
                     return
@@ -178,7 +179,7 @@ class Device(commands.Cog):
 
             try:
                 response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                answer = response.content.lower()
+                answer = discord.utils.remove_markdown(response.content.lower())
             except asyncio.exceptions.TimeoutError:
                 await message.edit(embed=timeout_embed)
                 return
@@ -195,7 +196,7 @@ class Device(commands.Cog):
 
                 try:
                     response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    answer = response.content.lower()
+                    answer = discord.utils.remove_markdown(response.content.lower())
                 except asyncio.exceptions.TimeoutError:
                     await message.edit(embed=timeout_embed)
                     return
@@ -248,7 +249,7 @@ class Device(commands.Cog):
 
             try:
                 response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                answer = response.content.lower()
+                answer = discord.utils.remove_markdown(response.content.lower())
             except asyncio.exceptions.TimeoutError:
                 await message.edit(embed=timeout_embed)
                 return
@@ -265,7 +266,7 @@ class Device(commands.Cog):
 
                 try:
                     response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    answer = response.content.lower()
+                    answer = discord.utils.remove_markdown(response.content.lower())
                 except asyncio.exceptions.TimeoutError:
                     await message.edit(embed=timeout_embed)
                     return
@@ -466,7 +467,7 @@ class Device(commands.Cog):
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-            answer = response.content.lower()
+            answer = discord.utils.remove_markdown(response.content.lower())
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)
             return
@@ -684,7 +685,7 @@ class Device(commands.Cog):
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-            answer = response.content.lower()
+            answer = discord.utils.remove_markdown(response.content.lower())
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)
             return

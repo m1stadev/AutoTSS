@@ -71,7 +71,7 @@ class Device(commands.Cog):
                 descriptions = (
                     'Enter a name for your device.',
                     "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
-                    "Enter your device's ECID (hex).",
+                    f"Enter your device's ECID (hex).\n*If you'd like to keep your ECID private, you can DM your ECID to {self.bot.user.mention}.*",
                     "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
                 )
 
@@ -101,7 +101,7 @@ class Device(commands.Cog):
                 # Delete the message
                 try:
                     await response.delete()
-                except discord.errors.NotFound:
+                except:
                     pass
 
                 answer = discord.utils.remove_markdown(answer)

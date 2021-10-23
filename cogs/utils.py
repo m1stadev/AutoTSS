@@ -318,7 +318,7 @@ class Utils(commands.Cog):
                 embed_num = len(embeds) - 1
 
             await message.clear_reactions()
-            await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
+            message = await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
             
         await message.clear_reactions()
 

@@ -175,10 +175,10 @@ class TSS(commands.Cog):
 
         if message.channel.type == discord.ChannelType.private:
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await message.edit(embed=embed)
+            message = await message.edit(embed=embed)
         else:
             embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).', icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await message.edit(embed=embed)
+            message = await message.edit(embed=embed)
 
             await asyncio.sleep(5)
             await ctx.message.delete()
@@ -309,7 +309,7 @@ class TSS(commands.Cog):
                     else:
                         failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
                         embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
-                        await message.edit(embed=embed)
+                        message = await message.edit(embed=embed)
 
                 if blobs_saved > current_blobs_saved:
                     devices_saved_for += 1
@@ -444,7 +444,7 @@ class TSS(commands.Cog):
                         else:
                             failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
                             embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
-                            await message.edit(embed=embed)
+                            message = await message.edit(embed=embed)
 
                     if blobs_saved > current_blobs_saved:
                         devices_saved_for += 1

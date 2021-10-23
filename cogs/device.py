@@ -84,7 +84,7 @@ class Device(commands.Cog):
                 if x == 0:
                     message = await ctx.reply(embed=embed)
                 else:
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
 
                 # Wait for a response from the user, and error out if the user takes over 5 minutes to respond
                 try:
@@ -152,7 +152,7 @@ class Device(commands.Cog):
                         if ecid_check == -1:
                             invalid_embed.description += ' This ECID has already been added to AutoTSS.'
 
-                        await message.edit(embed=invalid_embed)
+                        message = await message.edit(embed=invalid_embed)
                         invalid_embed.description = invalid_embed.description.replace(f'`{answer}`', f'`{await self.utils.censor_ecid(answer)}`')
                         invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                         await asyncio.sleep(5)
@@ -181,7 +181,7 @@ class Device(commands.Cog):
             embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
             embed.add_field(name='Options', value='Type `yes` to add a custom generator, `cancel` to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await message.edit(embed=embed)
+            message = await message.edit(embed=embed)
 
             try:
                 response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -198,7 +198,7 @@ class Device(commands.Cog):
             if answer == 'yes':
                 embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                await message.edit(embed=embed)
+                message = await message.edit(embed=embed)
 
                 try:
                     response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -241,7 +241,7 @@ class Device(commands.Cog):
             embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
             embed.add_field(name='Options', value='Type **yes** to add a custom ApNonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await message.edit(embed=embed)
+            message = await message.edit(embed=embed)
 
             try:
                 response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -258,7 +258,7 @@ class Device(commands.Cog):
             if answer == 'yes':
                 embed = discord.Embed(title='Add Device', description='Please enter the custom ApNonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                await message.edit(embed=embed)
+                message = await message.edit(embed=embed)
 
                 try:
                     response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -406,7 +406,7 @@ class Device(commands.Cog):
         embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        await message.edit(embed=embed, content=None)
+        message = await message.edit(embed=embed, content=None)
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
@@ -423,7 +423,7 @@ class Device(commands.Cog):
         if answer == 'yes':
             embed = discord.Embed(title='Remove Device', description='Removing device...')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await message.edit(embed=embed)
+            message = await message.edit(embed=embed)
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
                 url = await self.utils.backup_blobs(tmpdir, devices[num]['ecid'])
@@ -431,7 +431,7 @@ class Device(commands.Cog):
             if url is None:
                 embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                await message.edit(embed=embed)
+                message = await message.edit(embed=embed)
 
             else:
                 await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
@@ -443,7 +443,7 @@ class Device(commands.Cog):
                 try:
                     await ctx.author.send(embed=embed)
                     embed.description = f"Device `{devices[num]['name']}` removed."
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                 except:
                     embed.description = f"Device `{devices[num]['name']}` removed.\nSHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
                     embed.set_footer(
@@ -451,7 +451,7 @@ class Device(commands.Cog):
                         icon_url=ctx.author.display_avatar.with_static_format('png').url
                         )
 
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
 
                     await asyncio.sleep(5)
                     await ctx.message.delete()

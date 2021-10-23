@@ -136,22 +136,22 @@ class Admin(commands.Cog):
             for module in (self.modules if modules[0] == 'all' else modules):
                 if not any(module == x for x in self.modules):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_loads += 1
                     continue
 
                 try:
                     self.bot.load_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully unloaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     successful_loads += 1
                 except discord.ext.commands.ExtensionAlreadyLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is already loaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_loads += 1
                 except discord.ext.commands.ExtensionFailed:
                     embed.add_field(name='Error', value=f'Module `{module}` has an error, cannot load!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_loads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_loads}** module{'s' if successful_loads != 1 else ''} successfully loaded, **{failed_loads}** module{'s' if failed_loads != 1 else ''} failed to load.")
@@ -195,22 +195,22 @@ class Admin(commands.Cog):
             for module in (self.modules if modules[0] == 'all' else modules):
                 if module not in self.modules:
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_reloads += 1
                     continue
 
                 try:
                     self.bot.reload_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully reloaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     successful_reloads += 1
                 except discord.ext.commands.ExtensionNotLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is not currently loaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_reloads += 1
                 except discord.ext.commands.ExtensionFailed:
                     embed.add_field(name='Error', value=f'Module `{module}` failed to reload!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_reloads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_reloads}** module{'s' if successful_reloads != 1 else ''} successfully reloaded, **{failed_reloads}** module{'s' if failed_reloads != 1 else ''} failed to reload.")
@@ -257,24 +257,24 @@ class Admin(commands.Cog):
             for module in (self.modules if modules[0] == 'all' else modules):
                 if not any(module == x for x in self.modules):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_unloads += 1
                     continue
 
                 if module == 'admin':
                     embed.add_field(name='Error', value=f'Module `{module}` cannot be unloaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_unloads += 1
                     continue
 
                 try:
                     self.bot.unload_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully unloaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     successful_unloads += 1
                 except discord.ext.commands.ExtensionNotLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is already unloaded!', inline=False)
-                    await message.edit(embed=embed)
+                    message = await message.edit(embed=embed)
                     failed_unloads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_unloads}** module{'s' if successful_unloads != 1 else ''} successfully unloaded, **{failed_unloads}** module{'s' if failed_unloads != 1 else ''} failed to unload.")

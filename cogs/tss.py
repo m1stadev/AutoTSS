@@ -1,7 +1,8 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 from typing import Union
-from views.pagination import PaginatorView
+from views.buttons import PaginatorView
+
 import aiofiles
 import aiohttp
 import aiosqlite

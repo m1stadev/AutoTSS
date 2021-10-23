@@ -1,7 +1,7 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 from typing import Union
-from views.pagination import Paginator
+from views.pagination import PaginatorView
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -247,8 +247,8 @@ class TSS(commands.Cog):
             await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
             return
 
-        pagination = Paginator(device_embeds)
-        pagination.message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[pagination.embed_num]), view=pagination)
+        paginator = PaginatorView(device_embeds)
+        paginator.message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[paginator.embed_num]), view=paginator)
 
     @tss_cmd.command(name='save')
     @commands.guild_only()

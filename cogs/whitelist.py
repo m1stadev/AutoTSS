@@ -18,7 +18,7 @@ class Whitelist(commands.Cog):
         embed.add_field(name='Set whitelist channel', value=f'`{prefix}whitelist set <channel>`', inline=False)
         embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @whitelist_cmd.command(name='set')
@@ -41,7 +41,7 @@ class Whitelist(commands.Cog):
             await db.commit()
 
         embed = discord.Embed(title='Whitelist', description=f'Enabled AutoTSS whitelisting and set to {channel.mention}.')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @whitelist_cmd.command(name='toggle')
@@ -63,7 +63,7 @@ class Whitelist(commands.Cog):
 
                     embed = discord.Embed(title='Whitelist')
                     embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for AutoTSS to {channel.mention}."
-                    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             else:
                 embed = discord.Embed(title='Error', description='No whitelist channel is set.')
 

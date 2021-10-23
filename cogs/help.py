@@ -25,7 +25,7 @@ class Help(commands.Cog):
         if ctx.author.guild_permissions.administrator:
             embed.add_field(name='Whitelist Commands', value=f'`{prefix}help whitelist`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @help_command.command(name='devices', aliases=('device',))
@@ -43,7 +43,7 @@ class Help(commands.Cog):
         if await ctx.bot.is_owner(ctx.author):
             embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @help_command.command(name='tss')
@@ -62,7 +62,7 @@ class Help(commands.Cog):
             embed.add_field(name='Download all SHSH blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
             embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @help_command.command(name='misc')
@@ -80,7 +80,7 @@ class Help(commands.Cog):
         if ctx.author.guild_permissions.administrator:
             embed.add_field(name="Change AutoTSS's prefix", value=f'`{prefix}prefix <prefix>`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @help_command.command(name='whitelist')
@@ -96,7 +96,7 @@ class Help(commands.Cog):
         embed.add_field(name='Set whitelist channel', value=f'`{prefix}whitelist set <channel>`', inline=False)
         embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @help_command.command(name='admin')
@@ -108,7 +108,7 @@ class Help(commands.Cog):
         embed = discord.Embed(title='Admin Commands')
         embed.add_field(name='See module subcommands', value=f'`{prefix}module`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
 

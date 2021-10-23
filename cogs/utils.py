@@ -225,7 +225,7 @@ class Utils(commands.Cog):
         embed = {
             'title': "Hey, I'm AutoTSS!",
             'thumbnail': {
-                'url': str(self.bot.user.avatar_url_as(static_format='png'))
+                'url': str(self.bot.user.display_avatar.with_static_format('png').url)
             },
             'fields': [{
                 'name': 'What do I do?',
@@ -269,7 +269,7 @@ class Utils(commands.Cog):
             }],
             'footer': {
                 'text': member.display_name,
-                'icon_url': str(member.avatar_url_as(static_format='png'))
+                'icon_url': str(member.display_avatar.with_static_format('png').url)
             }
         }
 
@@ -427,7 +427,7 @@ class Utils(commands.Cog):
         whitelist = await self.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await ctx.reply(embed=embed)
 
             return False

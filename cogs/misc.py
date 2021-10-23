@@ -20,7 +20,7 @@ class Misc(commands.Cog):
         if prefix is None:
             prefix = await self.utils.get_prefix(ctx.guild.id)
             embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await ctx.reply(embed=embed)
             return
 
@@ -34,7 +34,7 @@ class Misc(commands.Cog):
             await db.commit()
 
         embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         await ctx.reply(embed=embed)
 
@@ -45,8 +45,8 @@ class Misc(commands.Cog):
             return
 
         embed = discord.Embed(title='Invite', description=f'[Click here]({self.utils.invite}).')
-        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         await ctx.reply(embed=embed)
 
@@ -57,8 +57,8 @@ class Misc(commands.Cog):
             return
 
         embed = discord.Embed(title='Pong!', description='Testing ping...')
-        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.display_avatar.with_static_format('png').url)
 
         time = await self.datetime.utcnow()
         message = await ctx.reply(embed=embed)

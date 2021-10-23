@@ -241,7 +241,7 @@ class Events(commands.Cog):
             prefix = await self.utils.get_prefix(message.guild.id)
 
             embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see all of my commands, run `{prefix}help`.')
-            embed.set_footer(text=message.author.name, icon_url=message.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=message.author.name, icon_url=message.author.display_avatar.with_static_format('png').url)
             try:
                 await message.reply(embed=embed)
             except:

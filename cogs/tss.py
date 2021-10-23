@@ -131,7 +131,7 @@ class TSS(commands.Cog):
             embed.add_field(name='Download SHSH blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
             embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
 
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
     @tss_cmd.command(name='download')
@@ -153,7 +153,7 @@ class TSS(commands.Cog):
             return
 
         embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         try:
             message = await ctx.author.send(embed=embed)
             await ctx.message.delete()
@@ -167,17 +167,17 @@ class TSS(commands.Cog):
 
             if url is None:
                 embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                 await message.edit(embed=embed)
                 return
 
             embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
 
         if message.channel.type == discord.ChannelType.private:
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await message.edit(embed=embed)
         else:
-            embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).', icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).', icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await message.edit(embed=embed)
 
             await asyncio.sleep(5)
@@ -218,7 +218,7 @@ class TSS(commands.Cog):
                 'fields': list(),
                 'footer': {
                     'text': ctx.author.display_name,
-                    'icon_url': str(ctx.author.avatar_url_as(static_format='png'))
+                    'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
                 }
             }
 
@@ -273,7 +273,7 @@ class TSS(commands.Cog):
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
 
         blobs_saved = int()
@@ -353,7 +353,7 @@ class TSS(commands.Cog):
             return
 
         embed = discord.Embed(title='Download All Blobs', description='Uploading SHSH blobs...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         try:
             message = await ctx.author.send(embed=embed)
@@ -370,7 +370,7 @@ class TSS(commands.Cog):
             embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
         else:
             embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         await message.edit(embed=embed)
 
@@ -400,7 +400,7 @@ class TSS(commands.Cog):
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all devices...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
 
         await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))

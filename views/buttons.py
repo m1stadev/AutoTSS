@@ -1,13 +1,39 @@
 import discord
 
 
+class ConfirmButton(discord.ui.Button['ConfirmView']):
+    def __init__(self, *, confirm: bool=False, cancel: bool=False):
+        self.type = 'confirm' if confirm == True else 'cancel'
+
+        if self.type == 'confirm':
+            super().__init__(style=discord.ButtonStyle.danger, label='Confirm')
+        elif self.type == 'cancel':
+            super().__init__(style=discord.ButtonStyle.secondary, label='Cancel')
+
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.answer = self.type
+        await self.view.on_timeout()
+        self.view.stop()
+
+
+class ConfirmView(discord.ui.View):
+    def __init__(self, timeout: int=60):
+        super().__init__(timeout=timeout)
+
+        self.add_item(ConfirmButton(confirm=True))
+        self.add_item(ConfirmButton(cancel=True))
+
+    async def on_timeout(self):
+        self.clear_items()
+        await self.message.edit(view=self)
+
+
 class PaginatorView(discord.ui.View):
     def __init__(self, embeds: list[dict], timeout: int=60):
-        super().__init__()
+        super().__init__(timeout=timeout)
 
         self.embeds = embeds
-        self.timeout = timeout
-
         self.embed_num = 0
 
     async def update_interaction(self, interaction: discord.Interaction):

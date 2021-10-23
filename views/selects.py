@@ -1,5 +1,6 @@
 import discord
 
+
 class DropdownSelect(discord.ui.Select['DropdownView']):
     def __init__(self, options: list[discord.SelectOption], placeholder: str):
         super().__init__(

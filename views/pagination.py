@@ -18,22 +18,22 @@ class PaginatorView(discord.ui.View):
 
         await interaction.response.edit_message(embed=discord.Embed.from_dict(self.embeds[self.embed_num]), view=self)
 
-    @discord.ui.button(label='⏪', style=discord.ButtonStyle.grey, disabled=True)
+    @discord.ui.button(emoji='⏪', style=discord.ButtonStyle.grey, disabled=True)
     async def page_beginning(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num = 0
         await self.update_interaction(interaction)
 
-    @discord.ui.button(label='⬅️', style=discord.ButtonStyle.grey, disabled=True)
+    @discord.ui.button(emoji='⬅️', style=discord.ButtonStyle.grey, disabled=True)
     async def page_backward(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num -= 1
         await self.update_interaction(interaction)
 
-    @discord.ui.button(label='➡️', style=discord.ButtonStyle.grey)
+    @discord.ui.button(emoji='➡️', style=discord.ButtonStyle.grey)
     async def page_forward(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num += 1
         await self.update_interaction(interaction)
 
-    @discord.ui.button(label='⏩', style=discord.ButtonStyle.grey)
+    @discord.ui.button(emoji='⏩', style=discord.ButtonStyle.grey)
     async def page_end(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num = len(self.embeds) - 1
         await self.update_interaction(interaction)

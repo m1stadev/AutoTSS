@@ -1,6 +1,7 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Union
+from views.pagination import Paginator
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -542,11 +543,12 @@ class Device(commands.Cog):
 
             device_embeds.append(device_embed)
 
-        embed_msg = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
         if len(device_embeds) == 1:
+            await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
             return
 
-        await self.utils.watch_pagination(device_embeds, embed_msg)
+        pagination = Paginator(device_embeds)
+        pagination.message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[pagination.embed_num]), view=pagination)
 
     @device_cmd.command(name='transfer')
     @commands.guild_only()

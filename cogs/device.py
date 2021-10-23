@@ -1,8 +1,9 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Union
-from views.dropdown import DropdownView
-from views.pagination import PaginatorView
+from views.buttons import PaginatorView
+from views.selects import DropdownView
+
 import aiofiles
 import aiohttp
 import aiosqlite
@@ -329,7 +330,7 @@ class Device(commands.Cog):
 
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
-        timeout_embed = discord.Embed(title='Remove Device', description='No response given in 5 minutes, cancelling.')
+        timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
 
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -378,7 +379,7 @@ class Device(commands.Cog):
         message = await message.edit(embed=embed, content=None) if message is not None else await ctx.reply(embed=embed)
 
         try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
             answer = discord.utils.remove_markdown(response.content.lower())
         except asyncio.exceptions.TimeoutError:
             await message.edit(embed=timeout_embed)

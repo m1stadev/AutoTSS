@@ -28,8 +28,7 @@ class Utils(commands.Cog):
         This is a much better implementation that utilizes
         available tools in the discord library rather than
         being lazy and using a long string. """
-        perms = discord.Permissions(93184)
-        return discord.utils.oauth_url(self.bot.user.id, perms)
+        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184))
 
     async def backup_blobs(self, tmpdir: str, *ecids: list):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')

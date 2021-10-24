@@ -401,7 +401,7 @@ class Device(commands.Cog):
                 await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
 
                 embed = discord.Embed(title='Remove Device')
-                embed.description = f"SHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
+                embed.description = f"SHSH Blobs from `{devices[num]['name']}`: [Click here]({url})"
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
                 try:
@@ -409,7 +409,7 @@ class Device(commands.Cog):
                     embed.description = f"Device `{devices[num]['name']}` removed."
                     message = await message.edit(embed=embed)
                 except:
-                    embed.description = f"Device `{devices[num]['name']}` removed.\nSHSH Blobs from **{devices[num]['name']}**: [Click here]({url})"
+                    embed.description = f"Device `{devices[num]['name']}` removed.\nSHSH Blobs from `{devices[num]['name']}`: [Click here]({url})"
                     embed.set_footer(
                         text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).',
                         icon_url=ctx.author.display_avatar.with_static_format('png').url

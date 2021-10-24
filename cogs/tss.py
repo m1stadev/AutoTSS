@@ -94,8 +94,6 @@ class TSS(commands.Cog):
                     if blobs_saved > current_blobs_saved:
                         devices_saved_for += 1
 
-
-
         self.blobs_loop = False
 
         if blobs_saved == 0:

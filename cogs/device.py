@@ -1,7 +1,7 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Union
-from views.buttons import PaginatorView
+from views.buttons import ConfirmView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
@@ -373,24 +373,18 @@ class Device(commands.Cog):
             message = None
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
-        embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        message = await message.edit(embed=embed, content=None) if message is not None else await ctx.reply(embed=embed)
-
-        try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60)
-            answer = discord.utils.remove_markdown(response.content.lower())
-        except asyncio.exceptions.TimeoutError:
-            await message.edit(embed=timeout_embed)
+        confirm = ConfirmView()
+        confirm.message = await message.edit(embed=embed, view=confirm) if message is not None else await ctx.reply(embed=embed, view=confirm)
+        await confirm.wait()
+        if confirm.answer is None:
+            await confirm.message.edit(embed=timeout_embed)
             return
 
-        try:
-            await response.delete()
-        except discord.errors.NotFound:
-            pass
+        message = confirm.message
 
-        if answer == 'yes':
+        if confirm.answer == True:
             embed = discord.Embed(title='Remove Device', description='Removing device...')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             message = await message.edit(embed=embed)

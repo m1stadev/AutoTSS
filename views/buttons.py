@@ -2,17 +2,16 @@ import discord
 
 
 class ConfirmButton(discord.ui.Button['ConfirmView']):
-    def __init__(self, *, confirm: bool=False, cancel: bool=False):
-        self.type = 'confirm' if confirm == True else 'cancel'
-
-        if self.type == 'confirm':
+    def __init__(self, *, confirm: bool):
+        if confirm == True:
             super().__init__(style=discord.ButtonStyle.danger, label='Confirm')
-        elif self.type == 'cancel':
+        else:
             super().__init__(style=discord.ButtonStyle.secondary, label='Cancel')
 
+        self.button_type = 'confirm' if confirm == True else 'cancel'
 
     async def callback(self, interaction: discord.Interaction):
-        self.view.answer = self.type
+        self.view.answer = True if self.button_type == 'confirm' else False
         await self.view.on_timeout()
         self.view.stop()
 
@@ -22,7 +21,7 @@ class ConfirmView(discord.ui.View):
         super().__init__(timeout=timeout)
 
         self.add_item(ConfirmButton(confirm=True))
-        self.add_item(ConfirmButton(cancel=True))
+        self.add_item(ConfirmButton(confirm=False))
 
     async def on_timeout(self):
         self.clear_items()

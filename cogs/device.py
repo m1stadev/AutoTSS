@@ -1,7 +1,7 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Union
-from views.buttons import CustomButtonView, PaginatorView
+from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
@@ -385,7 +385,7 @@ class Device(commands.Cog):
             'disabled': False
         }]
 
-        view = CustomButtonView(buttons)
+        view = SelectView(buttons)
         view.message = await message.edit(embed=embed, view=view) if message is not None else await ctx.reply(embed=embed, view=view)
         await view.wait()
         if view.answer is None:

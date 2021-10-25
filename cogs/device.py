@@ -401,12 +401,16 @@ class Device(commands.Cog):
 
         else:
             num = 0
+            message = None
 
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
         embed.add_field(name='Options', value='Type **yes** to delete your device & SHSH blobs from AutoTSS, or anything else to cancel.', inline=False)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
 
-        await message.edit(embed=embed, content=None)
+        if message is None:
+            message = await ctx.reply(embed=embed)
+        else
+            await message.edit(embed=embed, content=None)
 
         try:
             response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import discord
 
 
@@ -14,7 +16,7 @@ class SelectButton(discord.ui.Button['SelectView']):
 
 
 class SelectView(discord.ui.View):
-    def __init__(self, buttons: list[dict], *, timeout: int=60):
+    def __init__(self, buttons: list[dict], *, timeout: Optional[int]=60):
         super().__init__(timeout=timeout)
 
         self.answer = None
@@ -27,7 +29,7 @@ class SelectView(discord.ui.View):
 
 
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[dict], timeout: int=60):
+    def __init__(self, embeds: list[dict], timeout: Optional[int]=60):
         super().__init__(timeout=timeout)
 
         self.embeds = embeds

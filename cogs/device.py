@@ -392,12 +392,10 @@ class Device(commands.Cog):
             await view.message.edit(embed=timeout_embed)
             return
 
-        message = view.message
-
         if view.answer == 'confirm':
             embed = discord.Embed(title='Remove Device', description='Removing device...')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await message.edit(embed=embed)
+            message = await view.message.edit(embed=embed)
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
                 url = await self.utils.backup_blobs(tmpdir, devices[num]['ecid'])
@@ -441,7 +439,7 @@ class Device(commands.Cog):
             await self.utils.update_device_count()
 
         elif view.answer == 'cancel':
-            await message.edit(embed=cancelled_embed)
+            await view.message.edit(embed=cancelled_embed)
 
     @device_cmd.command(name='list')
     @commands.guild_only()

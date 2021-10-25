@@ -1,7 +1,7 @@
 import discord
 
 
-class CustomButtonView(discord.ui.Button['CustomButtonView']):
+class SelectButton(discord.ui.Button['SelectView']):
     def __init__(self, button: dict):
         super().__init__(**button)
 
@@ -13,13 +13,13 @@ class CustomButtonView(discord.ui.Button['CustomButtonView']):
         self.view.stop()
 
 
-class CustomButtonView(discord.ui.View):
+class SelectView(discord.ui.View):
     def __init__(self, buttons: list[dict], *, timeout: int=60):
         super().__init__(timeout=timeout)
 
         self.answer = None
         for button in buttons:
-            self.add_item(CustomButtonView(button))
+            self.add_item(SelectButton(button))
 
     async def on_timeout(self):
         self.clear_items()

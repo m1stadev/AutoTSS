@@ -231,8 +231,9 @@ class Device(commands.Cog):
                 device['generator'] = None
 
             apnonce_description = [
-                'Would you like to save SHSH blobs with a custom ApNonce?',
-                'This is **NOT** the same as your **generator**, which is hexadecimal, begins with `0x`, and is 16 characters long.'
+                f'Would you like to save SHSH blobs with a custom ApNonce?',
+                f'This value is hexadecimal and {40 if cpid < 0x8010 else 64} characters long.'
+                f'This is **NOT** the same as your **generator**, which is hexadecimal, begins with `0x`, and is 16 characters long.'
             ]
 
             if 32800 <= cpid < 35072:

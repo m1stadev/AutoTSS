@@ -409,7 +409,7 @@ class Device(commands.Cog):
 
         if message is None:
             message = await ctx.reply(embed=embed)
-        else
+        else:
             await message.edit(embed=embed, content=None)
 
         try:

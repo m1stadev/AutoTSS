@@ -111,7 +111,7 @@ class Events(commands.Cog):
                         invalid_devices[userid].append(device)
                         continue
 
-                    if (32800 <= cpid < 35072) and (device['apnonce'] is None):
+                    if (cpid >= 0x8020) and (device['apnonce'] is None):
                         invalid_devices[userid].append(device)
 
         for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:

@@ -54,9 +54,9 @@ class Utils(commands.Cog):
         except ValueError or TypeError:
             return False
 
-        if 32784 <= cpid < 35072: # A10+ device apnonce's are 64 characters long, 
+        if cpid >= 0x8010: # A10+ device apnonces are 64 characters long
             apnonce_len = 64
-        else: # A9 and below device apnonce's are 40 characters.
+        else: # A9 and below device apnonces are 40 characters
             apnonce_len = 40
 
         if len(nonce) != apnonce_len:

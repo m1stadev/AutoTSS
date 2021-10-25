@@ -173,7 +173,7 @@ class Device(commands.Cog):
             ]
 
             cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-            if 32800 <= cpid < 35072:
+            if cpid >= 0x8020:
                 generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
                 generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-web#getting-generator-and-apnonce-jailbroken-a12-only)*')
                 generator_description.append('*Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-computer#get-your-device-specific-apnonce-and-generator)*')
@@ -236,7 +236,7 @@ class Device(commands.Cog):
                 f'This is **NOT** the same as your **generator**, which begins with `0x` and is followed by 16 hexadecimal characters.'
             ]
 
-            if 32800 <= cpid < 35072:
+            if cpid >= 0x8020:
                 apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
@@ -289,7 +289,7 @@ class Device(commands.Cog):
                 await message.edit(embed=cancelled_embed)
                 return
             else:
-                if 32800 <= cpid < 35072: # If A12+ and no apnonce was specified
+                if cpid >= 0x8020: # If A12+ and no apnonce was specified
                     embed = discord.Embed(title='Add Device')
                     embed.add_field(name='Error', value='You cannot add a device with an A12+ SoC without specifying an ApNonce.', inline=False)
                     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

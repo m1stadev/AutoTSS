@@ -173,10 +173,10 @@ class Device(commands.Cog):
             ]
 
             cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-            if cpid >= 0x8020:
+            if 0x8020 <= cpid < 0x8900:
                 generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
-                generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://ios.cfw.guide/saving-blobs/#getting-generator-and-apnonce-jailbroken-a12-only)*')
-                generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://ios.cfw.guide/saving-blobs/#get-your-device-specific-apnonce-and-generator)*')
+                generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#getting-generator-and-apnonce-jailbroken-a12-only)*') #TODO: Change back to ios.cfw.guide links once they go to the proper section
+                generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#get-your-device-specific-apnonce-and-generator)*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
             embed.add_field(name='Options', value='Type `yes` to add a custom generator, `cancel` to cancel adding this device, or anything else to skip.', inline=False)
@@ -236,7 +236,7 @@ class Device(commands.Cog):
                 f'This is **NOT** the same as your **generator**, which begins with `0x` and is followed by 16 hexadecimal characters.'
             ]
 
-            if cpid >= 0x8020:
+            if 0x8020 <= cpid < 0x8900:
                 apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
@@ -289,7 +289,7 @@ class Device(commands.Cog):
                 await message.edit(embed=cancelled_embed)
                 return
             else:
-                if cpid >= 0x8020: # If A12+ and no apnonce was specified
+                if 0x8020 <= cpid < 0x8900: # If A12+ and no ApNonce was specified
                     embed = discord.Embed(title='Add Device')
                     embed.add_field(name='Error', value='You cannot add a device with an A12+ SoC without specifying an ApNonce.', inline=False)
                     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))

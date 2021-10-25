@@ -169,7 +169,7 @@ class Device(commands.Cog):
 
             generator_description = [
                 'Would you like to save SHSH blobs with a custom generator?',
-                'This value is hexadecimal, 18 characters long, and begins with `0x`.'
+                'This value begins with `0x` and is followed by 16 hexadecimal characters.'
             ]
 
             cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
@@ -233,7 +233,7 @@ class Device(commands.Cog):
             apnonce_description = [
                 f'Would you like to save SHSH blobs with a custom ApNonce?',
                 f'This value is hexadecimal and {40 if cpid < 0x8010 else 64} characters long.'
-                f'This is **NOT** the same as your **generator**, which is hexadecimal, begins with `0x`, and is 16 characters long.'
+                f'This is **NOT** the same as your **generator**, which begins with `0x` and is followed by 16 hexadecimal characters.'
             ]
 
             if 32800 <= cpid < 35072:

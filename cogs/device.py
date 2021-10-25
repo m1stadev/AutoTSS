@@ -1,7 +1,7 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Union
-from views.buttons import ConfirmView, PaginatorView
+from views.buttons import CustomButtonView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
@@ -375,16 +375,26 @@ class Device(commands.Cog):
         embed = discord.Embed(title='Remove Device', description=f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        confirm = ConfirmView()
-        confirm.message = await message.edit(embed=embed, view=confirm) if message is not None else await ctx.reply(embed=embed, view=confirm)
-        await confirm.wait()
-        if confirm.answer is None:
-            await confirm.message.edit(embed=timeout_embed)
+        buttons = [{
+            'label': 'Confirm',
+            'style': discord.ButtonStyle.danger,
+            'disabled': False
+        }, {
+            'label': 'Cancel',
+            'style': discord.ButtonStyle.secondary,
+            'disabled': False
+        }]
+
+        view = CustomButtonView(buttons)
+        view.message = await message.edit(embed=embed, view=view) if message is not None else await ctx.reply(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            await view.message.edit(embed=timeout_embed)
             return
 
-        message = confirm.message
+        message = view.message
 
-        if confirm.answer == True:
+        if view.answer == 'confirm':
             embed = discord.Embed(title='Remove Device', description='Removing device...')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             message = await message.edit(embed=embed)
@@ -430,7 +440,7 @@ class Device(commands.Cog):
             await message.edit(embed=embed)
             await self.utils.update_device_count()
 
-        else:
+        elif view.answer == 'cancel':
             await message.edit(embed=cancelled_embed)
 
     @device_cmd.command(name='list')

@@ -84,6 +84,7 @@ class Device(commands.Cog):
                 if (x == 3) and ('boardconfig' in device.keys()): # If we got boardconfig from API, no need to get it from user
                     continue
 
+                #TODO: Figure out how I'll have a cancel button through this loop
                 if x == 0:
                     message = await ctx.reply(embed=embed)
                 else:
@@ -182,23 +183,32 @@ class Device(commands.Cog):
                 generator_description.append('*Guide for nonjailbroken A12+ devices: [Click here](https://ios.cfw.guide/tss-computer#get-your-device-specific-apnonce-and-generator)*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
-            embed.add_field(name='Options', value='Type `yes` to add a custom generator, `cancel` to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await message.edit(embed=embed)
 
-            try:
-                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                answer = discord.utils.remove_markdown(response.content.lower())
-            except asyncio.exceptions.TimeoutError:
-                await message.edit(embed=timeout_embed)
+            buttons = [{
+                'label': 'Yes',
+                'style': discord.ButtonStyle.primary,
+                'disabled': False
+            }, {
+                'label': 'No',
+                'style': discord.ButtonStyle.secondary,
+                'disabled': False
+            }, {
+                'label': 'Cancel',
+                'style': discord.ButtonStyle.danger,
+                'disabled': False
+            }]
+
+            view = SelectView(buttons)
+            view.message = await message.edit(embed=embed, view=view)
+            await view.wait()
+            if view.answer is None:
+                timeout_embed.description = 'No response given in 1 minute, cancelling.'
+                await view.message.edit(embed=timeout_embed)
                 return
 
-            try:
-                await response.delete()
-            except discord.errors.NotFound:
-                pass
-
-            if answer == 'yes':
+            message = view.message
+            if view.answer == 'yes':
                 embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                 message = await message.edit(embed=embed)
@@ -227,11 +237,12 @@ class Device(commands.Cog):
                         await message.edit(embed=invalid_embed)
                         return
 
-            elif 'cancel' in answer or answer.startswith(prefix):
+            elif view.answer == 'no':
+                device['generator'] = None
+
+            elif view.answer == 'cancel':
                 await message.edit(embed=cancelled_embed)
                 return
-            else:
-                device['generator'] = None
 
             apnonce_description = [
                 'Would you like to save SHSH blobs with a custom ApNonce?',
@@ -242,23 +253,32 @@ class Device(commands.Cog):
                 apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
 
             embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
-            embed.add_field(name='Options', value='Type **yes** to add a custom ApNonce, **cancel** to cancel adding this device, or anything else to skip.', inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await message.edit(embed=embed)
 
-            try:
-                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                answer = discord.utils.remove_markdown(response.content.lower())
-            except asyncio.exceptions.TimeoutError:
-                await message.edit(embed=timeout_embed)
+            buttons = [{
+                'label': 'Yes',
+                'style': discord.ButtonStyle.primary,
+                'disabled': False
+            }, {
+                'label': 'No',
+                'style': discord.ButtonStyle.secondary,
+                'disabled': 32800 <= cpid < 35072 # Don't allow A12+ users to save blobs without an ApNonce
+            }, {
+                'label': 'Cancel',
+                'style': discord.ButtonStyle.danger,
+                'disabled': False
+            }]
+
+            view = SelectView(buttons)
+            view.message = await message.edit(embed=embed, view=view)
+            await view.wait()
+            if view.answer is None:
+                timeout_embed.description = 'No response given in 1 minute, cancelling.'
+                await view.message.edit(embed=timeout_embed)
                 return
 
-            try:
-                await response.delete()
-            except discord.errors.NotFound:
-                pass
-
-            if answer == 'yes':
+            message = view.message
+            if view.answer == 'yes':
                 embed = discord.Embed(title='Add Device', description='Please enter the custom ApNonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
                 embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                 message = await message.edit(embed=embed)
@@ -287,18 +307,12 @@ class Device(commands.Cog):
                         await message.edit(embed=invalid_embed)
                         return
 
-            elif 'cancel' in answer or answer.startswith(prefix):
+            elif view.answer == 'no':
+                device['apnonce'] = None
+
+            elif view.answer == 'cancel':
                 await message.edit(embed=cancelled_embed)
                 return
-            else:
-                if 32800 <= cpid < 35072: # If A12+ and no apnonce was specified
-                    embed = discord.Embed(title='Add Device')
-                    embed.add_field(name='Error', value='You cannot add a device with an A12+ SoC without specifying an ApNonce.', inline=False)
-                    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                    await message.edit(embed=embed)
-                    return
-
-                device['apnonce'] = None
 
         device['saved_blobs'] = list()
 

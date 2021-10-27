@@ -1,7 +1,8 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 from typing import Union
-from views.buttons import PaginatorView
+from views.buttons import SelectView, PaginatorView
+from views.selects import DropdownView
 
 import aiofiles
 import aiohttp
@@ -152,33 +153,72 @@ class TSS(commands.Cog):
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        try:
-            message = await ctx.author.send(embed=embed)
-            await ctx.message.delete()
-        except:
-            message = await ctx.reply(embed=embed)
+        total_blobs = sum([len(device['saved_blobs']) for device in devices])
+        if total_blobs == 0:
+            embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
+            await ctx.reply(embed=embed)
+            return
 
-        async with message.channel.typing():
-            async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                ecids = [device['ecid'] for device in devices]
-                url = await self.utils.backup_blobs(tmpdir, *ecids)
+        if len(devices) > 1:
+            device_options = [discord.SelectOption(
+                label='All',
+                description=f"Devices: {len(devices)} | Total SHSH blob{'s' if total_blobs != 1 else ''} saved: {total_blobs}",
+                emoji='📱'
+            )]
 
-            if url is None:
-                embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                await message.edit(embed=embed)
+            for device in devices:
+                device_options.append(discord.SelectOption(
+                    label=device['name'],
+                    description=f"ECID: {await self.utils.censor_ecid(device['ecid'])} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
+                    emoji='📱'
+                ))
+
+            embed = discord.Embed(title='Download Blobs', description="Choose which device you'd like to download SHSH blobs for")
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+            dropdown = DropdownView(device_options, 'Device')
+            dropdown.message = await ctx.reply(embed=embed, view=dropdown)
+            await dropdown.wait()
+            if dropdown.answer is None:
+                embed.description = 'No response given in 1 minute, cancelling.'
+                await dropdown.message.edit(embed=embed)
                 return
 
-            embed = discord.Embed(title='Download Blobs', description=f'[Click here]({url}).')
+            if dropdown.answer == 'All':
+                ecids = [device['ecid'] for device in devices]
+            else:
+                num = next(devices.index(x) for x in devices if x['name'] == dropdown.answer)
+                ecids = [devices[num]['ecid']]
 
-        if message.channel.type == discord.ChannelType.private:
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await message.edit(embed=embed)
+            message = dropdown.message
         else:
-            embed.set_footer(text=f'{ctx.author.display_name} | This message will automatically be deleted in 5 seconds to protect your ECID(s).', icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await message.edit(embed=embed)
+            ecids = [devices[0]['ecid']]
+            message = None
+
+        embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        message = await message.edit(embed=embed) if message is not None else ctx.reply(embed=embed)
+
+        async with message.channel.typing(), aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+            url = await self.utils.backup_blobs(tmpdir, *ecids)
+
+        buttons = [{
+            'label': 'Download',
+            'style': discord.ButtonStyle.link,
+            'url': url
+        }]
+
+        view = SelectView(buttons, timeout=None)
+        embed = discord.Embed(title='Download Blobs')
+
+        try:
+            await ctx.author.send(embed=embed, view=view)
+            embed.description = "I've DMed the download link to you."
+            await message.edit(embed=embed)
+
+        except:
+            embed.set_footer(text='This message will automatically be deleted in 5 seconds to protect your ECID(s).')
+            message = await message.edit(embed=embed, view=view)
 
             await asyncio.sleep(5)
             await ctx.message.delete()

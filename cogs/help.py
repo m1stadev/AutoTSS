@@ -1,6 +1,36 @@
 from discord.ext import commands
+from views.buttons import PaginatorView
 
 import discord
+
+
+class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is gone
+    async def send_bot_help(self, modules: dict):
+        prefix = await self.context.bot.get_cog('Utils').get_prefix(self.context.guild.id)
+        embeds = list()
+        for cog, commands in modules.items():
+            commands = await self.filter_commands(commands, sort=True)
+            if len([self.get_command_signature(cmd) for cmd in commands]) > 0:
+                embed_dict = {
+                    'title': f"{cog.qualified_name if cog is not None else 'Help'} Commands",
+                    'fields': list(),
+                    'footer': {
+                        'text': self.context.author.display_name,
+                        'icon_url': str(self.context.author.display_avatar.with_static_format('png').url)
+                    }
+                }
+
+                for cmd in commands:
+                    embed_dict['fields'].append({
+                        'name': self.get_command_signature(cmd).replace(self.context.clean_prefix, prefix), # In case prefix used is mention
+                        'value': cmd.help or 'No help.'
+                    })
+
+                embeds.append(discord.Embed.from_dict(embed_dict))
+
+        embeds = sorted(embeds, key=lambda embed: embed.title)
+        view = PaginatorView(embeds, timeout=180)
+        view.message = await self.context.reply(embed=embeds[0], view=view)
 
 
 class Help(commands.Cog):
@@ -114,4 +144,5 @@ class Help(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Help(bot))
+    bot.help_command = AutoTSSHelp()
+    #bot.add_cog(Help(bot))

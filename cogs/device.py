@@ -187,16 +187,13 @@ class Device(commands.Cog):
 
             buttons = [{
                 'label': 'Yes',
-                'style': discord.ButtonStyle.primary,
-                'disabled': False
+                'style': discord.ButtonStyle.primary
             }, {
                 'label': 'No',
-                'style': discord.ButtonStyle.secondary,
-                'disabled': False
+                'style': discord.ButtonStyle.secondary
             }, {
                 'label': 'Cancel',
-                'style': discord.ButtonStyle.danger,
-                'disabled': False
+                'style': discord.ButtonStyle.danger
             }]
 
             view = SelectView(buttons)
@@ -257,16 +254,14 @@ class Device(commands.Cog):
 
             buttons = [{
                 'label': 'Yes',
-                'style': discord.ButtonStyle.primary,
-                'disabled': False
+                'style': discord.ButtonStyle.primary
             }, {
                 'label': 'No',
                 'style': discord.ButtonStyle.secondary,
                 'disabled': 32800 <= cpid < 35072 # Don't allow A12+ users to save blobs without an ApNonce
             }, {
                 'label': 'Cancel',
-                'style': discord.ButtonStyle.danger,
-                'disabled': False
+                'style': discord.ButtonStyle.danger
             }]
 
             view = SelectView(buttons)
@@ -391,12 +386,10 @@ class Device(commands.Cog):
 
         buttons = [{
             'label': 'Confirm',
-            'style': discord.ButtonStyle.danger,
-            'disabled': False
+            'style': discord.ButtonStyle.danger
         }, {
             'label': 'Cancel',
-            'style': discord.ButtonStyle.secondary,
-            'disabled': False
+            'style': discord.ButtonStyle.secondary
         }]
 
         view = SelectView(buttons)

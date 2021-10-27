@@ -220,9 +220,8 @@ class TSS(commands.Cog):
             embed.set_footer(text='This message will automatically be deleted in 5 seconds to protect your ECID(s).')
             message = await message.edit(embed=embed, view=view)
 
-            await asyncio.sleep(5)
+            await message.delete(delay=5)
             await ctx.message.delete()
-            await message.delete()
 
     @tss_cmd.command(name='list')
     @commands.guild_only()

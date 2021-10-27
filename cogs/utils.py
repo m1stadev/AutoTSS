@@ -34,11 +34,15 @@ class Utils(commands.Cog):
     async def backup_blobs(self, tmpdir: str, *ecids: list):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
 
-        for ecid in ecids:
-            try:
-                await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
-            except FileNotFoundError:
-                pass
+        if len(ecids) == 1:
+            for firm in glob.glob(f'Data/Blobs/{ecids[0]}/*'):
+                await self.shutil.copytree(firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
+        else:
+            for ecid in ecids:
+                try:
+                    await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
+                except FileNotFoundError:
+                    pass
 
         if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
             return

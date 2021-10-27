@@ -26,6 +26,9 @@ class DropdownView(discord.ui.View):
         self.answer = None
 
     async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.channel.type == discord.ChannelType.private:
+            return True
+
         return interaction.user == self.message.reference.cached_message.author
 
     async def on_timeout(self):

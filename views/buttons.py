@@ -23,6 +23,12 @@ class SelectView(discord.ui.View):
         for button in buttons:
             self.add_item(SelectButton(button))
 
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.channel.type == discord.ChannelType.private:
+            return True
+
+        return interaction.user == self.message.reference.cached_message.author
+
     async def on_timeout(self):
         self.clear_items()
         await self.message.edit(view=self)
@@ -43,27 +49,30 @@ class PaginatorView(discord.ui.View):
 
         await interaction.response.edit_message(embed=discord.Embed.from_dict(self.embeds[self.embed_num]), view=self)
 
-    @discord.ui.button(emoji='⏪', style=discord.ButtonStyle.grey, disabled=True)
+    @discord.ui.button(emoji='⏪', style=discord.ButtonStyle.secondary, disabled=True)
     async def page_beginning(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num = 0
         await self.update_interaction(interaction)
 
-    @discord.ui.button(emoji='⬅️', style=discord.ButtonStyle.grey, disabled=True)
+    @discord.ui.button(emoji='⬅️', style=discord.ButtonStyle.secondary, disabled=True)
     async def page_backward(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num -= 1
         await self.update_interaction(interaction)
 
-    @discord.ui.button(emoji='➡️', style=discord.ButtonStyle.grey)
+    @discord.ui.button(emoji='➡️', style=discord.ButtonStyle.secondary)
     async def page_forward(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num += 1
         await self.update_interaction(interaction)
 
-    @discord.ui.button(emoji='⏩', style=discord.ButtonStyle.grey)
+    @discord.ui.button(emoji='⏩', style=discord.ButtonStyle.secondary)
     async def page_end(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.embed_num = len(self.embeds) - 1
         await self.update_interaction(interaction)
 
     async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.channel.type == discord.ChannelType.private:
+            return True
+
         return interaction.user == self.message.reference.cached_message.author
 
     async def on_timeout(self):

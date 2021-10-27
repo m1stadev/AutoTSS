@@ -35,7 +35,7 @@ class SelectView(discord.ui.View):
 
 
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[dict], timeout: Optional[int]=60):
+    def __init__(self, embeds: list[discord.Embed], timeout: Optional[int]=60):
         super().__init__(timeout=timeout)
 
         self.embeds = embeds
@@ -47,7 +47,7 @@ class PaginatorView(discord.ui.View):
         self.children[2].disabled = False if self.embed_num < (len(self.embeds) - 1) else True
         self.children[3].disabled = False if self.embed_num < (len(self.embeds) - 2) else True
 
-        await interaction.response.edit_message(embed=discord.Embed.from_dict(self.embeds[self.embed_num]), view=self)
+        await interaction.response.edit_message(embed=self.embeds[self.embed_num], view=self)
 
     @discord.ui.button(emoji='⏪', style=discord.ButtonStyle.secondary, disabled=True)
     async def page_beginning(self, button: discord.ui.Button, interaction: discord.Interaction):

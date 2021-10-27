@@ -279,14 +279,14 @@ class TSS(commands.Cog):
                 del device_embed['fields']
                 device_embed['description'] = 'No SHSH blobs saved.'
 
-            device_embeds.append(device_embed)
+            device_embeds.append(discord.Embed.from_dict(device_embed))
 
         if len(device_embeds) == 1:
-            await ctx.reply(embed=discord.Embed.from_dict(device_embeds[0]))
+            await ctx.reply(embed=device_embeds[0])
             return
 
         paginator = PaginatorView(device_embeds)
-        paginator.message = await ctx.reply(embed=discord.Embed.from_dict(device_embeds[paginator.embed_num]), view=paginator)
+        paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
     @tss_cmd.command(name='save')
     @commands.guild_only()

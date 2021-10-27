@@ -547,7 +547,7 @@ class Device(commands.Cog):
 
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error')
-        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 5 minutes, cancelling.')
+        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 1 minute, cancelling.')
 
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -605,36 +605,34 @@ class Device(commands.Cog):
             return
 
         embed = discord.Embed(title='Transfer Devices')
-        msg = (
-            f"Are you sure you'd like to transfer {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}?",
-            'Type `yes` to transfer the devices, or anything else to cancel.'
-        )
-        embed.description = '\n'.join(msg)
+        embed.description = f"Are you sure you'd like to transfer {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}?"
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        message = await ctx.reply(embed=embed)
 
-        try:
-            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-            answer = discord.utils.remove_markdown(response.content.lower())
-        except asyncio.exceptions.TimeoutError:
-            await message.edit(embed=timeout_embed)
+        buttons = [{
+                'label': 'Yes',
+                'style': discord.ButtonStyle.success
+            }, {
+                'label': 'Cancel',
+                'style': discord.ButtonStyle.danger
+            }]
+
+        view = SelectView(buttons)
+        view.message = await ctx.reply(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            await view.message.edit(embed=timeout_embed)
             return
 
-        try:
-            await response.delete()
-        except:
-            pass
-
-        if answer != 'yes' or answer.startswith(prefix):
-            await message.edit(embed=cancelled_embed)
+        if view.answer != 'yes':
+            await view.message.edit(embed=cancelled_embed)
             return
 
         async with aiosqlite.connect('Data/autotss.db') as db:
             await db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new_member.id, old_member.id))
             await db.commit()
 
-        embed.description = f"Successfully transferred {old_member.mention}'s {len(old_devices)} device{'s' if len(old_devices) != 1 else ''} to {new_member.mention}."
-        await message.edit(embed=embed)
+        embed.description = f"Successfully transferred {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}."
+        await view.message.edit(embed=embed)
 
 def setup(bot):
     bot.add_cog(Device(bot))

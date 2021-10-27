@@ -187,8 +187,8 @@ class TSS(commands.Cog):
             if dropdown.answer == 'All':
                 ecids = [device['ecid'] for device in devices]
             else:
-                num = next(devices.index(x) for x in devices if x['name'] == dropdown.answer)
-                ecids = [devices[num]['ecid']]
+                device = next(d for d in devices if d['name'] == dropdown.answer)
+                ecids = [device['ecid']]
 
             message = dropdown.message
         else:

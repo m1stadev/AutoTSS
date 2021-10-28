@@ -225,7 +225,7 @@ class TSS(commands.Cog):
 
     @tss_cmd.command(name='list')
     @commands.guild_only()
-    async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int, str]=0) -> None:
+    async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int, str]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 

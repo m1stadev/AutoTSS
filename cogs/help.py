@@ -28,6 +28,10 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
 
                 embeds.append(discord.Embed.from_dict(embed_dict))
 
+        if len(embeds) == 1:
+            await self.context.reply(embed=embeds[0])
+            return
+
         embeds = sorted(embeds, key=lambda embed: embed.title)
         view = PaginatorView(embeds, timeout=180)
         view.message = await self.context.reply(embed=embeds[0], view=view)

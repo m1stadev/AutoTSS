@@ -19,7 +19,7 @@ class Device(commands.Cog):
         self.shutil = aioify(shutil, name='shutil')
         self.utils = self.bot.get_cog('Utils')
 
-    @commands.group(name='devices', aliases=('device',), invoke_without_command=True)
+    @commands.group(name='device', aliases=('devices', 'd'), invoke_without_command=True)
     @commands.guild_only()
     async def device_cmd(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:

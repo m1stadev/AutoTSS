@@ -111,7 +111,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         await self.context.reply(embed=discord.Embed.from_dict(embed))
 
     async def send_command_help(self, cmd: commands.Command):
-        if (not await commands.can_run(self.context)) or (not self.get_command_signature(cmd)):
+        if (not await cmd.can_run(self.context)) or (not self.get_command_signature(cmd)):
             return
 
         prefix = await self.context.bot.get_cog('Utils').get_prefix(self.context.guild.id)

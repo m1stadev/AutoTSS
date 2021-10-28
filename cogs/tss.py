@@ -116,7 +116,7 @@ class TSS(commands.Cog):
         await self.bot.wait_until_ready()
         await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
-    @commands.group(name='tss', invoke_without_command=True)
+    @commands.group(name='tss', aliases=('t',), help='SHSH Blob commands.', invoke_without_command=True)
     @commands.guild_only()
     async def tss_cmd(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -135,7 +135,7 @@ class TSS(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @tss_cmd.command(name='download')
+    @tss_cmd.command(name='download', help='Download your saved SHSH blobs.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context) -> None:
@@ -223,7 +223,7 @@ class TSS(commands.Cog):
             await message.delete(delay=5)
             await ctx.message.delete()
 
-    @tss_cmd.command(name='list')
+    @tss_cmd.command(name='list', help='List your saved SHSH blobs.')
     @commands.guild_only()
     async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int, str]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -288,7 +288,7 @@ class TSS(commands.Cog):
         paginator = PaginatorView(device_embeds)
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
-    @tss_cmd.command(name='save')
+    @tss_cmd.command(name='save', help='Manually save SHSH blobs for your devices.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: commands.Context) -> None:
@@ -368,7 +368,7 @@ class TSS(commands.Cog):
         embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
 
-    @tss_cmd.command(name='downloadall')
+    @tss_cmd.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
     @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)
@@ -414,7 +414,7 @@ class TSS(commands.Cog):
 
         await message.edit(embed=embed)
 
-    @tss_cmd.command(name='saveall')
+    @tss_cmd.command(name='saveall', help='Manually save SHSH blobs for all devices in AutoTSS.')
     @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)

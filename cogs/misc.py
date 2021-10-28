@@ -11,10 +11,10 @@ class Misc(commands.Cog):
         self.datetime = aioify(datetime, name='datetime')
         self.utils = self.bot.get_cog('Utils')
 
-    @commands.command()
+    @commands.command(help='Set the command prefix for AutoTSS.')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    async def prefix(self, ctx: commands.Context, *, prefix: str = None) -> None:
+    async def prefix(self, ctx: commands.Context, *, prefix: str=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
@@ -39,7 +39,7 @@ class Misc(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(help='Get the invite for AutoTSS.')
     @commands.guild_only()
     async def invite(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -51,7 +51,7 @@ class Misc(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(help="See AutoTSS's latency.")
     @commands.guild_only()
     async def ping(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -67,7 +67,7 @@ class Misc(commands.Cog):
         embed.description = f'Ping: `{round((await self.datetime.utcnow() - time).total_seconds() * 1000)}ms`'
         await message.edit(embed=embed)
 
-    @commands.command()
+    @commands.command(help='General info on AutoTSS.')
     @commands.guild_only()
     async def info(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:

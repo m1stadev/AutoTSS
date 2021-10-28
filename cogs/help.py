@@ -91,7 +91,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
             if embed['description'] == str():
                 embed['description'] = aliases
             else:
-                embed['description'] += aliases
+                embed['description'] += f'\n{aliases}'
 
         prefix = await self.context.bot.get_cog('Utils').get_prefix(self.context.guild.id)
         for cmd in commands:

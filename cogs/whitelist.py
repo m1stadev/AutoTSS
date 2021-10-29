@@ -24,8 +24,6 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         await ctx.reply(embed=embed)
 
     @whitelist_group.command(name='set', help='Set the whitelist channel for AutoTSS commands.')
-    @commands.guild_only()
-    @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)
     async def set_whitelist_channel(self, ctx: commands.Context, channel: discord.TextChannel) -> None:
         if channel.guild != ctx.guild:
@@ -47,8 +45,6 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         await ctx.reply(embed=embed)
 
     @whitelist_group.command(name='toggle', help='Toggle the whitelist for AutoTSS commands on/off.')
-    @commands.guild_only()
-    @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)
     async def toggle_whitelist(self, ctx: commands.Context) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db:

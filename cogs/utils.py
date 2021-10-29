@@ -73,7 +73,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if boardconfig[-2:] != 'ap':
             return False
 
-        api = await self.fetch_ipswme_api(self.session, identifier)
+        api = await self.fetch_ipswme_api(identifier)
         if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
             return False
         else:
@@ -144,7 +144,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return await resp.json()
 
     async def get_cpid(self, identifier: str, boardconfig: str) -> str:
-        api = await self.fetch_ipswme_api(self.session, identifier)
+        api = await self.fetch_ipswme_api(identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
     def get_manifest(self, url: str, dir: str) -> Union[bool, str]:
@@ -171,7 +171,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return guild_prefix
 
     async def get_firms(self, identifier: str) -> list:
-        api = await self.fetch_ipswme_api(self.session, identifier)
+        api = await self.fetch_ipswme_api(identifier)
 
         buildids = list()
         for firm in api['firmwares']:

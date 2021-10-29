@@ -197,7 +197,7 @@ class TSS(commands.Cog):
 
         embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        message = await message.edit(embed=embed) if message is not None else ctx.reply(embed=embed)
+        message = await message.edit(embed=embed) if message is not None else await ctx.reply(embed=embed)
 
         async with message.channel.typing(), aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(tmpdir, *ecids)

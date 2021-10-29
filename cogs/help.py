@@ -8,7 +8,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
     def __init__(self):
         super().__init__(command_attrs={
             'aliases': ('h',),
-            'help': 'Shows help for all command.'
+            'help': 'Show info on all commands.'
         })
 
     async def send_bot_help(self, modules: dict):

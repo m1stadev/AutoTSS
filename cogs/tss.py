@@ -5,7 +5,6 @@ from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -58,7 +57,7 @@ class TSSCog(commands.Cog, name='TSS'):
         devices_saved_for = int()
         cached_firms = dict()
 
-        async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect('Data/autotss.db') as db:
             for user_devices in all_devices:
                 user = user_devices[0]
                 devices = json.loads(user_devices[1])
@@ -67,7 +66,7 @@ class TSSCog(commands.Cog, name='TSS'):
                     current_blobs_saved = blobs_saved
 
                     if device['identifier'] not in cached_firms.keys():
-                        cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
+                        cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
 
                     signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
                     for firm in signed_firms:
@@ -316,12 +315,12 @@ class TSSCog(commands.Cog, name='TSS'):
         devices_saved_for = int()
         cached_firms = dict()
 
-        async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect('Data/autotss.db') as db:
             for device in devices:
                 current_blobs_saved = blobs_saved
 
                 if device['identifier'] not in cached_firms.keys():
-                    cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
+                    cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
 
                 signed_firms = [firm for firm in cached_firms[device['identifier']] if firm['signed'] == True]
                 for firm in signed_firms:
@@ -447,7 +446,7 @@ class TSSCog(commands.Cog, name='TSS'):
         devices_saved_for = int()
         cached_firms = dict()
 
-        async with aiohttp.ClientSession() as session, aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect('Data/autotss.db') as db:
             for user_devices in all_devices:
                 user = user_devices[0]
                 devices = json.loads(user_devices[1])
@@ -456,7 +455,7 @@ class TSSCog(commands.Cog, name='TSS'):
                     current_blobs_saved = blobs_saved
 
                     if device['identifier'] not in cached_firms.keys():
-                        cached_firms[device['identifier']] = await self.utils.get_firms(session, device['identifier'])
+                        cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
 
                     signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
                     for firm in signed_firms:

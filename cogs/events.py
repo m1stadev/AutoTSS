@@ -41,44 +41,42 @@ class EventsCog(commands.Cog, name='Events'):
 
     @tasks.loop()
     async def signing_party_detection(self) -> None:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://api.ipsw.me/v4/devices') as resp:
-                devices = await resp.json()
+        async with aiohttp.ClientSession() as session, session.get('https://api.ipsw.me/v4/devices') as resp:
+            devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
 
-            devices = [d for d in devices if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
-            api = dict()
-            for device in [d['identifier'] for d in devices]:
-                api[device] = await self.utils.get_firms(session, device)
+        api = dict()
+        for device in [d['identifier'] for d in devices]:
+            api[device] = await self.utils.get_firms(device)
 
-            try:
-                self._api
-            except AttributeError:
-                self._api = api
-                return
+        try:
+            self._api
+        except AttributeError:
+            self._api = api
+            return
 
-            for device in self._api.keys():
-                for firm in [x for x in self._api[device] if x['signed'] == False]:
-                    if any(new_firm['signed'] == True for new_firm in api[device] if new_firm['buildid'] == firm['buildid']):
-                        print(f"[SIGN] Detected resigned firmware for: {device}, iOS {firm['version']}")
-                        await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
-                        tss = self.bot.get_cog('TSS') # Get TSS class
-                        tss.blobs_loop = False
+        for device in self._api.keys():
+            for firm in [x for x in self._api[device] if x['signed'] == False]:
+                if any(new_firm['signed'] == True for new_firm in api[device] if new_firm['buildid'] == firm['buildid']):
+                    print(f"[SIGN] Detected resigned firmware for: {device}, iOS {firm['version']}")
+                    await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
+                    tss = self.bot.get_cog('TSS') # Get TSS class
+                    tss.blobs_loop = False
 
-                        tss.auto_blob_saver.cancel() # Restart auto blob saver
-                        await asyncio.sleep(1)
-                        await self.utils.update_device_count()
-                        tss.auto_blob_saver.start()
+                    tss.auto_blob_saver.cancel() # Restart auto blob saver
+                    await asyncio.sleep(1)
+                    await self.utils.update_device_count()
+                    tss.auto_blob_saver.start()
 
-                        await asyncio.sleep(600) # Wait 10 minutes
+                    await asyncio.sleep(600) # Wait 10 minutes
 
-                        await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 3 hours
-                        tss.auto_blob_saver.cancel() # Restart auto blob saver
-                        await asyncio.sleep(1)
-                        tss.auto_blob_saver.start()
+                    await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 3 hours
+                    tss.auto_blob_saver.cancel() # Restart auto blob saver
+                    await asyncio.sleep(1)
+                    tss.auto_blob_saver.start()
 
-                        return
-                else:
-                    self._api[device] = api[device]
+                    return
+            else:
+                self._api[device] = api[device]
 
         await asyncio.sleep(30)
 
@@ -96,24 +94,23 @@ class EventsCog(commands.Cog, name='Events'):
             return
 
         invalid_devices = dict()
-        async with aiohttp.ClientSession() as session:
-            for userinfo in data:
-                userid = userinfo[0]
-                devices = json.loads(userinfo[1])
-                invalid_devices[userid] = list()
+        for userinfo in data:
+            userid = userinfo[0]
+            devices = json.loads(userinfo[1])
+            invalid_devices[userid] = list()
 
-                for device in devices:
-                    cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-                    if (device['apnonce'] is not None) and (await self.utils.check_apnonce(cpid, device['apnonce']) == False):
-                        invalid_devices[userid].append(device)
-                        continue
+            for device in devices:
+                cpid = await self.utils.get_cpid(device['identifier'], device['boardconfig'])
+                if (device['apnonce'] is not None) and (await self.utils.check_apnonce(cpid, device['apnonce']) == False):
+                    invalid_devices[userid].append(device)
+                    continue
 
-                    if (device['generator'] is not None) and (await self.utils.check_generator(device['generator']) == False):
-                        invalid_devices[userid].append(device)
-                        continue
+                if (device['generator'] is not None) and (await self.utils.check_generator(device['generator']) == False):
+                    invalid_devices[userid].append(device)
+                    continue
 
-                    if (0x8020 <= cpid < 0x8900) and (device['apnonce'] is None):
-                        invalid_devices[userid].append(device)
+                if (0x8020 <= cpid < 0x8900) and (device['apnonce'] is None):
+                    invalid_devices[userid].append(device)
 
         for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:
             embed = discord.Embed(title='Hey!')

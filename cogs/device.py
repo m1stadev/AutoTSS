@@ -5,7 +5,6 @@ from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -64,246 +63,245 @@ class DeviceCog(commands.Cog, name='Device'):
             return
 
         device = dict()
-        async with aiohttp.ClientSession() as session:
-            for x in range(4): # Loop that gets all of the required information to save blobs with from the user
-                descriptions = (
-                    'Enter a name for your device.',
-                    "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
-                    f"Enter your device's ECID (hex).\n*If you'd like to keep your ECID private, you can DM your ECID to {self.bot.user.mention}.*",
-                    "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
-                )
+        for x in range(4): # Loop that gets all of the required information to save blobs with from the user
+            descriptions = (
+                'Enter a name for your device.',
+                "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
+                f"Enter your device's ECID (hex).\n*If you'd like to keep your ECID private, you can DM your ECID to {self.bot.user.mention}.*",
+                "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
+            )
 
-                embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-
-                if (x == 3) and ('boardconfig' in device.keys()): # If we got boardconfig from API, no need to get it from user
-                    continue
-
-                #TODO: Figure out how I'll have a cancel button through this loop
-                if x == 0:
-                    message = await ctx.reply(embed=embed)
-                else:
-                    message = await message.edit(embed=embed)
-
-                # Wait for a response from the user, and error out if the user takes over 5 minutes to respond
-                try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    if x == 0:
-                        answer = response.content # Don't make the device's name lowercase
-                    else:
-                        answer = response.content.lower()
-
-                except asyncio.exceptions.TimeoutError:
-                    await message.edit(embed=timeout_embed)
-                    return
-
-                # Delete the message
-                try:
-                    await response.delete()
-                except discord.errors.NotFound:
-                    pass
-                except discord.errors.Forbidden as error:
-                    if x != 2:
-                        raise error
-
-                answer = discord.utils.remove_markdown(answer)
-                if 'cancel' in answer.lower() or answer.startswith(prefix):
-                    await message.edit(embed=cancelled_embed)
-                    return
-
-                # Make sure given information is valid
-                if x == 0:
-                    device['name'] = answer
-                    name_check = await self.utils.check_name(device['name'], ctx.author.id)
-                    if name_check != True:
-                        if name_check == 0:
-                            invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name cannot be over 20 characters long."
-                        elif name_check == -1:
-                            invalid_embed.description = f"Device name `{device['name']}` is not valid. You cannot use a device's name more than once."
-
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await message.edit(embed=invalid_embed)
-                        return
-
-                elif x == 1:
-                    device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
-                    if await self.utils.check_identifier(session, device['identifier']) is False:
-                        invalid_embed.description = f"Device Identifier `{answer}` is not valid."
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await message.edit(embed=invalid_embed)
-                        return
-
-                    # If there's only one board for the device, grab the boardconfig now
-                    api = await self.utils.fetch_ipswme_api(session, device['identifier'])
-                    if len([board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]) == 1: # Exclude development boards that may pop up
-                        device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
-
-                elif x == 2:
-                    if answer.startswith('0x'):
-                        device['ecid'] = answer[2:]
-                    else:
-                        device['ecid'] = answer
-
-                    ecid_check = await self.utils.check_ecid(device['ecid'])
-                    if ecid_check != True:
-                        invalid_embed.description = f"Device ECID `{answer}` is not valid."
-                        invalid_embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        if ecid_check == -1:
-                            invalid_embed.description += ' This ECID has already been added to AutoTSS.'
-
-                        message = await message.edit(embed=invalid_embed)
-                        invalid_embed.description = invalid_embed.description.replace(f'`{answer}`', f'`{await self.utils.censor_ecid(answer)}`')
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await asyncio.sleep(5)
-                        await message.edit(embed=invalid_embed)
-                        return
-
-                else:
-                    device['boardconfig'] = answer.lower().replace(' ', '').replace('deviceid:', '')
-                    if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
-                        invalid_embed.description = f"Device boardconfig `{answer}` is not valid."
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await message.edit(embed=invalid_embed)
-                        return
-
-            generator_description = [
-                'Would you like to save SHSH blobs with a custom generator?',
-                'This value begins with `0x` and is followed by 16 hexadecimal characters.'
-            ]
-
-            cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
-            if 0x8020 <= cpid < 0x8900:
-                generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
-                generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#getting-generator-and-apnonce-jailbroken-a12-only)*') #TODO: Change back to ios.cfw.guide links once they go to the proper section
-                generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#get-your-device-specific-apnonce-and-generator)*')
-
-            embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
+            embed = discord.Embed(title='Add Device', description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')))
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-            buttons = [{
-                'label': 'Yes',
-                'style': discord.ButtonStyle.primary
-            }, {
-                'label': 'No',
-                'style': discord.ButtonStyle.secondary
-            }, {
-                'label': 'Cancel',
-                'style': discord.ButtonStyle.danger
-            }]
+            if (x == 3) and ('boardconfig' in device.keys()): # If we got boardconfig from API, no need to get it from user
+                continue
 
-            view = SelectView(buttons)
-            view.message = await message.edit(embed=embed, view=view)
-            await view.wait()
-            if view.answer is None:
-                timeout_embed.description = 'No response given in 1 minute, cancelling.'
-                await view.message.edit(embed=timeout_embed)
-                return
-
-            message = view.message
-            if view.answer == 'yes':
-                embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save SHSH blobs with.\nType `cancel` to cancel.')
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            #TODO: Figure out how I'll have a cancel button through this loop
+            if x == 0:
+                message = await ctx.reply(embed=embed)
+            else:
                 message = await message.edit(embed=embed)
 
-                try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    answer = discord.utils.remove_markdown(response.content.lower())
-                except asyncio.exceptions.TimeoutError:
-                    await message.edit(embed=timeout_embed)
-                    return
-
-                try:
-                    await response.delete()
-                except discord.errors.NotFound:
-                    pass
-
-                if 'cancel' in answer or answer.startswith(prefix):
-                    await message.edit(embed=cancelled_embed)
-                    return
-
+            # Wait for a response from the user, and error out if the user takes over 5 minutes to respond
+            try:
+                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
+                if x == 0:
+                    answer = response.content # Don't make the device's name lowercase
                 else:
-                    device['generator'] = answer
-                    if await self.utils.check_generator(device['generator']) is False:
-                        invalid_embed.description = f"Generator `{device['generator']}` is not valid."
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await message.edit(embed=invalid_embed)
-                        return
+                    answer = response.content.lower()
 
-            elif view.answer == 'no':
-                device['generator'] = None
+            except asyncio.exceptions.TimeoutError:
+                await message.edit(embed=timeout_embed)
+                return
 
-            elif view.answer == 'cancel':
+            # Delete the message
+            try:
+                await response.delete()
+            except discord.errors.NotFound:
+                pass
+            except discord.errors.Forbidden as error:
+                if x != 2:
+                    raise error
+
+            answer = discord.utils.remove_markdown(answer)
+            if 'cancel' in answer.lower() or answer.startswith(prefix):
                 await message.edit(embed=cancelled_embed)
                 return
 
-            apnonce_description = [
-                'Would you like to save SHSH blobs with a custom ApNonce?',
-                f'This value is hexadecimal and {40 if 0x8010 <= cpid < 0x8900 else 64} characters long.'
-                'This is **NOT** the same as your **generator**, which begins with `0x` and is followed by 16 hexadecimal characters.'
-            ]
+            # Make sure given information is valid
+            if x == 0:
+                device['name'] = answer
+                name_check = await self.utils.check_name(device['name'], ctx.author.id)
+                if name_check != True:
+                    if name_check == 0:
+                        invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name cannot be over 20 characters long."
+                    elif name_check == -1:
+                        invalid_embed.description = f"Device name `{device['name']}` is not valid. You cannot use a device's name more than once."
 
-            if 0x8020 <= cpid < 0x8900:
-                apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await message.edit(embed=invalid_embed)
+                    return
 
-            embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
+            elif x == 1:
+                device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
+                if await self.utils.check_identifier(session, device['identifier']) is False:
+                    invalid_embed.description = f"Device Identifier `{answer}` is not valid."
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await message.edit(embed=invalid_embed)
+                    return
+
+                # If there's only one board for the device, grab the boardconfig now
+                api = await self.utils.fetch_ipswme_api(session, device['identifier'])
+                if len([board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]) == 1: # Exclude development boards that may pop up
+                    device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
+
+            elif x == 2:
+                if answer.startswith('0x'):
+                    device['ecid'] = answer[2:]
+                else:
+                    device['ecid'] = answer
+
+                ecid_check = await self.utils.check_ecid(device['ecid'])
+                if ecid_check != True:
+                    invalid_embed.description = f"Device ECID `{answer}` is not valid."
+                    invalid_embed.set_footer(text=f'{ctx.author.display_name} | This message will be censored in 5 seconds to protect your ECID(s).', icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    if ecid_check == -1:
+                        invalid_embed.description += ' This ECID has already been added to AutoTSS.'
+
+                    message = await message.edit(embed=invalid_embed)
+                    invalid_embed.description = invalid_embed.description.replace(f'`{answer}`', f'`{await self.utils.censor_ecid(answer)}`')
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await asyncio.sleep(5)
+                    await message.edit(embed=invalid_embed)
+                    return
+
+            else:
+                device['boardconfig'] = answer.lower().replace(' ', '').replace('deviceid:', '')
+                if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
+                    invalid_embed.description = f"Device boardconfig `{answer}` is not valid."
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await message.edit(embed=invalid_embed)
+                    return
+
+        generator_description = [
+            'Would you like to save SHSH blobs with a custom generator?',
+            'This value begins with `0x` and is followed by 16 hexadecimal characters.'
+        ]
+
+        cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
+        if 0x8020 <= cpid < 0x8900:
+            generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
+            generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#getting-generator-and-apnonce-jailbroken-a12-only)*') #TODO: Change back to ios.cfw.guide links once they go to the proper section
+            generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#get-your-device-specific-apnonce-and-generator)*')
+
+        embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        buttons = [{
+            'label': 'Yes',
+            'style': discord.ButtonStyle.primary
+        }, {
+            'label': 'No',
+            'style': discord.ButtonStyle.secondary
+        }, {
+            'label': 'Cancel',
+            'style': discord.ButtonStyle.danger
+        }]
+
+        view = SelectView(buttons)
+        view.message = await message.edit(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            timeout_embed.description = 'No response given in 1 minute, cancelling.'
+            await view.message.edit(embed=timeout_embed)
+            return
+
+        message = view.message
+        if view.answer == 'yes':
+            embed = discord.Embed(title='Add Device', description='Please enter the custom generator you wish to save SHSH blobs with.\nType `cancel` to cancel.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            message = await message.edit(embed=embed)
 
-            buttons = [{
-                'label': 'Yes',
-                'style': discord.ButtonStyle.primary
-            }, {
-                'label': 'No',
-                'style': discord.ButtonStyle.secondary,
-                'disabled': 0x8020 <= cpid < 0x8900 # Don't allow A12+ users to save blobs without an ApNonce
-            }, {
-                'label': 'Cancel',
-                'style': discord.ButtonStyle.danger
-            }]
-
-            view = SelectView(buttons)
-            view.message = await message.edit(embed=embed, view=view)
-            await view.wait()
-            if view.answer is None:
-                timeout_embed.description = 'No response given in 1 minute, cancelling.'
-                await view.message.edit(embed=timeout_embed)
+            try:
+                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
+                answer = discord.utils.remove_markdown(response.content.lower())
+            except asyncio.exceptions.TimeoutError:
+                await message.edit(embed=timeout_embed)
                 return
 
-            message = view.message
-            if view.answer == 'yes':
-                embed = discord.Embed(title='Add Device', description='Please enter the custom ApNonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
-                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                message = await message.edit(embed=embed)
+            try:
+                await response.delete()
+            except discord.errors.NotFound:
+                pass
 
-                try:
-                    response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
-                    answer = discord.utils.remove_markdown(response.content.lower())
-                except asyncio.exceptions.TimeoutError:
-                    await message.edit(embed=timeout_embed)
-                    return
-
-                try:
-                    await response.delete()
-                except discord.errors.NotFound:
-                    pass
-
-                if 'cancel' in answer or answer.startswith(prefix):
-                    await message.edit(embed=cancelled_embed)
-                    return
-
-                else:
-                    device['apnonce'] = answer
-                    if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
-                        invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
-                        invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-                        await message.edit(embed=invalid_embed)
-                        return
-
-            elif view.answer == 'no':
-                device['apnonce'] = None
-
-            elif view.answer == 'cancel':
+            if 'cancel' in answer or answer.startswith(prefix):
                 await message.edit(embed=cancelled_embed)
                 return
+
+            else:
+                device['generator'] = answer
+                if await self.utils.check_generator(device['generator']) is False:
+                    invalid_embed.description = f"Generator `{device['generator']}` is not valid."
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await message.edit(embed=invalid_embed)
+                    return
+
+        elif view.answer == 'no':
+            device['generator'] = None
+
+        elif view.answer == 'cancel':
+            await message.edit(embed=cancelled_embed)
+            return
+
+        apnonce_description = [
+            'Would you like to save SHSH blobs with a custom ApNonce?',
+            f'This value is hexadecimal and {40 if 0x8010 <= cpid < 0x8900 else 64} characters long.'
+            'This is **NOT** the same as your **generator**, which begins with `0x` and is followed by 16 hexadecimal characters.'
+        ]
+
+        if 0x8020 <= cpid < 0x8900:
+            apnonce_description.append('\n*You must save blobs with an ApNonce, or else your SHSH blobs **will not work**. More info [here](https://www.reddit.com/r/jailbreak/comments/f5wm6l/tutorial_repost_easiest_way_to_save_a12_blobs/).*')
+
+        embed = discord.Embed(title='Add Device', description='\n'.join(apnonce_description)) # Ask the user if they'd like to save blobs with a custom ApNonce
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        buttons = [{
+            'label': 'Yes',
+            'style': discord.ButtonStyle.primary
+        }, {
+            'label': 'No',
+            'style': discord.ButtonStyle.secondary,
+            'disabled': 0x8020 <= cpid < 0x8900 # Don't allow A12+ users to save blobs without an ApNonce
+        }, {
+            'label': 'Cancel',
+            'style': discord.ButtonStyle.danger
+        }]
+
+        view = SelectView(buttons)
+        view.message = await message.edit(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            timeout_embed.description = 'No response given in 1 minute, cancelling.'
+            await view.message.edit(embed=timeout_embed)
+            return
+
+        message = view.message
+        if view.answer == 'yes':
+            embed = discord.Embed(title='Add Device', description='Please enter the custom ApNonce you wish to save SHSH blobs with.\nType `cancel` to cancel.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            message = await message.edit(embed=embed)
+
+            try:
+                response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
+                answer = discord.utils.remove_markdown(response.content.lower())
+            except asyncio.exceptions.TimeoutError:
+                await message.edit(embed=timeout_embed)
+                return
+
+            try:
+                await response.delete()
+            except discord.errors.NotFound:
+                pass
+
+            if 'cancel' in answer or answer.startswith(prefix):
+                await message.edit(embed=cancelled_embed)
+                return
+
+            else:
+                device['apnonce'] = answer
+                if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
+                    invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
+                    invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+                    await message.edit(embed=invalid_embed)
+                    return
+
+        elif view.answer == 'no':
+            device['apnonce'] = None
+
+        elif view.answer == 'cancel':
+            await message.edit(embed=cancelled_embed)
+            return
 
         device['saved_blobs'] = list()
 

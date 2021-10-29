@@ -129,7 +129,6 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.reply(embed=embed)
 
     @tss_group.command(name='download', help='Download your saved SHSH blobs.')
-    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -217,7 +216,7 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.message.delete()
 
     @tss_group.command(name='list', help='List your saved SHSH blobs.')
-    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -284,7 +283,6 @@ class TSSCog(commands.Cog, name='TSS'):
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
     @tss_group.command(name='save', help='Manually save SHSH blobs for your devices.')
-    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -364,7 +362,6 @@ class TSSCog(commands.Cog, name='TSS'):
         await message.edit(embed=embed)
 
     @tss_group.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
-    @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     async def download_all_blobs(self, ctx: commands.Context) -> None:
@@ -410,7 +407,6 @@ class TSSCog(commands.Cog, name='TSS'):
         await message.edit(embed=embed)
 
     @tss_group.command(name='saveall', help='Manually save SHSH blobs for all devices in AutoTSS.')
-    @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     async def save_all_blobs(self, ctx: commands.Context) -> None:

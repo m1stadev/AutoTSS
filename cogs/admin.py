@@ -15,9 +15,9 @@ class Admin(commands.Cog, name='Administrator'):
     @property
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
-    @commands.group(name='module', aliases=('m',), help='Module management commands.')
+    @commands.group(name='module', aliases=('m',), help='Module management commands.', invoke_without_command=True)
     @commands.is_owner()
-    async def module_cmd(self, ctx: commands.Context) -> None:
+    async def module_group(self, ctx: commands.Context) -> None:
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
         if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
             await ctx.send_help(ctx.command)
@@ -27,7 +27,7 @@ class Admin(commands.Cog, name='Administrator'):
         embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
-    @module_cmd.command(name='edit', help='Edit a module.')
+    @module_group.command(name='edit', help='Edit a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def edit_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -110,7 +110,7 @@ class Admin(commands.Cog, name='Administrator'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await message.edit(embed=embed)
 
-    @module_cmd.command(name='list', help='List all modules.')
+    @module_group.command(name='list', help='List all modules.')
     @commands.guild_only()
     @commands.is_owner()
     async def list_modules(self, ctx: commands.Context) -> None:
@@ -118,7 +118,7 @@ class Admin(commands.Cog, name='Administrator'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url) 
         await ctx.reply(embed=embed)
 
-    @module_cmd.command(name='load', help='Load a module.')
+    @module_group.command(name='load', help='Load a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -177,7 +177,7 @@ class Admin(commands.Cog, name='Administrator'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module_cmd.command(name='reload', help='Reload a module.')
+    @module_group.command(name='reload', help='Reload a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -239,7 +239,7 @@ class Admin(commands.Cog, name='Administrator'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module_cmd.command(name='unload', help='Unload a module.')
+    @module_group.command(name='unload', help='Unload a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:

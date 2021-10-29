@@ -21,7 +21,7 @@ class Device(commands.Cog):
 
     @commands.group(name='device', aliases=('devices', 'd'), help='Device management commands.', invoke_without_command=True)
     @commands.guild_only()
-    async def device_cmd(self, ctx: commands.Context) -> None:
+    async def device_group(self, ctx: commands.Context) -> None:
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
         if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
             await ctx.send_help(ctx.command)
@@ -31,7 +31,7 @@ class Device(commands.Cog):
         embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
-    @device_cmd.command(name='add', help='Add a device to AutoTSS.')
+    @device_group.command(name='add', help='Add a device to AutoTSS.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def add_device(self, ctx: commands.Context) -> None:
@@ -324,7 +324,7 @@ class Device(commands.Cog):
 
         await self.utils.update_device_count()
 
-    @device_cmd.command(name='remove', help='Remove a device from AutoTSS.')
+    @device_group.command(name='remove', help='Remove a device from AutoTSS.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def remove_device(self, ctx: commands.Context) -> None:
@@ -442,7 +442,7 @@ class Device(commands.Cog):
         elif view.answer == 'cancel':
             await view.message.edit(embed=cancelled_embed)
 
-    @device_cmd.command(name='list', help='List your added devices.')
+    @device_group.command(name='list', help='List your added devices.')
     @commands.guild_only()
     async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -524,7 +524,7 @@ class Device(commands.Cog):
         paginator = PaginatorView(device_embeds)
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
-    @device_cmd.command(name='transfer', help="Transfer a user's devices to another user.")
+    @device_group.command(name='transfer', help="Transfer a user's devices to another user.")
     @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.user)

@@ -12,17 +12,17 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @commands.group(name='whitelist', aliases=('w',), help='Whitelist management commands.', invoke_without_command=True)
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    async def whitelist_cmd(self, ctx: commands.Context) -> None:
-        prefix = await self.utils.get_prefix(ctx.guild.id)
+    async def whitelist_group(self, ctx: commands.Context) -> None:
+        help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
+        if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
+            await ctx.send_help(ctx.command)
+            return
 
-        embed = discord.Embed(title='Whitelist Commands')
-        embed.add_field(name='Set whitelist channel', value=f'`{prefix}whitelist set <channel>`', inline=False)
-        embed.add_field(name='Toggle channel whitelist', value=f'`{prefix}whitelist toggle`', inline=False)
-
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        invoked_cmd = f'{await self.utils.get_prefix(ctx.guild.id) + ctx.invoked_with} {ctx.subcommand_passed}'
+        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
-    @whitelist_cmd.command(name='set', help='Set the whitelist channel for AutoTSS commands.')
+    @whitelist_group.command(name='set', help='Set the whitelist channel for AutoTSS commands.')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)
@@ -45,7 +45,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @whitelist_cmd.command(name='toggle', help='Toggle the whitelist for AutoTSS commands on/off.')
+    @whitelist_group.command(name='toggle', help='Toggle the whitelist for AutoTSS commands on/off.')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)

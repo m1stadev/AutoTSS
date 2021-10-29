@@ -32,6 +32,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
         being lazy and using a long string. """
         return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
+    async def _upload_file(self, file: str, name: str) -> str:
+        async with aiofiles.open(file, 'rb') as f, self.session.put(f'https://up.psty.io/{name}', data=f) as response:
+            resp = await response.text()
+
+        return resp.splitlines()[-1].split(':', 1)[1][1:]
+
     async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
 
@@ -371,12 +377,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
             num_devices += len(devices)
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
-
-    async def _upload_file(self, file: str, name: str) -> str:
-        async with aiofiles.open(file, 'rb') as f, self.session.put(f'https://up.psty.io/{name}', data=f) as response:
-            resp = await response.text()
-
-        return resp.splitlines()[-1].split(':', 1)[1][1:]
 
     async def whitelist_check(self, ctx: commands.Context) -> bool:
         if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):

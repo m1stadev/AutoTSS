@@ -20,6 +20,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @commands.group(name='device', aliases=('devices', 'd'), help='Device management commands.', invoke_without_command=True)
     @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def device_group(self, ctx: commands.Context) -> None:
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
         if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
@@ -32,8 +33,6 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.reply(embed=embed)
 
     @device_group.command(name='add', help='Add a device to AutoTSS.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def add_device(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -325,8 +324,6 @@ class DeviceCog(commands.Cog, name='Device'):
         await self.utils.update_device_count()
 
     @device_group.command(name='remove', help='Remove a device from AutoTSS.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def remove_device(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -443,7 +440,6 @@ class DeviceCog(commands.Cog, name='Device'):
             await view.message.edit(embed=cancelled_embed)
 
     @device_group.command(name='list', help='List your added devices.')
-    @commands.guild_only()
     async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -525,9 +521,7 @@ class DeviceCog(commands.Cog, name='Device'):
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
     @device_group.command(name='transfer', help="Transfer a user's devices to another user.")
-    @commands.guild_only()
     @commands.is_owner()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def transfer_devices(self, ctx: commands.Context, old_member: Union[discord.User, int], new_member: Union[discord.User, int]) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return

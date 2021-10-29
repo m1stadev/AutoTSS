@@ -16,15 +16,17 @@ class SelectButton(discord.ui.Button['SelectView']):
 
 
 class SelectView(discord.ui.View):
-    def __init__(self, buttons: list[dict], *, timeout: int=60):
+    def __init__(self, buttons: list[dict], *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
 
+        self.public = public
         self.answer = None
+
         for button in buttons:
             self.add_item(SelectButton(button))
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.channel.type == discord.ChannelType.private:
+        if self.public == True or interaction.channel.type == discord.ChannelType.private:
             return True
 
         return interaction.user == self.message.reference.cached_message.author
@@ -35,9 +37,10 @@ class SelectView(discord.ui.View):
 
 
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[discord.Embed], *, timeout: int=60):
+    def __init__(self, embeds: list[discord.Embed], *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
 
+        self.public = public
         self.embeds = embeds
         self.embed_num = 0
 
@@ -70,7 +73,7 @@ class PaginatorView(discord.ui.View):
         await self.update_interaction(interaction)
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.channel.type == discord.ChannelType.private:
+        if self.public == True or interaction.channel.type == discord.ChannelType.private:
             return True
 
         return interaction.user == self.message.reference.cached_message.author

@@ -16,6 +16,7 @@ class AdminCog(commands.Cog, name='Administrator'):
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
     @commands.group(name='module', aliases=('m',), help='Module management commands.', invoke_without_command=True)
+    @commands.guild_only()
     @commands.is_owner()
     async def module_group(self, ctx: commands.Context) -> None:
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
@@ -29,8 +30,6 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='edit', help='Edit a module.')
-    @commands.is_owner()
-    @commands.guild_only()
     async def edit_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = [cog.lower() for cog in cogs]
 
@@ -112,16 +111,13 @@ class AdminCog(commands.Cog, name='Administrator'):
         await message.edit(embed=embed)
 
     @module_group.command(name='list', help='List all modules.')
-    @commands.guild_only()
-    @commands.is_owner()
     async def list_modules(self, ctx: commands.Context) -> None:
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(self.modules)}`")
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url) 
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
         await ctx.reply(embed=embed)
 
     @module_group.command(name='load', help='Load a module.')
-    @commands.is_owner()
-    @commands.guild_only()
     async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -179,8 +175,6 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='reload', help='Reload a module.')
-    @commands.is_owner()
-    @commands.guild_only()
     async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -241,8 +235,6 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='unload', help='Unload a module.')
-    @commands.is_owner()
-    @commands.guild_only()
     async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 

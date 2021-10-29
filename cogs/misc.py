@@ -51,7 +51,7 @@ class Misc(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @commands.command(help="See AutoTSS's latency.")
+    @commands.command(help="See AutoTSS's latency.", aliases=('latency', 'ms'))
     @commands.guild_only()
     async def ping(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:

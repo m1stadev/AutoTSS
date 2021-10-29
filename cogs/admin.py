@@ -7,7 +7,7 @@ import discord
 import glob
 
 
-class Admin(commands.Cog):
+class Admin(commands.Cog, name='Administrator'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
@@ -15,22 +15,19 @@ class Admin(commands.Cog):
     @property
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
-    @commands.group(aliases=('m',), help='Module management commands.', invoke_without_command=True)
+    @commands.group(name='module', aliases=('m',), help='Module management commands.')
     @commands.is_owner()
-    async def module(self, ctx: commands.Context) -> None:
-        prefix = await self.utils.get_prefix(ctx.guild.id)
+    async def module_cmd(self, ctx: commands.Context) -> None:
+        help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
+        if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
+            await ctx.send_help(ctx.command)
+            return
 
-        embed = discord.Embed(title='Module Commands')
-        embed.add_field(name='Edit', value=f'`{prefix}module edit <module>`', inline=False)
-        embed.add_field(name='List', value=f'`{prefix}module list`', inline=False)
-        embed.add_field(name='Load', value=f'`{prefix}module load <module 1> <module 2>`', inline=False)
-        embed.add_field(name='Reload', value=f'`{prefix}module reload <all/module 1> <module 2>`', inline=False)
-        embed.add_field(name='Unload', value=f'`{prefix}module unload <module 1> <module 2>`', inline=False)
-
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        invoked_cmd = f'{await self.utils.get_prefix(ctx.guild.id) + ctx.invoked_with} {ctx.subcommand_passed}'
+        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
-    @module.command(name='edit', help='Edit a module.')
+    @module_cmd.command(name='edit', help='Edit a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def edit_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -113,7 +110,7 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await message.edit(embed=embed)
 
-    @module.command(name='list', help='List all modules.')
+    @module_cmd.command(name='list', help='List all modules.')
     @commands.guild_only()
     @commands.is_owner()
     async def list_modules(self, ctx: commands.Context) -> None:
@@ -121,7 +118,7 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url) 
         await ctx.reply(embed=embed)
 
-    @module.command(name='load', help='Load a module.')
+    @module_cmd.command(name='load', help='Load a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -180,7 +177,7 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module.command(name='reload', help='Reload a module.')
+    @module_cmd.command(name='reload', help='Reload a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
@@ -242,7 +239,7 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module.command(name='unload', help='Unload a module.')
+    @module_cmd.command(name='unload', help='Unload a module.')
     @commands.is_owner()
     @commands.guild_only()
     async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:

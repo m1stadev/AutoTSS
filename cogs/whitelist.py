@@ -9,7 +9,7 @@ class Whitelist(commands.Cog):
         self.bot = bot
         self.utils = self.bot.get_cog('Utils')
 
-    @commands.group(name='whitelist', invoke_without_command=True)
+    @commands.group(name='whitelist', aliases=('w',), help='Whitelist management commands.', invoke_without_command=True)
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def whitelist_cmd(self, ctx: commands.Context) -> None:
@@ -22,7 +22,7 @@ class Whitelist(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @whitelist_cmd.command(name='set')
+    @whitelist_cmd.command(name='set', help='Set the whitelist channel for AutoTSS commands.')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)
@@ -45,7 +45,7 @@ class Whitelist(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @whitelist_cmd.command(name='toggle')
+    @whitelist_cmd.command(name='toggle', help='Toggle the whitelist for AutoTSS commands on/off.')
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     @commands.max_concurrency(1, per=commands.BucketType.guild)

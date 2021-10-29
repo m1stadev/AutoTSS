@@ -10,7 +10,7 @@ import glob
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
 
     @property
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])

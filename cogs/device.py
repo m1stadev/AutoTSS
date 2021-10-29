@@ -17,7 +17,7 @@ class Device(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.shutil = aioify(shutil, name='shutil')
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
 
     @commands.group(name='device', aliases=('devices', 'd'), help='Device management commands.', invoke_without_command=True)
     @commands.guild_only()

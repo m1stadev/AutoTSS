@@ -9,7 +9,7 @@ class Misc(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
         self.datetime = aioify(datetime, name='datetime')
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
 
     @commands.command(help='Set the command prefix for AutoTSS.')
     @commands.guild_only()

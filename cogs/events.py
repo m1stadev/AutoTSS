@@ -15,7 +15,7 @@ class Events(commands.Cog):
         self.bot = bot
         self.os = aioify(os, name='os')
         self.shutil = aioify(shutil, name='shutil')
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
         self.auto_clean_db.start()
         self.signing_party_detection.start()
         self.auto_invalid_device_check.start()

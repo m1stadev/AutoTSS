@@ -7,7 +7,7 @@ import discord
 class Whitelist(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
 
     @commands.group(name='whitelist', aliases=('w',), help='Whitelist management commands.', invoke_without_command=True)
     @commands.guild_only()

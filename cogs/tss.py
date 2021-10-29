@@ -351,7 +351,7 @@ class TSSCog(commands.Cog, name='TSS'):
                     devices_saved_for += 1
 
         if blobs_saved == 0:
-            description = 'No new SHSH blobs were saved.'
+            description = 'No SHSH blobs need to be saved.\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
         else:
             total_time = round(await self.time.time() - start_time)
             output = (

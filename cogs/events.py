@@ -18,7 +18,6 @@ class EventsCog(commands.Cog, name='Events'):
         self.utils = self.bot.get_cog('Utilities')
         self.auto_clean_db.start()
         self.signing_party_detection.start()
-        self.auto_invalid_device_check.start()
 
     @tasks.loop()
     async def auto_clean_db(self) -> None:
@@ -82,82 +81,6 @@ class EventsCog(commands.Cog, name='Events'):
 
     @signing_party_detection.before_loop
     async def before_signing_party_detection(self) -> None:
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
-
-    @tasks.loop()
-    async def auto_invalid_device_check(self) -> None: # If any users are saving SHSH blobs for A12+ devices without using custom apnonces, attempt to DM them saying they need to re-add the device
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM autotss') as cursor:
-            data = await cursor.fetchall()
-
-        if len(data) == 0:
-            return
-
-        invalid_devices = dict()
-        for userinfo in data:
-            userid = userinfo[0]
-            devices = json.loads(userinfo[1])
-            invalid_devices[userid] = list()
-
-            for device in devices:
-                cpid = await self.utils.get_cpid(device['identifier'], device['boardconfig'])
-                if (device['apnonce'] is not None) and (await self.utils.check_apnonce(cpid, device['apnonce']) == False):
-                    invalid_devices[userid].append(device)
-                    continue
-
-                if (device['generator'] is not None) and (await self.utils.check_generator(device['generator']) == False):
-                    invalid_devices[userid].append(device)
-                    continue
-
-                if (0x8020 <= cpid < 0x8900) and (device['apnonce'] is None):
-                    invalid_devices[userid].append(device)
-
-        for userid in [x for x in invalid_devices.keys() if len(invalid_devices[x]) > 0]:
-            embed = discord.Embed(title='Hey!')
-            msg = (
-                'One or more of your devices were added incorrectly to AutoTSS, and are saving **invalid SHSH blobs**.',
-                'Due to this, they have been removed from AutoTSS so they are no longer continuing to save invalid SHSH blobs.'
-                'To fix this, please re-add the following devices to AutoTSS:'
-            )
-            embed.description = '\n'.join(msg)
-
-            for device in invalid_devices[userid]:
-                device_info = [
-                    f"Device Identifier: `{device['identifier']}`",
-                    f"ECID: `{device['ecid']}`",
-                    f"Boardconfig: `{device['boardconfig']}`"
-                ]
-
-                if device['generator'] is not None:
-                    device_info.insert(-1, f"Custom generator: `{device['generator']}`")
-
-                if device['apnonce'] is not None:
-                    device_info.insert(-1, f"Custom ApNonce: `{device['apnonce']}`")
-
-                embed.add_field(name=f"**{device['name']}**", value='\n'.join(device_info))
-
-            user = await self.bot.fetch_user(userid)
-
-            try:
-                await user.send(embed=embed)
-            except:
-                pass
-
-            async with aiosqlite.connect('Data/autotss.db') as db:
-                for device in invalid_devices[userid]:
-                    await self.shutil.rmtree(f"Data/Blobs/{device['ecid']}")
-                    async with db.execute('SELECT devices FROM autotss WHERE user = ?', (userid,)) as cursor:
-                        devices = json.loads((await cursor.fetchone())[0])
-
-                    devices.pop(next(devices.index(x) for x in devices if x['ecid'] == device['ecid']))
-
-                    await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), userid))
-                    await db.commit()
-
-        await asyncio.sleep(259200)
-
-    @auto_invalid_device_check.before_loop
-    async def before_invalid_device_check(self) -> None:
         await self.bot.wait_until_ready()
         await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 

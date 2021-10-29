@@ -32,7 +32,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         being lazy and using a long string. """
         return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
-    async def backup_blobs(self, tmpdir: str, *ecids: list):
+    async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
 
         if len(ecids) == 1:
@@ -49,7 +49,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return
 
         await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-        return await self.upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
+        return await self._upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
@@ -208,7 +208,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return buildids
 
-    async def get_whitelist(self, guild) -> Optional[Union[bool, discord.TextChannel]]:
+    async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
@@ -279,53 +279,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
         }
 
         return discord.Embed.from_dict(embed)
-
-    async def watch_pagination(self, embeds: list, message: discord.Message, *, get_answer: bool=False, timeout: int=300) -> Optional[int]:
-        arrows = ['⏪', '⬅️', '➡️', '⏩'] # [left arrow, right arrow]
-        start_time = await self.time.time()
-        embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
-
-        while round(await self.time.time() - start_time) < timeout:
-            if embed_num > 1:
-                await message.add_reaction(arrows[0])
-            if embed_num > 0:
-                await message.add_reaction(arrows[1])
-
-            if embed_num < (len(embeds) - 1):
-                await message.add_reaction(arrows[2])
-
-            if embed_num < (len(embeds) - 2):
-                await message.add_reaction(arrows[3])
-
-            if get_answer:
-                await message.add_reaction('✅')
-
-            reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: reaction.message == message and user != self.bot.user)
-            if user != message.reference.cached_message.author:
-                await reaction.remove(user)
-                continue
-
-            if reaction.emoji not in arrows:
-                if (reaction.emoji == '✅') and get_answer:
-                    await message.clear_reactions()
-                    return embed_num
-
-                await reaction.clear()
-                continue
-
-            if reaction.emoji == arrows[0]:
-                embed_num = 0
-            elif reaction.emoji == arrows[1]:
-                embed_num -= 1
-            elif reaction.emoji == arrows[2]:
-                embed_num += 1
-            elif reaction.emoji == arrows[3]:
-                embed_num = len(embeds) - 1
-
-            await message.clear_reactions()
-            message = await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
-            
-        await message.clear_reactions()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()
@@ -419,7 +372,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
-    async def upload_file(self, file: str, name: str) -> str:
+    async def _upload_file(self, file: str, name: str) -> str:
         async with aiofiles.open(file, 'rb') as f, self.session.put(f'https://up.psty.io/{name}', data=f) as response:
             resp = await response.text()
 

@@ -23,8 +23,9 @@ class AdminCog(commands.Cog, name='Administrator'):
             await ctx.send_help(ctx.command)
             return
 
-        invoked_cmd = f'{await self.utils.get_prefix(ctx.guild.id) + ctx.invoked_with} {ctx.subcommand_passed}'
-        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
+        prefix = await self.utils.get_prefix(ctx.guild.id)
+        invoked_cmd = f'{prefix + ctx.invoked_with} {ctx.subcommand_passed}'
+        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist! Use `{prefix}help` to see all the commands I can run.')
         await ctx.reply(embed=embed)
 
     @module_group.command(name='edit', help='Edit a module.')

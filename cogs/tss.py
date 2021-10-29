@@ -118,24 +118,17 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @commands.group(name='tss', aliases=('t',), help='SHSH Blob commands.', invoke_without_command=True)
     @commands.guild_only()
-    async def tss_cmd(self, ctx: commands.Context) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
+    async def tss_group(self, ctx: commands.Context) -> None:
+        help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
+        if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
+            await ctx.send_help(ctx.command)
             return
 
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-
-        embed = discord.Embed(title='TSS Commands')
-        embed.add_field(name='Download all SHSH blobs saved for your devices', value=f'`{prefix}tss download`', inline=False)
-        embed.add_field(name='List all SHSH blobs saved for your devices', value=f'`{prefix}tss list`', inline=False)
-        embed.add_field(name='Save SHSH blobs for all of your devices', value=f'`{prefix}tss save`', inline=False)
-        if await ctx.bot.is_owner(ctx.author):
-            embed.add_field(name='Download SHSH blobs saved for all devices', value=f'`{prefix}tss downloadall`', inline=False)
-            embed.add_field(name='Save SHSH blobs for all devices', value=f'`{prefix}tss saveall`', inline=False)
-
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        invoked_cmd = f'{await self.utils.get_prefix(ctx.guild.id) + ctx.invoked_with} {ctx.subcommand_passed}'
+        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
-    @tss_cmd.command(name='download', help='Download your saved SHSH blobs.')
+    @tss_group.command(name='download', help='Download your saved SHSH blobs.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context) -> None:
@@ -223,7 +216,7 @@ class TSSCog(commands.Cog, name='TSS'):
             await message.delete(delay=5)
             await ctx.message.delete()
 
-    @tss_cmd.command(name='list', help='List your saved SHSH blobs.')
+    @tss_group.command(name='list', help='List your saved SHSH blobs.')
     @commands.guild_only()
     async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -290,7 +283,7 @@ class TSSCog(commands.Cog, name='TSS'):
         paginator = PaginatorView(device_embeds)
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
-    @tss_cmd.command(name='save', help='Manually save SHSH blobs for your devices.')
+    @tss_group.command(name='save', help='Manually save SHSH blobs for your devices.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: commands.Context) -> None:
@@ -370,7 +363,7 @@ class TSSCog(commands.Cog, name='TSS'):
         embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
 
-    @tss_cmd.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
+    @tss_group.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
     @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)
@@ -416,7 +409,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         await message.edit(embed=embed)
 
-    @tss_cmd.command(name='saveall', help='Manually save SHSH blobs for all devices in AutoTSS.')
+    @tss_group.command(name='saveall', help='Manually save SHSH blobs for all devices in AutoTSS.')
     @commands.guild_only()
     @commands.is_owner()
     @commands.max_concurrency(1, per=commands.BucketType.default)

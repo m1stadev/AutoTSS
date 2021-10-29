@@ -15,7 +15,7 @@ import shutil
 import time
 
 
-class Utils(commands.Cog):
+class Utils(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')

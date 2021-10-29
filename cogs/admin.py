@@ -7,7 +7,7 @@ import discord
 import glob
 
 
-class Admin(commands.Cog, name='Administrator'):
+class AdminCog(commands.Cog, name='Administrator'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
@@ -297,5 +297,6 @@ class Admin(commands.Cog, name='Administrator'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(Admin(bot))
+    bot.add_cog(AdminCog(bot))

@@ -5,7 +5,7 @@ from discord.ext import commands
 import aiosqlite
 import discord
 
-class Misc(commands.Cog, name='Miscellaneous'):
+class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
         self.datetime = aioify(datetime, name='datetime')
@@ -77,5 +77,6 @@ class Misc(commands.Cog, name='Miscellaneous'):
         embed = await self.utils.info_embed(prefix, ctx.author)
         await ctx.reply(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(Misc(bot))
+    bot.add_cog(MiscCog(bot))

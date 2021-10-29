@@ -13,7 +13,7 @@ import json
 import shutil
 
 
-class Device(commands.Cog):
+class DeviceCog(commands.Cog, name='Device'):
     def __init__(self, bot):
         self.bot = bot
         self.shutil = aioify(shutil, name='shutil')
@@ -623,5 +623,6 @@ class Device(commands.Cog):
         embed.description = f"Successfully transferred {old_member.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new_member.mention}."
         await view.message.edit(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(Device(bot))
+    bot.add_cog(DeviceCog(bot))

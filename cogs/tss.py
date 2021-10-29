@@ -16,7 +16,7 @@ import shutil
 import time
 
 
-class TSS(commands.Cog):
+class TSSCog(commands.Cog, name='TSS'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
@@ -509,5 +509,6 @@ class TSS(commands.Cog):
         embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(TSS(bot))
+    bot.add_cog(TSSCog(bot))

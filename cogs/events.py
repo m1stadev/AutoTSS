@@ -10,7 +10,7 @@ import os
 import shutil
 
 
-class Events(commands.Cog):
+class EventsCog(commands.Cog, name='Events'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
@@ -329,4 +329,4 @@ class Events(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Events(bot))
+    bot.add_cog(EventsCog(bot))

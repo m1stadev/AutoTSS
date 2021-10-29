@@ -4,7 +4,7 @@ import aiosqlite
 import discord
 
 
-class Whitelist(commands.Cog):
+class WhitelistCog(commands.Cog, name='Whitelist'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
@@ -70,5 +70,6 @@ class Whitelist(commands.Cog):
 
         await ctx.reply(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(Whitelist(bot))
+    bot.add_cog(WhitelistCog(bot))

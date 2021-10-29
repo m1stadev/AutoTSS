@@ -136,7 +136,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         await self.context.reply(embed=discord.Embed.from_dict(embed))
 
 
-class Help(commands.Cog):
+class HelpCog(commands.Cog, name='Help'):
     def __init__(self, bot):
         help_cmd = AutoTSSHelp()
         help_cmd.cog = self
@@ -144,4 +144,4 @@ class Help(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Help(bot))
+    bot.add_cog(HelpCog(bot))

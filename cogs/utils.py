@@ -29,7 +29,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         This is a much better implementation that utilizes
         available tools in the discord library rather than
         being lazy and using a long string. """
-        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184))
+        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
     async def backup_blobs(self, tmpdir: str, *ecids: list):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')

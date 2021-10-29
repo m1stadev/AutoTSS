@@ -15,7 +15,7 @@ class Admin(commands.Cog):
     @property
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(aliases=('m',), help='Module management commands.', invoke_without_command=True)
     @commands.is_owner()
     async def module(self, ctx: commands.Context) -> None:
         prefix = await self.utils.get_prefix(ctx.guild.id)
@@ -30,10 +30,10 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module.command()
+    @module.command(name='edit', help='Edit a module.')
     @commands.is_owner()
     @commands.guild_only()
-    async def edit(self, ctx: commands.Context, *cogs: str) -> None:
+    async def edit_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = [cog.lower() for cog in cogs]
 
         if len(modules) > 1:
@@ -113,18 +113,18 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await message.edit(embed=embed)
 
-    @module.command(name='list')
+    @module.command(name='list', help='List all modules.')
     @commands.guild_only()
     @commands.is_owner()
-    async def _list(self, ctx: commands.Context) -> None:
+    async def list_modules(self, ctx: commands.Context) -> None:
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(self.modules)}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url) 
         await ctx.reply(embed=embed)
 
-    @module.command()
+    @module.command(name='load', help='Load a module.')
     @commands.is_owner()
     @commands.guild_only()
-    async def load(self, ctx: commands.Context, *cogs: str) -> None:
+    async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -180,10 +180,10 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module.command(name='reload')
+    @module.command(name='reload', help='Reload a module.')
     @commands.is_owner()
     @commands.guild_only()
-    async def _reload(self, ctx: commands.Context, *cogs: str) -> None:
+    async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
@@ -242,10 +242,10 @@ class Admin(commands.Cog):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.reply(embed=embed)
 
-    @module.command()
+    @module.command(name='unload', help='Unload a module.')
     @commands.is_owner()
     @commands.guild_only()
-    async def unload(self, ctx: commands.Context, *cogs: str) -> None:
+    async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':

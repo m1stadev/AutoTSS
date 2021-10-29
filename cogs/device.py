@@ -450,17 +450,19 @@ class Device(commands.Cog):
 
     @device_cmd.command(name='list', help='List your added devices.')
     @commands.guild_only()
-    async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int, str]=None) -> None:
+    async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        if type(user) == int:
-            user = ctx.author if user == 0 else self.bot.get_user(user)
+        if user is None:
+            user = ctx.author
 
-        if type(user) in (None, str):
-            embed = discord.Embed(title='Error', description="This user doesn't exist!")
-            await ctx.reply(embed=embed)
-            return
+        elif type(user) == int:
+            user = self.bot.get_user(user)
+            if user is None:
+                embed = discord.Embed(title='Error', description="This user doesn't exist!")
+                await ctx.reply(embed=embed)
+                return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:

@@ -125,14 +125,14 @@ class DeviceCog(commands.Cog, name='Device'):
 
             elif x == 1:
                 device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
-                if await self.utils.check_identifier(session, device['identifier']) is False:
+                if await self.utils.check_identifier(device['identifier']) is False:
                     invalid_embed.description = f"Device Identifier `{answer}` is not valid."
                     invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                     await message.edit(embed=invalid_embed)
                     return
 
                 # If there's only one board for the device, grab the boardconfig now
-                api = await self.utils.fetch_ipswme_api(session, device['identifier'])
+                api = await self.utils.fetch_ipswme_api(device['identifier'])
                 if len([board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]) == 1: # Exclude development boards that may pop up
                     device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
 
@@ -158,7 +158,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
             else:
                 device['boardconfig'] = answer.lower().replace(' ', '').replace('deviceid:', '')
-                if await self.utils.check_boardconfig(session, device['identifier'], device['boardconfig']) is False:
+                if await self.utils.check_boardconfig(device['identifier'], device['boardconfig']) is False:
                     invalid_embed.description = f"Device boardconfig `{answer}` is not valid."
                     invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                     await message.edit(embed=invalid_embed)
@@ -169,7 +169,7 @@ class DeviceCog(commands.Cog, name='Device'):
             'This value begins with `0x` and is followed by 16 hexadecimal characters.'
         ]
 
-        cpid = await self.utils.get_cpid(session, device['identifier'], device['boardconfig'])
+        cpid = await self.utils.get_cpid(device['identifier'], device['boardconfig'])
         if 0x8020 <= cpid < 0x8900:
             generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
             generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#getting-generator-and-apnonce-jailbroken-a12-only)*') #TODO: Change back to ios.cfw.guide links once they go to the proper section

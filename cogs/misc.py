@@ -13,7 +13,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @commands.command(help='Set the command prefix for AutoTSS.')
     @commands.guild_only()
-    @commands.has_permissions(administrator=True)
     async def prefix(self, ctx: commands.Context, *, prefix: str=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -23,6 +22,9 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await ctx.reply(embed=embed)
+            return
+
+        if not ctx.author.guild_permissions.administrator:
             return
 
         if len(prefix) > 4:

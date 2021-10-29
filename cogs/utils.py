@@ -19,6 +19,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
+        self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.shutil = aioify(shutil, name='shutil')
         self.time = aioify(time, name='time')
 
@@ -68,11 +69,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_boardconfig(self, session, identifier: str, boardconfig: str) -> bool:
+    async def check_boardconfig(self, identifier: str, boardconfig: str) -> bool:
         if boardconfig[-2:] != 'ap':
             return False
 
-        api = await self.fetch_ipswme_api(session, identifier)
+        api = await self.fetch_ipswme_api(self.session, identifier)
         if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
             return False
         else:
@@ -113,8 +114,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_identifier(self, session, identifier: str) -> bool:
-        async with session.get('https://api.ipsw.me/v4/devices') as resp:
+    async def check_identifier(self, identifier: str) -> bool:
+        async with self.session.get('https://api.ipsw.me/v4/devices') as resp:
             api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
@@ -138,12 +139,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def fetch_ipswme_api(self, session, identifier: str) -> dict:
-        async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+    async def fetch_ipswme_api(self, identifier: str) -> dict:
+        async with self.session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
             return await resp.json()
 
-    async def get_cpid(self, session, identifier: str, boardconfig: str) -> str:
-        api = await self.fetch_ipswme_api(session, identifier)
+    async def get_cpid(self, identifier: str, boardconfig: str) -> str:
+        api = await self.fetch_ipswme_api(self.session, identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
     def get_manifest(self, url: str, dir: str) -> Union[bool, str]:
@@ -169,8 +170,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return guild_prefix
 
-    async def get_firms(self, session, identifier: str) -> list:
-        api = await self.fetch_ipswme_api(session, identifier)
+    async def get_firms(self, identifier: str) -> list:
+        api = await self.fetch_ipswme_api(self.session, identifier)
 
         buildids = list()
         for firm in api['firmwares']:
@@ -184,7 +185,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 })
 
         beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
-        async with session.get(beta_api_url) as resp:
+        async with self.session.get(beta_api_url) as resp:
             if resp.status != 200:
                 return buildids
             else:
@@ -419,7 +420,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def upload_file(self, file: str, name: str) -> str:
-        async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:
+        async with aiofiles.open(file, 'rb') as f, self.session.put(f'https://up.psty.io/{name}', data=f) as response:
             resp = await response.text()
 
         return resp.splitlines()[-1].split(':', 1)[1][1:]

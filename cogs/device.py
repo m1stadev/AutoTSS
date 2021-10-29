@@ -22,19 +22,13 @@ class Device(commands.Cog):
     @commands.group(name='device', aliases=('devices', 'd'), help='Device management commands.', invoke_without_command=True)
     @commands.guild_only()
     async def device_cmd(self, ctx: commands.Context) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
+        help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
+        if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
+            await ctx.send_help(ctx.command)
             return
 
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-
-        embed = discord.Embed(title='Device Commands')
-        embed.add_field(name='Add a device', value=f'`{prefix}devices add`', inline=False)
-        embed.add_field(name='Remove a device', value=f'`{prefix}devices remove`', inline=False)
-        embed.add_field(name='List your devices', value=f'`{prefix}devices list`', inline=False)
-        if await ctx.bot.is_owner(ctx.author):
-            embed.add_field(name='Transfer devices to new user', value=f'`{prefix}devices transfer <old user> <new user>`', inline=False)
-
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        invoked_cmd = f'{await self.utils.get_prefix(ctx.guild.id) + ctx.invoked_with} {ctx.subcommand_passed}'
+        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist!')
         await ctx.reply(embed=embed)
 
     @device_cmd.command(name='add', help='Add a device to AutoTSS.')

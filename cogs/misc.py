@@ -5,7 +5,7 @@ from discord.ext import commands
 import aiosqlite
 import discord
 
-class Misc(commands.Cog):
+class Misc(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
         self.datetime = aioify(datetime, name='datetime')

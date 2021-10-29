@@ -73,8 +73,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-        embed = await self.utils.info_embed(prefix, ctx.author)
+        embed = await self.utils.info_embed(await self.utils.get_prefix(ctx.guild.id), ctx.author)
         await ctx.reply(embed=embed)
 
 

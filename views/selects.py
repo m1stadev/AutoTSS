@@ -18,7 +18,7 @@ class DropdownSelect(discord.ui.Select['DropdownView']):
         self.view.stop()
 
 class DropdownView(discord.ui.View):
-    def __init__(self, options: list[discord.SelectOption], placeholder: str='\u200b', timeout: Optional[int]=60):
+    def __init__(self, options: list[discord.SelectOption], *, placeholder: str='\u200b', timeout: int=60):
         super().__init__(timeout=timeout)
 
         self.options = options

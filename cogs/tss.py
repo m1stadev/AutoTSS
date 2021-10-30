@@ -302,8 +302,6 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.reply(embed=embed)
             return
 
-        self.utils.saving_blobs = True
-
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
@@ -321,8 +319,6 @@ class TSSCog(commands.Cog, name='TSS'):
         async with aiosqlite.connect('Data/autotss.db') as db:        
             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), ctx.author.id))
             await db.commit()
-
-        self.utils.saving_blobs = False
 
         embed.description = ' '.join((
             f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",

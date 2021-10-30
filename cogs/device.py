@@ -440,19 +440,12 @@ class DeviceCog(commands.Cog, name='Device'):
             await view.message.edit(embed=cancelled_embed)
 
     @device_group.command(name='list', help='List your added devices.')
-    async def list_devices(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
+    async def list_devices(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
         if user is None:
             user = ctx.author
-
-        elif type(user) == int:
-            user = self.bot.get_user(user)
-            if user is None:
-                embed = discord.Embed(title='Error', description="This user doesn't exist!")
-                await ctx.reply(embed=embed)
-                return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
@@ -522,7 +515,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device_group.command(name='transfer', help="Transfer a user's devices to another user.")
     @commands.is_owner()
-    async def transfer_devices(self, ctx: commands.Context, old_member: Union[discord.User, int], new_member: Union[discord.User, int]) -> None:
+    async def transfer_devices(self, ctx: commands.Context, old_member: commands.UserConverter, new_member: commands.UserConverter) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
@@ -538,21 +531,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.reply(embed=invalid_embed)
             return
 
-        if type(old_member) == int:
-            old_member = await self.bot.fetch_user(old_member)
-            if old_member is None:
-                invalid_embed.description = "The member specified to transfer devices from doesn't exist!"
-                await ctx.reply(embed=invalid_embed)
-                return
-
-        if type(new_member) == int:
-            new_member = await self.bot.fetch_user(new_member)
-            if new_member is None:
-                invalid_embed.description = "The member specified to transfer devices to doesn't exist!"
-                await ctx.reply(embed=invalid_embed)
-                return
-
-        if old_member.id == new_member.id:
+        if old_member == new_member:
             invalid_embed.description = "Silly goose, you can't transfer devices between the same user!"
             await ctx.reply(embed=invalid_embed)
             return

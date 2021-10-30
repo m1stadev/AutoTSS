@@ -526,9 +526,6 @@ class DeviceCog(commands.Cog, name='Device'):
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.is_owner()
     async def transfer_devices(self, ctx: commands.Context, old_member: commands.UserConverter, new_member: commands.UserConverter) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error')
         timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 1 minute, cancelling.')

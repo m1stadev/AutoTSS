@@ -11,7 +11,15 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
             'help': 'Show info on all commands.'
         })
 
+        self.utils = None #TODO: Make this less shit if possible
+
     async def send_bot_help(self, modules: dict):
+        if self.utils is None:
+            self.utils = self.context.bot.get_cog('Utilities')
+
+        if await self.utils.whitelist_check(self.context) != True:
+            return
+
         prefix = await self.context.bot.get_cog('Utilities').get_prefix(self.context.guild.id)
         embeds = list()
         for cog, commands in modules.items():
@@ -48,6 +56,12 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         view.message = await self.context.reply(embed=embeds[0], view=view)
 
     async def send_cog_help(self, cog: commands.Cog):
+        if self.utils is None:
+            self.utils = self.context.bot.get_cog('Utilities')
+
+        if await self.utils.whitelist_check(self.context) != True:
+            return
+
         commands = await self.filter_commands(cog.get_commands(), sort=True)
         if len(commands) == 0:
             return
@@ -77,6 +91,12 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         view.message = await self.context.reply(embed=embeds[0], view=view)
 
     async def send_group_help(self, group: commands.Group):
+        if self.utils is None:
+            self.utils = self.context.bot.get_cog('Utilities')
+
+        if await self.utils.whitelist_check(self.context) != True:
+            return
+
         commands = await self.filter_commands(group.commands, sort=True)
         if len(commands) == 0:
             return
@@ -117,6 +137,12 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         await self.context.reply(embed=discord.Embed.from_dict(embed))
 
     async def send_command_help(self, cmd: commands.Command):
+        if self.utils is None:
+            self.utils = self.context.bot.get_cog('Utilities')
+
+        if await self.utils.whitelist_check(self.context) != True:
+            return
+
         if (not await cmd.can_run(self.context)) or (not self.get_command_signature(cmd)):
             return
 

@@ -1,28 +1,18 @@
 #!/usr/bin/env python3
 
 from discord.ext import commands
+
+import aiohttp
 import aiosqlite
+import asyncio
 import discord
 import glob
 import os
-import platform
 import shutil
 import sys
 
 
-def bot_token():
-    if os.getenv('AUTOTSS_TOKEN') is not None:
-        return os.getenv('AUTOTSS_TOKEN')
-    else:
-        sys.exit("[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting.")
-
-
-def check_tsschecker():
-    if shutil.which('tsschecker') is None:
-        sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
-
-
-async def get_prefix(client, message):
+async def get_prefix(bot, message):
     if message.channel.type is discord.ChannelType.private:
         return 'b!'
 
@@ -34,40 +24,52 @@ async def get_prefix(client, message):
             await db.commit()
             guild_prefix = 'b!'
 
-    return commands.when_mentioned_or(guild_prefix)(client, message)
+    return commands.when_mentioned_or(guild_prefix)(bot, message)
 
-def main():
-    if platform.system() == 'Windows':
+async def startup():
+    if sys.version_info.major < 3 and sys.version_info.minor < 9:
+        sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
+
+    if sys.platform == 'win32':
         sys.exit('[ERROR] AutoTSS is not supported on Windows. Exiting.')
 
-    check_tsschecker()
+    if await asyncio.to_thread(shutil.which, 'tsschecker') is None:
+        sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
-    mentions = discord.AllowedMentions(everyone=False, roles=False)
+    if 'AUTOTSS_TOKEN' not in os.environ.keys():
+        sys.exit("[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting.")
 
-    # Neato trick for intents in one line
+    mentions = discord.AllowedMentions(everyone=False, roles=False)    
     (intents := discord.Intents.default()).members = True
 
-    client = commands.AutoShardedBot(
+    bot = commands.AutoShardedBot(
         help_command=None,
         command_prefix=get_prefix,
         intents=intents,
         allowed_mentions=mentions
     )
 
-    client.load_extension('cogs.utils') # Load utils cog first
-
-    for cog in glob.glob('cogs/*.py'):
+    bot.load_extension('cogs.utils') # Load utils cog first
+    for cog in await asyncio.to_thread(glob.glob, 'cogs/*.py'):
         if 'utils.py' in cog:
             continue
 
-        client.load_extension(cog.replace('/', '.')[:-3])
+        bot.load_extension(cog.replace('/', '.')[:-3])
 
-    try:
-        client.run(bot_token())
-    except discord.LoginFailure:
-        sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
-    except discord.errors.PrivilegedIntentsRequired:
-        sys.exit("[ERROR] Server Members Intent not enabled, go to 'https://discord.com/developers/applications/' and enable the Server Members Intent. Exiting.")
+    async with aiohttp.ClientSession() as session:
+        bot.session = session
+
+        try:
+            await bot.start(os.environ['AUTOTSS_TOKEN'])
+        except discord.LoginFailure:
+            sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
+        except discord.PrivilegedIntentsRequired:
+            sys.exit("[ERROR] Server Members Intent not enabled, go to 'https://discord.com/developers/applications' and enable the Server Members Intent. Exiting.")
+
 
 if __name__ == '__main__':
-    main()
+    try:
+        asyncio.run(startup())
+    except KeyboardInterrupt:
+        pass
+

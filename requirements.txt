@@ -1,5 +1,5 @@
 aioify
 aiofiles
 aiosqlite
-discord.py
+git+git://github.com/Pycord-Development/pycord@master
 remotezip

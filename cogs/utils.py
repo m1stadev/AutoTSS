@@ -1,8 +1,8 @@
 from aioify import aioify
 from discord.ext import commands
 from typing import Optional, Union
+
 import aiofiles
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -14,7 +14,7 @@ import shutil
 import time
 
 
-class Utils(commands.Cog):
+class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
@@ -28,23 +28,32 @@ class Utils(commands.Cog):
         This is a much better implementation that utilizes
         available tools in the discord library rather than
         being lazy and using a long string. """
-        perms = discord.Permissions(93184)
-        return discord.utils.oauth_url(self.bot.user.id, perms)
+        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
-    async def backup_blobs(self, tmpdir: str, *ecids: list):
+    async def _upload_file(self, file: str, name: str) -> str:
+        async with aiofiles.open(file, 'rb') as f, self.bot.session.put(f'https://up.psty.io/{name}', data=f) as response:
+            resp = await response.text()
+
+        return resp.splitlines()[-1].split(':', 1)[1][1:]
+
+    async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
         await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
 
-        for ecid in ecids:
-            try:
-                await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
-            except FileNotFoundError:
-                pass
+        if len(ecids) == 1:
+            for firm in glob.glob(f'Data/Blobs/{ecids[0]}/*'):
+                await self.shutil.copytree(firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
+        else:
+            for ecid in ecids:
+                try:
+                    await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
+                except FileNotFoundError:
+                    pass
 
         if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
             return
 
         await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
-        return await self.upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
+        return await self._upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
@@ -64,11 +73,11 @@ class Utils(commands.Cog):
 
         return True
 
-    async def check_boardconfig(self, session, identifier: str, boardconfig: str) -> bool:
+    async def check_boardconfig(self, identifier: str, boardconfig: str) -> bool:
         if boardconfig[-2:] != 'ap':
             return False
 
-        api = await self.fetch_ipswme_api(session, identifier)
+        api = await self.fetch_ipswme_api(identifier)
         if not any(x['boardconfig'].lower() == boardconfig for x in api['boards']): # If no boardconfigs for the given device identifier match the boardconfig, then return False
             return False
         else:
@@ -109,8 +118,8 @@ class Utils(commands.Cog):
 
         return True
 
-    async def check_identifier(self, session, identifier: str) -> bool:
-        async with session.get('https://api.ipsw.me/v4/devices') as resp:
+    async def check_identifier(self, identifier: str) -> bool:
+        async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
@@ -134,12 +143,12 @@ class Utils(commands.Cog):
 
         return True
 
-    async def fetch_ipswme_api(self, session, identifier: str) -> dict:
-        async with session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+    async def fetch_ipswme_api(self, identifier: str) -> dict:
+        async with self.bot.session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
             return await resp.json()
 
-    async def get_cpid(self, session, identifier: str, boardconfig: str) -> str:
-        api = await self.fetch_ipswme_api(session, identifier)
+    async def get_cpid(self, identifier: str, boardconfig: str) -> str:
+        api = await self.fetch_ipswme_api(identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
     def get_manifest(self, url: str, dir: str) -> Union[bool, str]:
@@ -165,8 +174,8 @@ class Utils(commands.Cog):
 
         return guild_prefix
 
-    async def get_firms(self, session, identifier: str) -> list:
-        api = await self.fetch_ipswme_api(session, identifier)
+    async def get_firms(self, identifier: str) -> list:
+        api = await self.fetch_ipswme_api(identifier)
 
         buildids = list()
         for firm in api['firmwares']:
@@ -180,7 +189,7 @@ class Utils(commands.Cog):
                 })
 
         beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
-        async with session.get(beta_api_url) as resp:
+        async with self.bot.session.get(beta_api_url) as resp:
             if resp.status != 200:
                 return buildids
             else:
@@ -203,7 +212,7 @@ class Utils(commands.Cog):
 
         return buildids
 
-    async def get_whitelist(self, guild) -> Optional[Union[bool, discord.TextChannel]]:
+    async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
@@ -225,7 +234,7 @@ class Utils(commands.Cog):
         embed = {
             'title': "Hey, I'm AutoTSS!",
             'thumbnail': {
-                'url': str(self.bot.user.avatar_url_as(static_format='png'))
+                'url': str(self.bot.user.display_avatar.with_static_format('png').url)
             },
             'fields': [{
                 'name': 'What do I do?',
@@ -269,58 +278,11 @@ class Utils(commands.Cog):
             }],
             'footer': {
                 'text': member.display_name,
-                'icon_url': str(member.avatar_url_as(static_format='png'))
+                'icon_url': str(member.display_avatar.with_static_format('png').url)
             }
         }
 
         return discord.Embed.from_dict(embed)
-
-    async def watch_pagination(self, embeds: list, message: discord.Message, *, get_answer: bool=False, timeout: int=300) -> Optional[int]:
-        arrows = ['⏪', '⬅️', '➡️', '⏩'] # [left arrow, right arrow]
-        start_time = await self.time.time()
-        embed_num = embeds.index(next(embed for embed in embeds if message.embeds[0].title == embed['title']))
-
-        while round(await self.time.time() - start_time) < timeout:
-            if embed_num > 1:
-                await message.add_reaction(arrows[0])
-            if embed_num > 0:
-                await message.add_reaction(arrows[1])
-
-            if embed_num < (len(embeds) - 1):
-                await message.add_reaction(arrows[2])
-
-            if embed_num < (len(embeds) - 2):
-                await message.add_reaction(arrows[3])
-
-            if get_answer:
-                await message.add_reaction('✅')
-
-            reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: reaction.message == message and user != self.bot.user)
-            if user != message.reference.cached_message.author:
-                await reaction.remove(user)
-                continue
-
-            if reaction.emoji not in arrows:
-                if (reaction.emoji == '✅') and get_answer:
-                    await message.clear_reactions()
-                    return embed_num
-
-                await reaction.clear()
-                continue
-
-            if reaction.emoji == arrows[0]:
-                embed_num = 0
-            elif reaction.emoji == arrows[1]:
-                embed_num -= 1
-            elif reaction.emoji == arrows[2]:
-                embed_num += 1
-            elif reaction.emoji == arrows[3]:
-                embed_num = len(embeds) - 1
-
-            await message.clear_reactions()
-            await message.edit(embed=discord.Embed.from_dict(embeds[embed_num]))
-            
-        await message.clear_reactions()
 
     async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
         generators = list()
@@ -414,20 +376,14 @@ class Utils(commands.Cog):
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
-    async def upload_file(self, file: str, name: str) -> str:
-        async with aiohttp.ClientSession() as session, aiofiles.open(file, 'rb') as f, session.put(f'https://up.psty.io/{name}', data=f) as response:
-            resp = await response.text()
-
-        return resp.splitlines()[-1].split(':', 1)[1][1:]
-
     async def whitelist_check(self, ctx: commands.Context) -> bool:
-        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
-            return True
+        #if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+        #    return True
 
         whitelist = await self.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await ctx.reply(embed=embed)
 
             return False
@@ -436,4 +392,4 @@ class Utils(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Utils(bot))
+    bot.add_cog(UtilsCog(bot))

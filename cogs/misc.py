@@ -1,27 +1,30 @@
 from aioify import aioify
 from datetime import datetime
 from discord.ext import commands
+
 import aiosqlite
 import discord
 
-class Misc(commands.Cog):
+class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
         self.datetime = aioify(datetime, name='datetime')
-        self.utils = self.bot.get_cog('Utils')
+        self.utils = self.bot.get_cog('Utilities')
 
-    @commands.command()
+    @commands.command(help='Set the command prefix for AutoTSS.')
     @commands.guild_only()
-    @commands.has_permissions(administrator=True)
-    async def prefix(self, ctx: commands.Context, *, prefix: str = None) -> None:
+    async def prefix(self, ctx: commands.Context, *, prefix: str=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
         if prefix is None:
             prefix = await self.utils.get_prefix(ctx.guild.id)
             embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
             await ctx.reply(embed=embed)
+            return
+
+        if not ctx.author.guild_permissions.administrator:
             return
 
         if len(prefix) > 4:
@@ -34,31 +37,31 @@ class Misc(commands.Cog):
             await db.commit()
 
         embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(help='Get the invite for AutoTSS.')
     @commands.guild_only()
     async def invite(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
         embed = discord.Embed(title='Invite', description=f'[Click here]({self.utils.invite}).')
-        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format='png'))
+        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(help="See AutoTSS's latency.", aliases=('latency', 'ms'))
     @commands.guild_only()
     async def ping(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
         embed = discord.Embed(title='Pong!', description='Testing ping...')
-        embed.set_thumbnail(url=self.bot.user.avatar_url_as(static_format='png'))
-        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.avatar_url_as(static_format='png'))
+        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
+        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.display_avatar.with_static_format('png').url)
 
         time = await self.datetime.utcnow()
         message = await ctx.reply(embed=embed)
@@ -66,15 +69,15 @@ class Misc(commands.Cog):
         embed.description = f'Ping: `{round((await self.datetime.utcnow() - time).total_seconds() * 1000)}ms`'
         await message.edit(embed=embed)
 
-    @commands.command()
+    @commands.command(help='General info on AutoTSS.')
     @commands.guild_only()
     async def info(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-        embed = await self.utils.info_embed(prefix, ctx.author)
+        embed = await self.utils.info_embed(await self.utils.get_prefix(ctx.guild.id), ctx.author)
         await ctx.reply(embed=embed)
 
+
 def setup(bot):
-    bot.add_cog(Misc(bot))
+    bot.add_cog(MiscCog(bot))

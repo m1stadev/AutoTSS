@@ -56,6 +56,41 @@ async def startup():
 
         bot.load_extension(cog.replace('/', '.')[:-3])
 
+    await asyncio.to_thread(os.makedirs, 'Data', exist_ok=True)
+    async with aiosqlite.connect('Data/autotss.db') as db:
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS autotss(
+            user INTEGER,
+            devices JSON,
+            enabled BOOLEAN
+            )
+            ''')
+        await db.commit()
+
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS prefix(
+            guild INTEGER,
+            prefix TEXT
+            )
+            ''')
+        await db.commit()
+
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS whitelist(
+            guild INTEGER,
+            channel INTEGER,
+            enabled BOOLEAN
+            )
+            ''')
+        await db.commit()
+
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS auto_frequency(
+            time INTEGER
+            )
+            ''')
+        await db.commit()
+
     async with aiohttp.ClientSession() as session:
         bot.session = session
 

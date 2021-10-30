@@ -32,11 +32,6 @@ class EventsCog(commands.Cog, name='Events'):
 
         await asyncio.sleep(300)
 
-    @auto_clean_db.before_loop
-    async def before_auto_clean_db(self) -> None:
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
-
     @tasks.loop()
     async def signing_party_detection(self) -> None:
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
@@ -77,11 +72,6 @@ class EventsCog(commands.Cog, name='Events'):
                 self._api[device] = api[device]
 
         await asyncio.sleep(30)
-
-    @signing_party_detection.before_loop
-    async def before_signing_party_detection(self) -> None:
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -169,42 +159,6 @@ class EventsCog(commands.Cog, name='Events'):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        await self.os.makedirs('Data', exist_ok=True)
-
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            await db.execute('''
-                CREATE TABLE IF NOT EXISTS autotss(
-                user INTEGER,
-                devices JSON,
-                enabled BOOLEAN
-                )
-                ''')
-            await db.commit()
-
-            await db.execute('''
-                CREATE TABLE IF NOT EXISTS prefix(
-                guild INTEGER,
-                prefix TEXT
-                )
-                ''')
-            await db.commit()
-
-            await db.execute('''
-                CREATE TABLE IF NOT EXISTS whitelist(
-                guild INTEGER,
-                channel INTEGER,
-                enabled BOOLEAN
-                )
-                ''')
-            await db.commit()
-
-            await db.execute('''
-                CREATE TABLE IF NOT EXISTS auto_frequency(
-                time INTEGER
-                )
-                ''')
-            await db.commit()
-
         await self.utils.update_device_count()
         await self.utils.update_auto_saver_frequency()
         print('AutoTSS is now online.')

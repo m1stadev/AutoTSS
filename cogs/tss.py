@@ -118,6 +118,9 @@ class TSSCog(commands.Cog, name='TSS'):
     @commands.group(name='tss', aliases=('t',), help='SHSH Blob commands.', invoke_without_command=True)
     @commands.guild_only()
     async def tss_group(self, ctx: commands.Context) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
         if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
             await ctx.send_help(ctx.command)
@@ -129,6 +132,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.reply(embed=embed)
 
     @tss_group.command(name='download', help='Download your saved SHSH blobs.')
+    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -216,6 +220,7 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.message.delete()
 
     @tss_group.command(name='list', help='List your saved SHSH blobs.')
+    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def list_blobs(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -276,6 +281,7 @@ class TSSCog(commands.Cog, name='TSS'):
         paginator.message = await ctx.reply(embed=device_embeds[paginator.embed_num], view=paginator)
 
     @tss_group.command(name='save', help='Manually save SHSH blobs for your devices.')
+    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
@@ -355,8 +361,9 @@ class TSSCog(commands.Cog, name='TSS'):
         await message.edit(embed=embed)
 
     @tss_group.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
-    @commands.is_owner()
+    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def download_all_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -400,8 +407,9 @@ class TSSCog(commands.Cog, name='TSS'):
         await message.edit(embed=embed)
 
     @tss_group.command(name='saveall', help='Manually save SHSH blobs for all devices in AutoTSS.')
-    @commands.is_owner()
+    @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def save_all_blobs(self, ctx: commands.Context) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return

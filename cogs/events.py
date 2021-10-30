@@ -20,6 +20,8 @@ class EventsCog(commands.Cog, name='Events'):
 
     @tasks.loop()
     async def auto_clean_db(self) -> None:
+        await self.bot.wait_until_ready()
+
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
             data = await cursor.fetchall()
 
@@ -34,6 +36,8 @@ class EventsCog(commands.Cog, name='Events'):
 
     @tasks.loop()
     async def signing_party_detection(self) -> None:
+        await self.bot.wait_until_ready()
+
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
 

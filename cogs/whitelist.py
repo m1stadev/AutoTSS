@@ -12,6 +12,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @commands.group(name='whitelist', aliases=('w',), help='Whitelist management commands.', invoke_without_command=True)
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.has_permissions(administrator=True)
     async def whitelist_group(self, ctx: commands.Context) -> None:
         help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
         if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
@@ -26,6 +27,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @whitelist_group.command(name='set', help='Set the whitelist channel for AutoTSS commands.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.has_permissions(administrator=True)
     async def set_whitelist_channel(self, ctx: commands.Context, channel: discord.TextChannel) -> None:
         if channel.guild != ctx.guild:
             embed = discord.Embed(title='Error', description=f'{channel.mention} is not a valid channel.')
@@ -48,6 +50,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @whitelist_group.command(name='toggle', help='Toggle the whitelist for AutoTSS commands on/off.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.has_permissions(administrator=True)
     async def toggle_whitelist(self, ctx: commands.Context) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db:
             async with db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:

@@ -422,5 +422,24 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return stats
 
+    async def save_user_blobs(self, user: int, devices: list[dict]) -> None:
+        tasks = [self.save_device_blobs(device) for device in devices]
+        data = await asyncio.gather(*tasks)
+
+        async with aiosqlite.connect('Data/autotss.db') as db:        
+            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
+            await db.commit()
+
+        user_stats = {
+            'blobs_saved': sum([len(d['saved_blobs']) for d in data]),
+            'devices_saved': len([d for d in data if d['saved_blobs']]),
+            'devices': [d['device'] for d in data]
+        }
+
+        for d in range(len(user_stats['devices'])):
+            user_stats['devices'][d]['failed_blobs'] = data[d]['failed_blobs']
+
+        return user_stats
+
 def setup(bot):
     bot.add_cog(UtilsCog(bot))

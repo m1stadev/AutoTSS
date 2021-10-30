@@ -3,7 +3,6 @@ from discord.ext import commands
 from typing import Optional, Union
 
 import aiofiles
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -19,7 +18,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
-        self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.shutil = aioify(shutil, name='shutil')
         self.time = aioify(time, name='time')
 
@@ -33,7 +31,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
     async def _upload_file(self, file: str, name: str) -> str:
-        async with aiofiles.open(file, 'rb') as f, self.session.put(f'https://up.psty.io/{name}', data=f) as response:
+        async with aiofiles.open(file, 'rb') as f, self.bot.session.put(f'https://up.psty.io/{name}', data=f) as response:
             resp = await response.text()
 
         return resp.splitlines()[-1].split(':', 1)[1][1:]
@@ -121,7 +119,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return True
 
     async def check_identifier(self, identifier: str) -> bool:
-        async with self.session.get('https://api.ipsw.me/v4/devices') as resp:
+        async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
@@ -146,7 +144,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return True
 
     async def fetch_ipswme_api(self, identifier: str) -> dict:
-        async with self.session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
+        async with self.bot.session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
             return await resp.json()
 
     async def get_cpid(self, identifier: str, boardconfig: str) -> str:
@@ -191,7 +189,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 })
 
         beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
-        async with self.session.get(beta_api_url) as resp:
+        async with self.bot.session.get(beta_api_url) as resp:
             if resp.status != 200:
                 return buildids
             else:
@@ -379,8 +377,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def whitelist_check(self, ctx: commands.Context) -> bool:
-        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
-            return True
+        #if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+        #    return True
 
         whitelist = await self.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):

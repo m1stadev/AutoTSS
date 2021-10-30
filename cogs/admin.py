@@ -10,7 +10,7 @@ import glob
 class AdminCog(commands.Cog, name='Administrator'):
     def __init__(self, bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils = bot.get_cog('Utilities')
 
     @property
     def modules(self): return sorted([cog.split('/')[-1][:-3] for cog in glob.glob('cogs/*.py')])
@@ -67,7 +67,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             old_module = await f.read()
 
         try:
-            async with aiohttp.ClientSession() as session, session.get(answer.content) as response:
+            async with self.bot.session.get(answer.content) as response:
                 new_module = await response.text()
 
         except aiohttp.client_exceptions.InvalidURL:

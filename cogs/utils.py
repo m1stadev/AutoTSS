@@ -377,8 +377,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def whitelist_check(self, ctx: commands.Context) -> bool:
-        #if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
-        #    return True
+        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+            return True
 
         whitelist = await self.get_whitelist(ctx.guild.id)
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):

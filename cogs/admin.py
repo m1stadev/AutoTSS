@@ -30,6 +30,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='edit', help='Edit a module.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def edit_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = [cog.lower() for cog in cogs]
 
@@ -111,6 +114,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         await message.edit(embed=embed)
 
     @module_group.command(name='list', help='List all modules.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def list_modules(self, ctx: commands.Context) -> None:
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(self.modules)}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -118,6 +124,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='load', help='Load a module.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -175,6 +184,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='reload', help='Reload a module.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
@@ -235,6 +247,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.reply(embed=embed)
 
     @module_group.command(name='unload', help='Unload a module.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.default)
+    @commands.is_owner()
     async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 

@@ -1,6 +1,5 @@
 from aioify import aioify
 from discord.ext import commands, tasks
-from typing import Union
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 

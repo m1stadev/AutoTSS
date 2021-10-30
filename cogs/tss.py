@@ -320,11 +320,15 @@ class TSSCog(commands.Cog, name='TSS'):
             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), ctx.author.id))
             await db.commit()
 
-        embed.description = ' '.join((
-            f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
-            f"for **{devices_saved} device{'s' if devices_saved != 1 else ''}**",
-            f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
-        ))
+        if len(blobs_saved) > 0:
+            embed.description = ' '.join((
+                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
+                f"for **{devices_saved} device{'s' if devices_saved != 1 else ''}**",
+                f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
+            ))
+        else:
+            embed.description = 'No SHSH Blobs need to be saved.'
+
         await message.edit(embed=embed)
 
     @tss_group.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')

@@ -1,4 +1,5 @@
 from aioify import aioify
+from discord import user
 from discord.ext import commands, tasks
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -307,23 +308,13 @@ class TSSCog(commands.Cog, name='TSS'):
         message = await ctx.reply(embed=embed)
 
         start_time = await asyncio.to_thread(time.time)
-        tasks = list()
-        for device in devices:
-            tasks.append(self.utils.save_device_blobs(device))
-
-        data = await asyncio.gather(*tasks)
-        blobs_saved = sum([len(d['saved_blobs']) for d in data])
-        devices_saved = len([d for d in data if d['saved_blobs']])
+        user = await self.utils.save_user_blobs(ctx.author.id, devices)
         finish_time = round(await asyncio.to_thread(time.time) - start_time)
 
-        async with aiosqlite.connect('Data/autotss.db') as db:        
-            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), ctx.author.id))
-            await db.commit()
-
-        if len(blobs_saved) > 0:
+        if user['blobs_saved'] > 0:
             embed.description = ' '.join((
-                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
-                f"for **{devices_saved} device{'s' if devices_saved != 1 else ''}**",
+                f"Saved **{user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''}**",
+                f"for **{user['devices_saved']} device{'s' if user['devices_saved'] != 1 else ''}**",
                 f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
             ))
         else:

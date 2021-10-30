@@ -20,7 +20,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if await self.utils.whitelist_check(self.context) != True:
             return
 
-        prefix = await self.context.bot.get_cog('Utilities').get_prefix(self.context.guild.id)
+        prefix = await self.utils.get_prefix(self.context.guild.id)
         embeds = list()
         for cog, commands in modules.items():
             if cog is None:
@@ -67,7 +67,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
             return
 
         embeds = list()
-        prefix = await self.context.bot.get_cog('Utilities').get_prefix(self.context.guild.id)
+        prefix = await self.utils.get_prefix(self.context.guild.id)
         for command in commands:
             if len([self.get_command_signature(cmd) for cmd in commands]) == 0:
                 continue
@@ -119,7 +119,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
             else:
                 embed['description'] += f'\n{aliases}'
 
-        prefix = await self.context.bot.get_cog('Utilities').get_prefix(self.context.guild.id)
+        prefix = await self.utils.get_prefix(self.context.guild.id)
         for cmd in commands:
             if not self.get_command_signature(cmd):
                 continue
@@ -146,7 +146,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if (not await cmd.can_run(self.context)) or (not self.get_command_signature(cmd)):
             return
 
-        prefix = await self.context.bot.get_cog('Utilities').get_prefix(self.context.guild.id)
+        prefix = await self.utils.get_prefix(self.context.guild.id)
         embed = {
             'title': self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix),
             'description': cmd.help or 'No help.',

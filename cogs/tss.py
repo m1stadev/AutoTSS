@@ -217,19 +217,12 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss_group.command(name='list', help='List your saved SHSH blobs.')
     @commands.max_concurrency(1, per=commands.BucketType.user)
-    async def list_blobs(self, ctx: commands.Context, user: Union[discord.User, int]=None) -> None:
+    async def list_blobs(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
         if user is None:
             user = ctx.author
-
-        elif type(user) == int:
-            user = self.bot.get_user(user)
-            if user is None:
-                embed = discord.Embed(title='Error', description="This user doesn't exist!")
-                await ctx.reply(embed=embed)
-                return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:

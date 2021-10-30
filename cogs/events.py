@@ -1,7 +1,6 @@
 from aioify import aioify
 from discord.ext import commands, tasks
 
-import aiohttp
 import aiosqlite
 import asyncio
 import discord
@@ -40,7 +39,7 @@ class EventsCog(commands.Cog, name='Events'):
 
     @tasks.loop()
     async def signing_party_detection(self) -> None:
-        async with aiohttp.ClientSession() as session, session.get('https://api.ipsw.me/v4/devices') as resp:
+        async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
 
         api = dict()

@@ -18,6 +18,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.os = aioify(os, name='os')
+        self.saving_blobs = False
         self.shutil = aioify(shutil, name='shutil')
         self.time = aioify(time, name='time')
 
@@ -284,14 +285,52 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
+    async def update_auto_saver_frequency(self, time: int=10800) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT time FROM auto_frequency') as cursor:
+                if await cursor.fetchone() is None:
+                    sql = 'INSERT INTO auto_frequency(time) VALUES(?)'
+                else:
+                    sql = 'UPDATE auto_frequency SET time = ?'
+
+            await db.execute(sql, (time,))
+            await db.commit()
+
+    async def update_device_count(self) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+            all_devices = (await cursor.fetchall())
+
+        num_devices = int()
+        for user_devices in all_devices:
+            devices = json.loads(user_devices[0])
+            num_devices += len(devices)
+
+        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+
+    async def whitelist_check(self, ctx: commands.Context) -> bool:
+        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+            return True
+
+        whitelist = await self.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            await ctx.reply(embed=embed)
+
+            return False
+
+        return True
+
+    # SHSH Blob saving functions
+
+    async def _save_blob(self, device: dict, firm: dict, manifest: str, tmpdir: str) -> bool:
         generators = list()
         save_path = [
             'Data',
             'Blobs',
             device['ecid'],
-            version,
-            buildid
+            firm['version'],
+            firm['buildid']
         ]
 
         args = [
@@ -354,42 +393,34 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def update_auto_saver_frequency(self, time: int=10800) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            async with db.execute('SELECT time FROM auto_frequency') as cursor:
-                if await cursor.fetchone() is None:
-                    sql = 'INSERT INTO auto_frequency(time) VALUES(?)'
+    async def save_device_blobs(self, device: dict) -> None:
+        stats = {
+            'saved_blobs': list(),
+            'failed_blobs': list(),
+        }
+
+        firms = await self.get_firms(device['identifier'])
+
+        for firm in [f for f in firms if f['signed'] == True]:
+            if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
+                continue
+
+            async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+                manifest = await self.bot.loop.run_in_executor(self.shsh_pool, self.get_manifest, firm['url'], tmpdir)
+                if manifest == False:
+                    saved_blob = False
                 else:
-                    sql = 'UPDATE auto_frequency SET time = ?'
+                    saved_blob = await self._save_blob(device, firm, manifest, tmpdir)
 
-            await db.execute(sql, (time,))
-            await db.commit()
+            if saved_blob is True:
+                device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
+                stats['saved_blobs'].append(firm)
+            else:
+                stats['failed_blobs'].append(firm)
 
-    async def update_device_count(self) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = (await cursor.fetchall())
+        stats['device'] = device
 
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-            num_devices += len(devices)
-
-        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
-
-    async def whitelist_check(self, ctx: commands.Context) -> bool:
-        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
-            return True
-
-        whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
-
-            return False
-
-        return True
-
+        return stats
 
 def setup(bot):
     bot.add_cog(UtilsCog(bot))

@@ -1,5 +1,6 @@
 from aioify import aioify
 from discord.ext import commands
+from discord.errors import NotFound, Forbidden
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
@@ -100,9 +101,9 @@ class DeviceCog(commands.Cog, name='Device'):
             # Delete the message
             try:
                 await response.delete()
-            except discord.errors.NotFound:
+            except NotFound:
                 pass
-            except discord.errors.Forbidden as error:
+            except Forbidden as error:
                 if x != 2:
                     raise error
 

@@ -333,13 +333,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.message.delete()
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
-            all_devices = await cursor.fetchall()
-
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-
-            num_devices += len(devices)
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
@@ -363,8 +357,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if url is None:
             embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
         else:
-            embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            embed.description = f'[Click here]({url}).'
 
         await message.edit(embed=embed)
 

@@ -1,3 +1,4 @@
+from discord.embeds import Embed
 from discord.ext import commands
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -75,6 +76,11 @@ class TSSCog(commands.Cog, name='TSS'):
                     emoji='📱'
                 ))
 
+            device_options.append(discord.SelectOption(
+                label='Cancel',
+                emoji='❌'
+            ))
+
             embed = discord.Embed(title='Download Blobs', description="Choose which device you'd like to download SHSH blobs for")
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
@@ -83,6 +89,11 @@ class TSSCog(commands.Cog, name='TSS'):
             await dropdown.wait()
             if dropdown.answer is None:
                 embed.description = 'No response given in 1 minute, cancelling.'
+                await dropdown.message.edit(embed=embed)
+                return
+
+            if dropdown.answer == 'Cancel':
+                embed.description = 'Cancelled.'
                 await dropdown.message.edit(embed=embed)
                 return
 

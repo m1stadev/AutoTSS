@@ -5,7 +5,6 @@ from discord.ext import commands
 import aiohttp
 import aiosqlite
 import asyncio
-import concurrent.futures
 import discord
 import glob
 import os
@@ -92,17 +91,17 @@ async def startup():
             ''')
         await db.commit()
 
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        async with aiohttp.ClientSession() as session:
-            bot.get_cog('Utilities').shsh_pool = pool
-            bot.session = session
+    async with aiohttp.ClientSession() as session:
+        cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
+        bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
+        bot.session = session
 
-            try:
-                await bot.start(os.environ['AUTOTSS_TOKEN'])
-            except discord.LoginFailure:
-                sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
-            except discord.PrivilegedIntentsRequired:
-                sys.exit("[ERROR] Server Members Intent not enabled, go to 'https://discord.com/developers/applications' and enable the Server Members Intent. Exiting.")
+        try:
+            await bot.start(os.environ['AUTOTSS_TOKEN'])
+        except discord.LoginFailure:
+            sys.exit("[ERROR] Token invalid, make sure the 'AUTOTSS_TOKEN' environment variable is set to your bot token. Exiting.")
+        except discord.PrivilegedIntentsRequired:
+            sys.exit("[ERROR] Server Members Intent not enabled, go to 'https://discord.com/developers/applications' and enable the Server Members Intent. Exiting.")
 
 
 if __name__ == '__main__':

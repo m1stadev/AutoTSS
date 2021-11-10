@@ -196,7 +196,7 @@ class EventsCog(commands.Cog, name='Events'):
         await self.utils.update_device_count()
         print('AutoTSS is now online.')
 
-    @commands.Cog.listener()
+    @commands.Cog.listener() #TODO: Clean this up
     async def on_command_error(self, ctx: commands.Context, error) -> None:
         await self.bot.wait_until_ready()
 

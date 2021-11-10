@@ -285,17 +285,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def update_auto_saver_frequency(self, time: int=10800) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            async with db.execute('SELECT time FROM auto_frequency') as cursor:
-                if await cursor.fetchone() is None:
-                    sql = 'INSERT INTO auto_frequency(time) VALUES(?)'
-                else:
-                    sql = 'UPDATE auto_frequency SET time = ?'
-
-            await db.execute(sql, (time,))
-            await db.commit()
-
     async def update_device_count(self) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             all_devices = (await cursor.fetchall())

@@ -282,12 +282,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     async def update_device_count(self) -> None:
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = (await cursor.fetchall())
-
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-            num_devices += len(devices)
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 

@@ -49,8 +49,6 @@ async def startup():
         intents=intents,
         allowed_mentions=mentions
     )
-    cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
-    bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
     bot.load_extension('cogs.utils') # Load utils cog first
     for cog in await asyncio.to_thread(glob.glob, 'cogs/*.py'):
@@ -58,6 +56,9 @@ async def startup():
             continue
 
         bot.load_extension(cog.replace('/', '.')[:-3])
+
+    cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
+    bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
     await asyncio.to_thread(os.makedirs, 'Data', exist_ok=True)
     async with aiosqlite.connect('Data/autotss.db') as db:

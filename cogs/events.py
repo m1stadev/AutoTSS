@@ -39,6 +39,7 @@ class EventsCog(commands.Cog, name='Events'):
             await asyncio.sleep(300)
             return
 
+        self.utils.saving_blobs = True
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
 
@@ -66,7 +67,6 @@ class EventsCog(commands.Cog, name='Events'):
                     elif any(oldfirm['signed'] == False for oldfirm in self._api[device] if oldfirm['buildid'] == firm['buildid']): # If firmware has been resigned
                         print(f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs.")
 
-                    self.utils.saving_blobs = True
                     async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                         data = await cursor.fetchall()
 
@@ -74,7 +74,6 @@ class EventsCog(commands.Cog, name='Events'):
                     data = await asyncio.gather(*[self.utils.sem_call(self.utils.save_user_blobs, user_data[0], json.loads(user_data[1])) for user_data in data])
                     finish_time = round(await asyncio.to_thread(time.time) - start_time)
 
-                    self.utils.saving_blobs = False
                     blobs_saved = sum(user['blobs_saved'] for user in data)
                     devices_saved = sum(user['devices_saved'] for user in data)
 
@@ -95,6 +94,7 @@ class EventsCog(commands.Cog, name='Events'):
             else:
                 self._api[device] = api[device]
 
+        self.utils.saving_blobs = False
         await asyncio.sleep(300)
 
     @commands.Cog.listener()

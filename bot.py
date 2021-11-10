@@ -57,6 +57,9 @@ async def startup():
 
         bot.load_extension(cog.replace('/', '.')[:-3])
 
+    cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
+    bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
+
     await asyncio.to_thread(os.makedirs, 'Data', exist_ok=True)
     async with aiosqlite.connect('Data/autotss.db') as db:
         await db.execute('''

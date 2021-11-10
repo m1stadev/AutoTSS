@@ -35,11 +35,17 @@ class TSSCog(commands.Cog, name='TSS'):
     @tss_group.command(name='download', help='Download your saved SHSH blobs.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
-    async def download_blobs(self, ctx: commands.Context) -> None:
+    async def download_blobs(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        if user is None:
+            user = ctx.author
+        else:
+            if await ctx.bot.is_owner(ctx.author) == False:
+                return
+
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -52,7 +58,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         total_blobs = sum([len(device['saved_blobs']) for device in devices])
         if total_blobs == 0:
-            embed = discord.Embed(title='Error', description='Currently, you do not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.')
+            embed = discord.Embed(title='Error', description=f"Currently, {'you do' if user.id == ctx.author.id else f'{user.mention} does'} not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.")
             await ctx.reply(embed=embed)
             return
 

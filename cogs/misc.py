@@ -3,7 +3,11 @@ from datetime import datetime
 from discord.ext import commands
 
 import aiosqlite
+import asyncio
 import discord
+import math
+import time
+
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
@@ -78,6 +82,27 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed = await self.utils.info_embed(await self.utils.get_prefix(ctx.guild.id), ctx.author)
         await ctx.reply(embed=embed)
 
+    @commands.command(help="See AutoTSS's uptime")
+    @commands.guild_only()
+    async def uptime(self, ctx: commands.Context) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT start_time from uptime') as cursor:
+            start_time = (await cursor.fetchone())[0]
+
+        uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))
+        uptime = await asyncio.to_thread(time.strftime, "%H:%M:%S", await asyncio.to_thread(time.gmtime, uptime))
+        hours, minutes, seconds = [int(i) for i in uptime.split(':')]
+
+        formatted_uptime = list()
+        if hours > 0:
+            formatted_uptime.append(f"**{hours}** hour{'s' if hours != 1 else ''}")
+        if minutes > 0:
+            formatted_uptime.append(f"**{minutes}** minute{'s' if minutes != 1 else ''}")
+        if seconds > 0:
+            formatted_uptime.append(f"**{seconds}** second{'s' if seconds != 1 else ''}")
+
+        embed = discord.Embed(title='Uptime', description=', '.join(formatted_uptime))
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        await ctx.reply(embed=embed)
 
 def setup(bot):
     bot.add_cog(MiscCog(bot))

@@ -71,6 +71,9 @@ class EventsCog(commands.Cog, name='Events'):
                     elif any(oldfirm['signed'] == False for oldfirm in self._api[device] if oldfirm['buildid'] == firm['buildid']): # If firmware has been resigned
                         print(f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs.")
 
+                    else:
+                        print('[AUTO] Saving SHSH Blobs.')
+
                     async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                         data = await cursor.fetchall()
 

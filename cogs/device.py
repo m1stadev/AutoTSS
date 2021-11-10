@@ -134,8 +134,9 @@ class DeviceCog(commands.Cog, name='Device'):
 
                 # If there's only one board for the device, grab the boardconfig now
                 api = await self.utils.fetch_ipswme_api(device['identifier'])
-                if len([board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]) == 1: # Exclude development boards that may pop up
-                    device['boardconfig'] = api['boards'][0]['boardconfig'].lower()
+                valid_boards = [board for board in api['boards'] if board['boardconfig'].lower().endswith('ap')]
+                if len(valid_boards) == 1: # Exclude development boards that may pop up
+                    device['boardconfig'] = valid_boards[0]['boardconfig'].lower()
 
             elif x == 2:
                 if answer.startswith('0x'):

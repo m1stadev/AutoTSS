@@ -49,6 +49,8 @@ async def startup():
         intents=intents,
         allowed_mentions=mentions
     )
+    cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
+    bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
     bot.load_extension('cogs.utils') # Load utils cog first
     for cog in await asyncio.to_thread(glob.glob, 'cogs/*.py'):
@@ -101,8 +103,6 @@ async def startup():
         await db.commit()
 
     async with aiohttp.ClientSession() as session:
-        cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
-        bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
         bot.session = session
 
         try:

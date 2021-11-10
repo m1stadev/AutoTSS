@@ -438,5 +438,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return user_stats
 
+    async def sem_call(self, func, *args):
+        async with self.sem:
+            return await func(*args)
+
 def setup(bot):
     bot.add_cog(UtilsCog(bot))

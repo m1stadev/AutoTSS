@@ -98,6 +98,7 @@ async def startup():
                 sql = 'UPDATE uptime SET start_time = ?'
 
         await db.execute(sql, (await asyncio.to_thread(time.time),))
+        await db.commit()
 
     async with aiohttp.ClientSession() as session:
         cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)

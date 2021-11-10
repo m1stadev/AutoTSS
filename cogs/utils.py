@@ -224,7 +224,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         notes = (
             'There is a limit of **10 devices per user**.',
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
-            'AutoTSS checks for new versions to save SHSH blobs for **every 3 hours**.'
+            'AutoTSS checks for new versions to save SHSH blobs for **every 5 minutes**.'
         )
 
         embed = {

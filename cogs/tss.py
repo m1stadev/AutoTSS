@@ -41,9 +41,8 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if user is None:
             user = ctx.author
-        else:
-            if await ctx.bot.is_owner(ctx.author) == False:
-                return
+        elif await ctx.bot.is_owner(ctx.author) == False:
+            return
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:

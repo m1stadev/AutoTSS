@@ -1,4 +1,3 @@
-from aioify import aioify
 from discord.ext import commands
 from typing import Optional, Union
 
@@ -11,15 +10,12 @@ import json
 import os
 import remotezip
 import shutil
-import time
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
-        self.os = aioify(os, name='os')
-        self.shutil = aioify(shutil, name='shutil')
-        self.time = aioify(time, name='time')
+        self.saving_blobs = False
 
     @property
     def invite(self) -> str:
@@ -37,22 +33,22 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return resp.splitlines()[-1].split(':', 1)[1][1:]
 
     async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
-        await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
+        await asyncio.to_thread(os.mkdir, f'{tmpdir}/SHSH Blobs')
 
         if len(ecids) == 1:
             for firm in glob.glob(f'Data/Blobs/{ecids[0]}/*'):
-                await self.shutil.copytree(firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
+                await asyncio.to_thread(shutil.copytree, firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
         else:
             for ecid in ecids:
                 try:
-                    await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
+                    await asyncio.to_thread(shutil.copytree, f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
                 except FileNotFoundError:
                     pass
 
         if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
             return
 
-        await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
+        await asyncio.to_thread(shutil.make_archive, f'{tmpdir}_blobs', 'zip', tmpdir)
         return await self._upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
@@ -228,7 +224,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         notes = (
             'There is a limit of **10 devices per user**.',
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
-            'AutoTSS checks for new versions to save SHSH blobs for **every 3 hours**.'
+            'AutoTSS checks for new versions to save SHSH blobs for **every 5 minutes**.'
         )
 
         embed = {
@@ -284,14 +280,36 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def save_blob(self, device: dict, version: str, buildid: str, manifest: str, tmpdir: str) -> bool:
+    async def update_device_count(self) -> None:
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
+
+        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+
+    async def whitelist_check(self, ctx: commands.Context) -> bool:
+        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
+            return True
+
+        whitelist = await self.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            await ctx.reply(embed=embed)
+
+            return False
+
+        return True
+
+    # SHSH Blob saving functions
+
+    async def _save_blob(self, device: dict, firm: dict, manifest: str, tmpdir: str) -> bool:
         generators = list()
         save_path = [
             'Data',
             'Blobs',
             device['ecid'],
-            version,
-            buildid
+            firm['version'],
+            firm['buildid']
         ]
 
         args = [
@@ -333,7 +351,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return True
 
             elif len(glob.glob(f'{path}/*.shsh*')) > 0:
-                await self.os.remove(*[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
+                await asyncio.to_thread(os.remove, *[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
 
             args.append('-g')
             for gen in generators:
@@ -346,50 +364,62 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
                 args.pop(-1)
 
-        if not await self.os.path.isdir(path):
-            await self.os.makedirs(path)
+        if not await asyncio.to_thread(os.path.isdir, path):
+            await asyncio.to_thread(os.makedirs, path)
 
         for blob in glob.glob(f'{tmpdir}/*.shsh*'):
-            await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
+            await asyncio.to_thread(os.rename, blob, f"{path}/{blob.split('/')[-1]}")
 
         return True
 
-    async def update_auto_saver_frequency(self, time: int=10800) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            async with db.execute('SELECT time FROM auto_frequency') as cursor:
-                if await cursor.fetchone() is None:
-                    sql = 'INSERT INTO auto_frequency(time) VALUES(?)'
-                else:
-                    sql = 'UPDATE auto_frequency SET time = ?'
+    async def save_device_blobs(self, device: dict) -> None:
+        stats = {
+            'saved_blobs': list(),
+            'failed_blobs': list(),
+        }
 
-            await db.execute(sql, (time,))
+        firms = await self.get_firms(device['identifier'])
+
+        for firm in [f for f in firms if f['signed'] == True]:
+            if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
+                continue
+
+            async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+                manifest = await asyncio.to_thread(self.get_manifest, firm['url'], tmpdir)
+                saved_blob = await self._save_blob(device, firm, manifest, tmpdir) if manifest != False else False
+
+            if saved_blob is True:
+                device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
+                stats['saved_blobs'].append(firm)
+            else:
+                stats['failed_blobs'].append(firm)
+
+        stats['device'] = device
+
+        return stats
+
+    async def save_user_blobs(self, user: int, devices: list[dict]) -> None:
+        tasks = [self.save_device_blobs(device) for device in devices]
+        data = await asyncio.gather(*tasks)
+
+        async with aiosqlite.connect('Data/autotss.db') as db:        
+            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
             await db.commit()
 
-    async def update_device_count(self) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = (await cursor.fetchall())
+        user_stats = {
+            'blobs_saved': sum([len(d['saved_blobs']) for d in data]),
+            'devices_saved': len([d for d in data if d['saved_blobs']]),
+            'devices': [d['device'] for d in data]
+        }
 
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-            num_devices += len(devices)
+        for d in range(len(user_stats['devices'])):
+            user_stats['devices'][d]['failed_blobs'] = data[d]['failed_blobs']
 
-        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+        return user_stats
 
-    async def whitelist_check(self, ctx: commands.Context) -> bool:
-        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.administrator):
-            return True
-
-        whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
-
-            return False
-
-        return True
-
+    async def sem_call(self, func, *args):
+        async with self.sem:
+            return await func(*args)
 
 def setup(bot):
     bot.add_cog(UtilsCog(bot))

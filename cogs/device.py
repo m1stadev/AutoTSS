@@ -1,4 +1,3 @@
-from aioify import aioify
 from discord.ext import commands
 from discord.errors import NotFound, Forbidden
 from views.buttons import SelectView, PaginatorView
@@ -15,7 +14,6 @@ import shutil
 class DeviceCog(commands.Cog, name='Device'):
     def __init__(self, bot):
         self.bot = bot
-        self.shutil = aioify(shutil, name='shutil')
         self.utils = self.bot.get_cog('Utilities')
 
     @commands.group(name='device', aliases=('devices', 'd'), help='Device management commands.', invoke_without_command=True)
@@ -410,7 +408,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 message = await message.edit(embed=embed)
 
             else:
-                await self.shutil.rmtree(f"Data/Blobs/{devices[num]['ecid']}")
+                await asyncio.to_thread(shutil.rmtree, f"Data/Blobs/{devices[num]['ecid']}")
 
                 embed = discord.Embed(title='Remove Device')
                 embed.description = f"SHSH Blobs from `{devices[num]['name']}`: [Click here]({url})"

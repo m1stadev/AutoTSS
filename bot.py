@@ -10,6 +10,7 @@ import glob
 import os
 import shutil
 import sys
+import time
 
 
 async def get_prefix(bot, message):
@@ -85,13 +86,23 @@ async def startup():
         await db.commit()
 
         await db.execute('''
-            CREATE TABLE IF NOT EXISTS auto_frequency(
-            time INTEGER
-            )
-            ''')
+            CREATE TABLE IF NOT EXISTS uptime(
+            start_time REAL
+            )''')
+        await db.commit()
+
+        async with db.execute('SELECT start_time FROM uptime') as cursor:
+            if await cursor.fetchone() is None:
+                sql = 'INSERT INTO uptime(start_time) VALUES(?)'
+            else:
+                sql = 'UPDATE uptime SET start_time = ?'
+
+        await db.execute(sql, (await asyncio.to_thread(time.time),))
         await db.commit()
 
     async with aiohttp.ClientSession() as session:
+        cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
+        bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
         bot.session = session
 
         try:

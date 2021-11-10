@@ -1,22 +1,18 @@
-from aioify import aioify
 from discord.ext import commands, tasks
 
 import aiosqlite
 import asyncio
 import discord
 import json
-import os
-import shutil
+import time
 
 
 class EventsCog(commands.Cog, name='Events'):
     def __init__(self, bot):
         self.bot = bot
-        self.os = aioify(os, name='os')
-        self.shutil = aioify(shutil, name='shutil')
         self.utils = self.bot.get_cog('Utilities')
         self.auto_clean_db.start()
-        self.signing_party_detection.start()
+        self.blob_saver.start()
 
     @tasks.loop()
     async def auto_clean_db(self) -> None:
@@ -35,8 +31,16 @@ class EventsCog(commands.Cog, name='Events'):
         await asyncio.sleep(300)
 
     @tasks.loop()
-    async def signing_party_detection(self) -> None:
+    async def blob_saver(self) -> None:
         await self.bot.wait_until_ready()
+
+        if self.utils.saving_blobs:
+            print(f"[AUTO] SHSH blob saver already running, continuing.")
+            await asyncio.sleep(300)
+            return
+
+        self.utils.saving_blobs = True
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
 
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
@@ -49,33 +53,59 @@ class EventsCog(commands.Cog, name='Events'):
             self._api
         except AttributeError:
             self._api = api
+            self.utils.saving_blobs = False
+            await self.utils.update_device_count()
             return
 
-        for device in self._api.keys():
-            for firm in [x for x in self._api[device] if x['signed'] == False]:
-                if any(new_firm['signed'] == True for new_firm in api[device] if new_firm['buildid'] == firm['buildid']):
-                    print(f"[SIGN] Detected resigned firmware for: {device}, iOS {firm['version']}")
-                    await self.utils.update_auto_saver_frequency(60) # Set blob saver frequency to 1 minute
-                    tss = self.bot.get_cog('TSS') # Get TSS class
-                    tss.blobs_loop = False
+        for device in api.keys():
+            if device not in self._api.keys(): # If new device is added to the API
+                print(f"[AUTO] New device has been detected: {device}.")
+                self._api[device] = api[device]
+                continue
 
-                    tss.auto_blob_saver.cancel() # Restart auto blob saver
-                    await asyncio.sleep(1)
+            for firm in api[device]:
+                if firm['signed'] == True:
+                    if firm not in self._api[device]: # If firmware was just released
+                        print(f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been released, saving SHSH blobs.")
+
+                    elif any(oldfirm['signed'] == False for oldfirm in self._api[device] if oldfirm['buildid'] == firm['buildid']): # If firmware has been resigned
+                        print(f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs.")
+
+                    else:
+                        print('[AUTO] Saving SHSH Blobs.')
+
+                    async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+                        data = await cursor.fetchall()
+
+                    start_time = await asyncio.to_thread(time.time)
+                    data = await asyncio.gather(*[self.utils.sem_call(self.utils.save_user_blobs, user_data[0], json.loads(user_data[1])) for user_data in data])
+                    finish_time = round(await asyncio.to_thread(time.time) - start_time)
+                    self.utils.saving_blobs = False
+
+                    blobs_saved = sum(user['blobs_saved'] for user in data)
+                    devices_saved = sum(user['devices_saved'] for user in data)
+
+                    if blobs_saved > 0:
+                        description = ' '.join((
+                            f"Saved {blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''}",
+                            f"for {devices_saved} device{'s' if devices_saved > 1 else ''}",
+                            f"in {finish_time} second{'s' if finish_time != 1 else ''}."
+                        ))
+
+                    else:
+                        description = 'All SHSH blobs have already been saved.'
+
+                    print(f"[AUTO] {description}")
                     await self.utils.update_device_count()
-                    tss.auto_blob_saver.start()
-
-                    await asyncio.sleep(600) # Wait 10 minutes
-
-                    await self.utils.update_auto_saver_frequency() # Set blob saver frequency back to 3 hours
-                    tss.auto_blob_saver.cancel() # Restart auto blob saver
-                    await asyncio.sleep(1)
-                    tss.auto_blob_saver.start()
-
+                    await asyncio.sleep(300)
                     return
+
             else:
                 self._api[device] = api[device]
 
-        await asyncio.sleep(30)
+        self.utils.saving_blobs = False
+        await self.utils.update_device_count()
+        await asyncio.sleep(300)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -164,7 +194,6 @@ class EventsCog(commands.Cog, name='Events'):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         await self.utils.update_device_count()
-        await self.utils.update_auto_saver_frequency()
         print('AutoTSS is now online.')
 
     @commands.Cog.listener()

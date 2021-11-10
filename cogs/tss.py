@@ -1,5 +1,4 @@
-from aioify import aioify
-from discord.ext import commands, tasks
+from discord.ext import commands
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
@@ -9,110 +8,13 @@ import asyncio
 import discord
 import glob
 import json
-import os
-import shutil
 import time
 
 
 class TSSCog(commands.Cog, name='TSS'):
     def __init__(self, bot):
         self.bot = bot
-        self.os = aioify(os, name='os')
-        self.shutil = aioify(shutil, name='shutil')
-        self.time = aioify(time, name='time')
         self.utils = self.bot.get_cog('Utilities')
-        self.blobs_loop = None
-        self.auto_blob_saver.start()
-
-
-    @tasks.loop()
-    async def auto_blob_saver(self) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            async with db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
-                all_devices = await cursor.fetchall()
-
-            async with db.execute('SELECT time FROM auto_frequency') as cursor:
-                sleep = (await cursor.fetchone())[0]
-
-        if self.blobs_loop == True:
-            print('[AUTO] Manual blob saving currently running, not saving SHSH blobs.')
-            await asyncio.sleep(sleep)
-            return
-
-        num_devices = int()
-        for user_devices in all_devices:
-            num_devices += len(json.loads(user_devices[1]))
-
-        if num_devices == 0:
-            print('[AUTO] No SHSH blobs need to be saved.')
-            await asyncio.sleep(sleep)
-            return
-
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
-        self.blobs_loop = True
-        start_time = await self.time.time()
-
-        blobs_saved = int()
-        devices_saved_for = int()
-        cached_firms = dict()
-
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            for user_devices in all_devices:
-                user = user_devices[0]
-                devices = json.loads(user_devices[1])
-
-                for device in devices:
-                    current_blobs_saved = blobs_saved
-
-                    if device['identifier'] not in cached_firms.keys():
-                        cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
-
-                    signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
-                    for firm in signed_firms:
-                        if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
-                            continue
-
-                        async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                            manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
-                            if manifest == False:
-                                saved_blob = False
-                            else:
-                                saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
-
-                        if saved_blob is True:
-                            device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
-
-                            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
-                            await db.commit()
-
-                            blobs_saved += 1
-                        else:
-                            failed_info = f"{device['name']}, iOS {firm['version']} | {firm['buildid']}"
-                            print(f"[AUTO] Failed to save SHSH blobs for: {failed_info}.")
-
-                    if blobs_saved > current_blobs_saved:
-                        devices_saved_for += 1
-
-        self.blobs_loop = False
-
-        if blobs_saved == 0:
-            print('[AUTO] No new SHSH blobs were saved.')
-        else:
-            total_time = round(await self.time.time() - start_time)
-            output = (
-                f"[AUTO] Saved {blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}",
-                f"for {devices_saved_for} device{'s' if devices_saved_for != 1 else ''}",
-                f"in {total_time} second{'s' if total_time != 1 else ''}."
-            )
-            print(' '.join(output))
-
-        await self.utils.update_device_count()
-        await asyncio.sleep(sleep)
-
-    @auto_blob_saver.before_loop
-    async def before_auto_blob_saver(self) -> None:
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(3) # If first run, give on_ready() some time to create the database
 
     @commands.group(name='tss', aliases=('t',), help='SHSH Blob commands.', invoke_without_command=True)
     @commands.guild_only()
@@ -286,7 +188,6 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        start_time = await self.time.time()
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
@@ -298,7 +199,7 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.reply(embed=embed)
             return
 
-        if self.blobs_loop:
+        if self.utils.saving_blobs:
             embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
             await ctx.reply(embed=embed)
             return
@@ -307,56 +208,19 @@ class TSSCog(commands.Cog, name='TSS'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
 
-        blobs_saved = int()
-        devices_saved_for = int()
-        cached_firms = dict()
+        start_time = await asyncio.to_thread(time.time)
+        user = await self.utils.save_user_blobs(ctx.author.id, devices)
+        finish_time = round(await asyncio.to_thread(time.time) - start_time)
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            for device in devices:
-                current_blobs_saved = blobs_saved
-
-                if device['identifier'] not in cached_firms.keys():
-                    cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
-
-                signed_firms = [firm for firm in cached_firms[device['identifier']] if firm['signed'] == True]
-                for firm in signed_firms:
-                    if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
-                        continue
-
-                    async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                        manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
-                        if manifest == False:
-                            saved_blob = False
-                        else:
-                            saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
-
-                    if saved_blob is True:
-                        device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
-
-                        await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
-                        await db.commit()
-
-                        blobs_saved += 1
-                    else:
-                        failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                        embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
-                        message = await message.edit(embed=embed)
-
-                if blobs_saved > current_blobs_saved:
-                    devices_saved_for += 1
-
-        if blobs_saved == 0:
-            description = 'No SHSH blobs need to be saved.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
+        if user['blobs_saved'] > 0:
+            embed.description = ' '.join((
+                f"Saved **{user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''}**",
+                f"for **{user['devices_saved']} device{'s' if user['devices_saved'] != 1 else ''}**",
+                f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
+            ))
         else:
-            total_time = round(await self.time.time() - start_time)
-            output = (
-                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
-                f"for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**",
-                f"in **{total_time} second{'s' if total_time != 1 else ''}**."
-            )
-            description = ' '.join(output)
+            embed.description = 'All SHSH blobs have already been saved for your devices.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
-        embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
 
     @tss_group.command(name='downloadall', help='Download SHSH blobs for all devices in AutoTSS.')
@@ -370,13 +234,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.message.delete()
 
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
-            all_devices = await cursor.fetchall()
-
-        num_devices = int()
-        for user_devices in all_devices:
-            devices = json.loads(user_devices[0])
-
-            num_devices += len(devices)
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
@@ -400,8 +258,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if url is None:
             embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
         else:
-            embed = discord.Embed(title='Download All Blobs', description=f'[Click here]({url}).')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            embed.description = f'[Click here]({url}).'
 
         await message.edit(embed=embed)
 
@@ -413,89 +270,46 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        if self.blobs_loop:
-            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
-            await ctx.reply(embed=embed)
-            return
-
         async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
-            all_devices = await cursor.fetchall()
+            data = await cursor.fetchall()
 
-        num_devices = int()
-        for user_devices in all_devices:
-            num_devices += len(json.loads(user_devices[1]))
-
+        num_devices = sum(len(json.loads(devices[1])) for devices in data)
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
             await ctx.reply(embed=embed)
             return
 
-        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all devices...')
+        if self.utils.saving_blobs:
+            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            await ctx.reply(embed=embed)
+            return
+
+        self.utils.saving_blobs = True
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+
+        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
 
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
-        self.blobs_loop = True
-        start_time = await self.time.time()
+        start_time = await asyncio.to_thread(time.time)
+        data = await asyncio.gather(*[self.utils.sem_call(self.utils.save_user_blobs, user_data[0], json.loads(user_data[1])) for user_data in data])
+        finish_time = round(await asyncio.to_thread(time.time) - start_time)
+        self.utils.saving_blobs = False
 
-        blobs_saved = int()
-        devices_saved_for = int()
-        cached_firms = dict()
+        blobs_saved = sum(user['blobs_saved'] for user in data)
+        devices_saved = sum(user['devices_saved'] for user in data)
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
-            for user_devices in all_devices:
-                user = user_devices[0]
-                devices = json.loads(user_devices[1])
+        if blobs_saved > 0:
+            embed.description = ' '.join((
+                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''}**",
+                f"for **{devices_saved} device{'s' if devices_saved > 1 else ''}**",
+                f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
+            ))
 
-                for device in devices:
-                    current_blobs_saved = blobs_saved
-
-                    if device['identifier'] not in cached_firms.keys():
-                        cached_firms[device['identifier']] = await self.utils.get_firms(device['identifier'])
-
-                    signed_firms = [f for f in cached_firms[device['identifier']] if f['signed'] == True]
-                    for firm in signed_firms:
-                        if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
-                            continue
-
-                        async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                            manifest = await self.bot.loop.run_in_executor(None, self.utils.get_manifest, firm['url'], tmpdir)
-                            if manifest == False:
-                                saved_blob = False
-                            else:
-                                saved_blob = await self.utils.save_blob(device, firm['version'], firm['buildid'], manifest, tmpdir)
-
-                        if saved_blob is True:
-                            device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
-
-                            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), user))
-                            await db.commit()
-
-                            blobs_saved += 1
-                        else:
-                            failed_info = f"{device['name']} - iOS {firm['version']} | {firm['buildid']}"
-                            embed.add_field(name='Error', value=f'Failed to save SHSH blobs for `{failed_info}`.', inline=False)
-                            message = await message.edit(embed=embed)
-
-                    if blobs_saved > current_blobs_saved:
-                        devices_saved_for += 1
-
-        self.blobs_loop = False
-
-        if blobs_saved == 0:
-            description = 'No new SHSH blobs were saved.'
         else:
-            total_time = round(await self.time.time() - start_time)
-            output = (
-                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved != 1 else ''}**",
-                f"for **{devices_saved_for} device{'s' if devices_saved_for != 1 else ''}**",
-                f"in **{total_time} second{'s' if total_time != 1 else ''}**."
-            )
-            description = ' '.join(output)
+            embed.description = 'All SHSH blobs have already been saved.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
         await self.utils.update_device_count()
-
-        embed.add_field(name='Finished!', value=description, inline=False)
         await message.edit(embed=embed)
 
 

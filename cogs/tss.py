@@ -285,6 +285,8 @@ class TSSCog(commands.Cog, name='TSS'):
             return
 
         self.utils.saving_blobs = True
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         message = await ctx.reply(embed=embed)
@@ -307,6 +309,7 @@ class TSSCog(commands.Cog, name='TSS'):
         else:
             embed.description = 'All SHSH blobs have already been saved.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
+        await self.utils.update_device_count()
         await message.edit(embed=embed)
 
 

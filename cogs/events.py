@@ -40,6 +40,8 @@ class EventsCog(commands.Cog, name='Events'):
             return
 
         self.utils.saving_blobs = True
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
             devices = [d for d in await resp.json() if any(x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad'))]
 
@@ -51,6 +53,8 @@ class EventsCog(commands.Cog, name='Events'):
             self._api
         except AttributeError:
             self._api = api
+            self.utils.saving_blobs = False
+            await self.utils.update_device_count()
             return
 
         for device in api.keys():
@@ -73,6 +77,7 @@ class EventsCog(commands.Cog, name='Events'):
                     start_time = await asyncio.to_thread(time.time)
                     data = await asyncio.gather(*[self.utils.sem_call(self.utils.save_user_blobs, user_data[0], json.loads(user_data[1])) for user_data in data])
                     finish_time = round(await asyncio.to_thread(time.time) - start_time)
+                    self.utils.saving_blobs = False
 
                     blobs_saved = sum(user['blobs_saved'] for user in data)
                     devices_saved = sum(user['devices_saved'] for user in data)
@@ -88,6 +93,7 @@ class EventsCog(commands.Cog, name='Events'):
                         description = 'All SHSH blobs have already been saved.'
 
                     print(f"[AUTO] {description}")
+                    await self.utils.update_device_count()
                     await asyncio.sleep(300)
                     return
 
@@ -95,6 +101,7 @@ class EventsCog(commands.Cog, name='Events'):
                 self._api[device] = api[device]
 
         self.utils.saving_blobs = False
+        await self.utils.update_device_count()
         await asyncio.sleep(300)
 
     @commands.Cog.listener()

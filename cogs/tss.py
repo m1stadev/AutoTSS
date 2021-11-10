@@ -318,7 +318,7 @@ class TSSCog(commands.Cog, name='TSS'):
                 f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
             ))
         else:
-            embed.description = 'No SHSH Blobs need to be saved.'
+            embed.description = 'No SHSH blobs need to be saved.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
         await message.edit(embed=embed)
 

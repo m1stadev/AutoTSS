@@ -541,7 +541,7 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        if self.bot.get_cog('TSS').blobs_loop == True: # Avoid any potential conflict with transferring devices while blobs are being saved
+        if self.utils.saving_blobs == True: # Avoid any potential conflict with transferring devices while blobs are being saved
             invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
             await ctx.reply(embed=invalid_embed)
             return

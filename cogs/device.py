@@ -359,6 +359,11 @@ class DeviceCog(commands.Cog, name='Device'):
                     emoji='📱'
                 ))
 
+            device_options.append(discord.SelectOption(
+                label='Cancel',
+                emoji='❌'
+            ))
+
             embed = discord.Embed(title='Remove Device', description="Please select the device you'd like to remove.")
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
@@ -367,6 +372,10 @@ class DeviceCog(commands.Cog, name='Device'):
             await dropdown.wait()
             if dropdown.answer is None:
                 await dropdown.message.edit(embed=timeout_embed)
+                return
+
+            if dropdown.answer == 'Cancel':
+                await dropdown.message.edit(embed=cancelled_embed)
                 return
 
             num = next(devices.index(x) for x in devices if x['name'] == dropdown.answer)

@@ -1,4 +1,3 @@
-aioify
 aiofiles
 aiosqlite
 git+git://github.com/Pycord-Development/pycord@master

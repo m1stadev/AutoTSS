@@ -1,4 +1,3 @@
-from aioify import aioify
 from discord.ext import commands
 from typing import Optional, Union
 
@@ -11,16 +10,12 @@ import json
 import os
 import remotezip
 import shutil
-import time
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
-        self.os = aioify(os, name='os')
         self.saving_blobs = False
-        self.shutil = aioify(shutil, name='shutil')
-        self.time = aioify(time, name='time')
 
     @property
     def invite(self) -> str:
@@ -38,22 +33,22 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return resp.splitlines()[-1].split(':', 1)[1][1:]
 
     async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
-        await self.os.mkdir(f'{tmpdir}/SHSH Blobs')
+        await asyncio.to_thread(os.mkdir, f'{tmpdir}/SHSH Blobs')
 
         if len(ecids) == 1:
             for firm in glob.glob(f'Data/Blobs/{ecids[0]}/*'):
-                await self.shutil.copytree(firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
+                await asyncio.to_thread(shutil.copytree, firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
         else:
             for ecid in ecids:
                 try:
-                    await self.shutil.copytree(f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
+                    await asyncio.to_thread(shutil.copytree, f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}'))
                 except FileNotFoundError:
                     pass
 
         if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
             return
 
-        await self.shutil.make_archive(f'{tmpdir}_blobs', 'zip', tmpdir)
+        await asyncio.to_thread(shutil.make_archive, f'{tmpdir}_blobs', 'zip', tmpdir)
         return await self._upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
@@ -361,7 +356,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return True
 
             elif len(glob.glob(f'{path}/*.shsh*')) > 0:
-                await self.os.remove(*[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
+                await asyncio.to_thread(os.remove, *[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
 
             args.append('-g')
             for gen in generators:
@@ -374,11 +369,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
                 args.pop(-1)
 
-        if not await self.os.path.isdir(path):
-            await self.os.makedirs(path)
+        if not await asyncio.to_thread(os.path.isdir, path):
+            await asyncio.to_thread(os.makedirs, path)
 
         for blob in glob.glob(f'{tmpdir}/*.shsh*'):
-            await self.os.rename(blob, f"{path}/{blob.split('/')[-1]}")
+            await asyncio.to_thread(os.rename, blob, f"{path}/{blob.split('/')[-1]}")
 
         return True
 

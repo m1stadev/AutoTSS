@@ -1,4 +1,3 @@
-from aioify import aioify
 from datetime import datetime
 from discord.ext import commands
 
@@ -12,7 +11,7 @@ import time
 class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
-        self.datetime = aioify(datetime, name='datetime')
+
         self.utils = self.bot.get_cog('Utilities')
 
     @commands.command(help='Set the command prefix for AutoTSS.')
@@ -67,10 +66,10 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        current_time = await self.datetime.utcnow()
+        current_time = await asyncio.to_thread(datetime.utcnow)
         message = await ctx.reply(embed=embed)
 
-        embed.description = f'Ping: `{round((await self.datetime.utcnow() - current_time).total_seconds() * 1000)}ms`'
+        embed.description = f'Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
         await message.edit(embed=embed)
 
     @commands.command(help='General info on AutoTSS.')

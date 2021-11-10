@@ -61,12 +61,12 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
         embed = discord.Embed(title='Pong!', description='Testing ping...')
         embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
-        embed.set_footer(text=ctx.message.author.name, icon_url=ctx.message.author.display_avatar.with_static_format('png').url)
+        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        time = await self.datetime.utcnow()
+        current_time = await self.datetime.utcnow()
         message = await ctx.reply(embed=embed)
 
-        embed.description = f'Ping: `{round((await self.datetime.utcnow() - time).total_seconds() * 1000)}ms`'
+        embed.description = f'Ping: `{round((await self.datetime.utcnow() - current_time).total_seconds() * 1000)}ms`'
         await message.edit(embed=embed)
 
     @commands.command(help='General info on AutoTSS.')

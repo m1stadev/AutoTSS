@@ -41,7 +41,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         else:
             for ecid in ecids:
                 try:
-                    await asyncio.to_thread(shutil.copytree, f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}'))
+                    await asyncio.to_thread(shutil.copytree, f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
                 except FileNotFoundError:
                     pass
 

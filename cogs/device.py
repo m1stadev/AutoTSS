@@ -476,8 +476,10 @@ class DeviceCog(commands.Cog, name='Device'):
 
         device_embeds = list()
         for device in devices:
+            num_blobs = len(device['saved_blobs'])
             device_embed = {
                 'title': f"*{device['name']}*  ({devices.index(device) + 1}/{len(devices)})",
+                'description': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
                 'fields': [{
                     'name': 'Device Identifier',
                     'value': f"`{device['identifier']}`",
@@ -512,13 +514,6 @@ class DeviceCog(commands.Cog, name='Device'):
                     'value': f"`{device['apnonce']}`",
                     'inline': False
                 })
-
-            num_blobs = len(device['saved_blobs'])
-            device_embed['fields'].append({
-                'name': 'SHSH Blobs',
-                'value': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
-                'inline': False
-            })
 
             device_embeds.append(discord.Embed.from_dict(device_embed))
 

@@ -18,13 +18,12 @@ class EventsCog(commands.Cog, name='Events'):
     async def auto_clean_db(self) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
-            data = await cursor.fetchall()
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT devices from autotss') as cursor:
+                data = await cursor.fetchall()
 
-        for user_devices in data:
-            devices = json.loads(user_devices[0])
-            if devices == list():
-                async with aiosqlite.connect('Data/autotss.db') as db:
+            for user_devices in data:
+                if len(json.loads(user_devices[0])) == 0:
                     await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices[0],))
                     await db.commit()
 
@@ -157,14 +156,14 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_member_remove(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
-            data = await cursor.fetchone()
+        async with aiosqlite.connect('Data/autotss.db') as db:
+            async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+                data = await cursor.fetchone()
 
-        if data is None:
-            return
+            if data is None:
+                return
 
-        if len(member.mutual_guilds) == 0:
-            async with aiosqlite.connect('Data/autotss.db') as db:
+            if len(member.mutual_guilds) == 0:
                 await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
                 await db.commit()
 

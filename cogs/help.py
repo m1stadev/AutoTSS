@@ -20,14 +20,14 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if await self.utils.whitelist_check(self.context) != True:
             return
 
-        prefix = await self.utils.get_prefix(self.context.guild.id)
         embeds = list()
-        for cog, commands in modules.items():
+        prefix = await self.utils.get_prefix(self.context.guild.id)
+        for cog, cmds in modules.items():
             if cog is None:
                 continue
 
-            commands = await self.filter_commands(commands, sort=True)
-            if len([self.get_command_signature(cmd) for cmd in commands]) == 0:
+            cmds = await self.filter_commands(cmds, sort=True)
+            if len(cmds) == 0:
                 continue
 
             embed_dict = {
@@ -39,16 +39,32 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
                 }
             }
 
-            for cmd in commands:
-                embed_dict['fields'].append({
-                    'name': self.get_command_signature(cmd).replace(self.context.clean_prefix, prefix), # In case bot mention is used as prefix
-                    'value': cmd.help or 'No help.'
-                })
+            for cmd in cmds:
+                if isinstance(cmd, commands.Group):
+                    group_cmds = await self.filter_commands(cmd.commands, sort=True)
+                    for group_cmd in group_cmds:
+                        cmd_sig = self.get_command_signature(group_cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+                        embed_dict['fields'].append({
+                            'name': cmd_sig, # In case bot mention is used as prefix
+                            'value': group_cmd.help or 'No help.'
+                        })
+
+                        if group_cmd.aliases:
+                            embed_dict['fields'][-1]['value'] += f"\n**Aliases**: `{'`, `'.join(group_cmd.aliases)}`."
+
+                else:
+                    cmd_sig = self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+                    embed_dict['fields'].append({
+                        'name': cmd_sig, # In case bot mention is used as prefix
+                        'value': cmd.help or 'No help.'
+                    })
 
             embeds.append(discord.Embed.from_dict(embed_dict))
 
-        if len(embeds) == 1:
-            await self.context.reply(embed=embeds[0])
+        if len(embeds) in range(2):
+            if len(embeds) == 1:
+                await self.context.reply(embed=embeds[0])
+
             return
 
         embeds = sorted(embeds, key=lambda embed: embed.title)
@@ -62,29 +78,48 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if await self.utils.whitelist_check(self.context) != True:
             return
 
-        commands = await self.filter_commands(cog.get_commands(), sort=True)
-        if len(commands) == 0:
-            return
-
         embeds = list()
         prefix = await self.utils.get_prefix(self.context.guild.id)
-        for command in commands:
-            if len([self.get_command_signature(cmd) for cmd in commands]) == 0:
-                continue
+        cmds = await self.filter_commands(cog.get_commands(), sort=True)
+        for cmd in cmds:
+            if isinstance(cmd, commands.Group):
+                group_cmds = await self.filter_commands(cmd.commands, sort=True)
+                for group_cmd in group_cmds:
+                    cmd_sig = self.get_command_signature(group_cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+                    embed_dict = {
+                        'title': cmd_sig, # In case bot mention is used as prefix
+                        'description': group_cmd.help or 'No help.',
+                        'footer': {
+                            'text': self.context.author.display_name,
+                            'icon_url': str(self.context.author.display_avatar.with_static_format('png').url)
+                        }
+                    }
 
-            embed_dict = {
-                'title': self.get_command_signature(command).replace(self.context.clean_prefix, prefix), # In case bot mention is used as prefix
-                'description': command.help or 'No help.',
-                'footer': {
-                    'text': self.context.author.display_name,
-                    'icon_url': str(self.context.author.display_avatar.with_static_format('png').url)
+                    if group_cmd.aliases:
+                        embed_dict['description'] += f"\n**Aliases**: `{'`, `'.join(group_cmd.aliases)}`."
+
+                    embeds.append(discord.Embed.from_dict(embed_dict))
+
+            else:
+                cmd_sig = self.get_command_signature(cmds).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+                embed_dict = {
+                    'title': cmd_sig, # In case bot mention is used as prefix
+                    'description': cmd.help or 'No help.',
+                    'footer': {
+                        'text': self.context.author.display_name,
+                        'icon_url': str(self.context.author.display_avatar.with_static_format('png').url)
+                    }
                 }
-            }
 
-            embeds.append(discord.Embed.from_dict(embed_dict))
+                if cmd.aliases:
+                    embed_dict['description'] += f"\n**Aliases**: `{'`, `'.join(cmd.aliases)}`."
 
-        if len(embeds) == 1:
-            await self.context.reply(embed=embeds[0])
+                embeds.append(discord.Embed.from_dict(embed_dict))
+
+        if len(embeds) in range(2):
+            if len(embeds) == 1:
+                await self.context.reply(embed=embeds[0])
+
             return
 
         view = PaginatorView(embeds, timeout=180)
@@ -97,13 +132,9 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if await self.utils.whitelist_check(self.context) != True:
             return
 
-        commands = await self.filter_commands(group.commands, sort=True)
-        if len(commands) == 0:
-            return
-
-        embed = {
+        embed_dict = {
             'title': f"{group.name.capitalize() if group.name != 'tss' else group.name.upper()} Commands", #TODO: Make this less shit
-            'description': group.help or str(),
+            'description': group.help or 'No help.',
             'fields': list(),
             'footer': {
                 'text': self.context.author.display_name,
@@ -112,29 +143,21 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         }
 
         if group.aliases:
-            aliases = f"**Aliases**: `{'`, `'.join(group.aliases)}`."
-
-            if embed['description'] == str():
-                embed['description'] = aliases
-            else:
-                embed['description'] += f'\n{aliases}'
+            embed_dict['description'] += f"\n**Aliases**: `{'`, `'.join(group.aliases)}`."
 
         prefix = await self.utils.get_prefix(self.context.guild.id)
-        for cmd in commands:
-            if not self.get_command_signature(cmd):
-                continue
-
-            cmd_info = {
-                'name': self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix), # In case bot mention is used as prefix
+        cmds = await self.filter_commands(group.commands, sort=True)
+        for cmd in cmds:
+            cmd_sig = self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+            embed_dict['fields'].append({
+                'name': cmd_sig, # In case bot mention is used as prefix
                 'value': cmd.help or 'No help.'
-            }
+            })
 
             if cmd.aliases:
-                cmd_info['value'] += f"\n**Aliases**: `{'`, `'.join(cmd.aliases)}`."
+                embed_dict['fields'][-1]['value'] += f"\n**Aliases**: `{'`, `'.join(cmd.aliases)}`."
 
-            embed['fields'].append(cmd_info)
-
-        await self.context.reply(embed=discord.Embed.from_dict(embed))
+        await self.context.reply(embed=discord.Embed.from_dict(embed_dict))
 
     async def send_command_help(self, cmd: commands.Command):
         if self.utils is None:
@@ -143,12 +166,13 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         if await self.utils.whitelist_check(self.context) != True:
             return
 
-        if (not await cmd.can_run(self.context)) or (not self.get_command_signature(cmd)):
+        if not await cmd.can_run(self.context):
             return
 
         prefix = await self.utils.get_prefix(self.context.guild.id)
-        embed = {
-            'title': self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix),
+        cmd_sig = self.get_command_signature(cmd).replace('_', ' ').replace(self.context.clean_prefix, prefix)
+        embed_dict = {
+            'title': cmd_sig,
             'description': cmd.help or 'No help.',
             'footer': {
                 'text': self.context.author.display_name,
@@ -157,9 +181,9 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
         }
 
         if cmd.aliases:
-            embed['description'] += f"\n**Aliases**: `{'`, `'.join(cmd.aliases)}`."
+            embed_dict['description'] += f"\n**Aliases**: `{'`, `'.join(cmd.aliases)}`."
 
-        await self.context.reply(embed=discord.Embed.from_dict(embed))
+        await self.context.reply(embed=discord.Embed.from_dict(embed_dict))
 
 
 class HelpCog(commands.Cog, name='Help'):

@@ -59,7 +59,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
                         'value': cmd.help or 'No help.'
                     })
 
-            embeds.append(discord.Embed.from_dict(embed_dict))
+                embeds.append(discord.Embed.from_dict(embed_dict))
 
         if len(embeds) in range(2):
             if len(embeds) == 1:

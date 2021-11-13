@@ -140,17 +140,18 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
-            data = await cursor.fetchone()
-
-        if data is None:
-            return
-
         async with aiosqlite.connect('Data/autotss.db') as db:
-            await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
-            await db.commit()
+            async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+                data = await cursor.fetchone()
 
-        await self.utils.update_device_count()
+            if data is None:
+                return
+
+            if len(member.mutual_guilds) == 0:
+                await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (Trye, member.id))
+                await db.commit()
+
+            await self.utils.update_device_count()
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:

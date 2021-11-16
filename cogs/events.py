@@ -148,7 +148,7 @@ class EventsCog(commands.Cog, name='Events'):
                 return
 
             if len(member.mutual_guilds) == 0:
-                await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (Trye, member.id))
+                await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
                 await db.commit()
 
             await self.utils.update_device_count()

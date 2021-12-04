@@ -1,5 +1,3 @@
-from typing import Optional
-
 import discord
 
 
@@ -79,5 +77,7 @@ class PaginatorView(discord.ui.View):
         return interaction.user == self.message.reference.cached_message.author
 
     async def on_timeout(self):
-        self.clear_items()
+        for item in self.children:
+            item.disabled = True
+
         await self.message.edit(view=self)

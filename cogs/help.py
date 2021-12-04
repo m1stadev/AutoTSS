@@ -4,7 +4,7 @@ from views.buttons import PaginatorView
 import discord
 
 
-class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is gone
+class Help(commands.HelpCommand):
     def __init__(self):
         super().__init__(command_attrs={
             'aliases': ('h',),
@@ -188,7 +188,7 @@ class AutoTSSHelp(commands.HelpCommand): #TODO: Rename to Help once Help cog is 
 
 class HelpCog(commands.Cog, name='Help'):
     def __init__(self, bot):
-        help_cmd = AutoTSSHelp()
+        help_cmd = Help()
         help_cmd.cog = self
         bot.help_command = help_cmd
 

@@ -125,7 +125,12 @@ class DeviceCog(commands.Cog, name='Device'):
                     return
 
             elif x == 1:
-                device['identifier'] = 'P'.join(answer.lower().replace(' ', '').replace('devicestring:', '').split('p'))
+                device['identifier'] = answer.lower().replace(' ', '').replace('devicestring:', '')
+                if 'appletv' in device['identifier']:
+                    device['identifier'] = 'TV'.join(device['identifier'].capitalize().split('tv'))
+                else:
+                    device['identifier'] = 'P'.join(device['identifier'].split('p'))
+
                 if await self.utils.check_identifier(device['identifier']) is False:
                     invalid_embed.description = f"Device Identifier `{answer}` is not valid."
                     invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)

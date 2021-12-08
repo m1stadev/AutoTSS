@@ -458,6 +458,158 @@ class DeviceCog(commands.Cog, name='Device'):
         elif view.answer == 'cancel':
             await view.message.edit(embed=cancelled_embed)
 
+    @device_group.command(name='edit', help='Edit an added device.')
+    @commands.guild_only()
+    @commands.max_concurrency(1, per=commands.BucketType.user)
+    async def edit_device(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
+        if user is None:
+            user = ctx.author
+        elif await ctx.bot.is_owner(ctx.author) == False:
+            return
+
+        cancelled_embed = discord.Embed(title='Edit Device', description='Cancelled.')
+        invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
+        timeout_embed = discord.Embed(title='Edit Device', description='No response given in 1 minute, cancelling.')
+
+        for x in (cancelled_embed, invalid_embed, timeout_embed):
+            x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+            try:
+                devices = json.loads((await cursor.fetchone())[0])
+            except TypeError:
+                devices = list()
+
+        if len(devices) == 0:
+            embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
+            await ctx.reply(embed=embed)
+            return
+
+        if len(devices) > 1:
+            device_options = list()
+            for device in devices:
+                device_options.append(discord.SelectOption(
+                    label=device['name'],
+                    description=f"ECID: {await self.utils.censor_ecid(device['ecid'])} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
+                    emoji='📱'
+                ))
+
+            device_options.append(discord.SelectOption(
+                label='Cancel',
+                emoji='❌'
+            ))
+
+            embed = discord.Embed(title='Edit Device', description="Please select the device you'd like to edit:")
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+            dropdown = DropdownView(device_options, 'Device to edit...')
+            dropdown.message = await ctx.reply(embed=embed, view=dropdown)
+            await dropdown.wait()
+            if dropdown.answer is None:
+                await dropdown.message.edit(embed=timeout_embed)
+                return
+
+            if dropdown.answer == 'Cancel':
+                await dropdown.message.edit(embed=cancelled_embed)
+                return
+
+            num = next(devices.index(x) for x in devices if x['name'] == dropdown.answer)
+            message = dropdown.message
+
+        else:
+            num = 0
+            message = None
+
+        options = [
+            discord.SelectOption(label='Name', description=devices[num]['name'], emoji='📱'),
+            discord.SelectOption(label='Cancel', emoji='❌')
+        ]
+        for x in ('Custom Generator', 'Custom ApNonce'):
+            if devices[num][x.split()[-1].lower()] is not None:
+                options.insert(1, discord.SelectOption(label=x, description=devices[num][x.split()[-1].lower()], emoji='📱'))
+
+        embed = discord.Embed(title='Edit Device', description=f"Please select the item you'd like to edit for `{devices[num]['name']}`:")
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        dropdown = DropdownView(options, 'Device to edit...')
+        dropdown.message = await ctx.reply(embed=embed, view=dropdown)
+        await dropdown.wait()
+        if dropdown.answer is None:
+            await dropdown.message.edit(embed=timeout_embed)
+            return
+
+        if dropdown.answer == 'Cancel':
+            await dropdown.message.edit(embed=cancelled_embed)
+            return
+
+        item = dropdown.answer.split()[-1].lower()
+        message = dropdown.message
+
+        embed = discord.Embed(title='Edit Device', description=f"Please enter the new {dropdown.answer.lower()} you'd like to use for `{devices[num]['name']}`.")
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        await message.edit(embed=embed)
+
+        try:
+            response = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=300)
+            answer = discord.utils.remove_markdown(response.content)
+        except asyncio.exceptions.TimeoutError:
+            await message.edit(embed=timeout_embed)
+            return
+
+        try:
+            await response.delete()
+        except discord.errors.NotFound:
+            pass
+
+        if item == 'name':
+            check = await self.utils.check_name(answer, ctx.author.id)
+        elif item == 'generator':
+            check = await self.utils.check_generator(answer)
+        elif item == 'apnonce':
+            check = await self.utils.check_apnonce(answer)
+
+        if check == False:
+            invalid_embed.description = f"{dropdown.answer} `{answer}` is not valid."
+            invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            await message.edit(embed=invalid_embed)
+            return
+
+        embed = discord.Embed(title='Edit Device', description=f"Are you **absolutely sure** you want to change `{devices[num]['name']}`'s {dropdown.answer.lower()} from `{devices[num][item]}` to `{answer}`?")
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        buttons = [{
+            'label': 'Confirm',
+            'style': discord.ButtonStyle.danger
+        }, {
+            'label': 'Cancel',
+            'style': discord.ButtonStyle.secondary
+        }]
+
+        view = SelectView(buttons)
+        view.message = await message.edit(embed=embed, view=view) if message is not None else await ctx.reply(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            await view.message.edit(embed=timeout_embed)
+            return
+
+        if view.answer == 'confirm':
+            embed = discord.Embed(title='Edit Device', description=f"`{devices[num]['name']}`'s {dropdown.answer.lower()} has been changed from `{devices[num][item]}` to `{answer}`.")
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+            devices[num][item] = answer
+
+            async with aiosqlite.connect('Data/autotss.db') as db:
+                await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
+                await db.commit()
+
+            await view.message.edit(embed=embed)
+
+        elif view.answer == 'cancel':
+            await view.message.edit(embed=cancelled_embed)
+
     @device_group.command(name='list', help='List your added devices.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)

@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord.errors import NotFound, Forbidden
+from discord.types.embed import Embed
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
@@ -465,6 +466,8 @@ class DeviceCog(commands.Cog, name='Device'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
+        prefix = await self.utils.get_prefix(ctx.guild.id)
+
         if user is None:
             user = ctx.author
         elif await ctx.bot.is_owner(ctx.author) == False:
@@ -564,21 +567,33 @@ class DeviceCog(commands.Cog, name='Device'):
         except discord.errors.NotFound:
             pass
 
+        if 'cancel' in answer.lower() or answer.startswith(prefix):
+            await message.edit(embed=cancelled_embed)
+            return
+
         if item == 'name':
             check = await self.utils.check_name(answer, ctx.author.id)
         elif item == 'generator':
             check = await self.utils.check_generator(answer)
         elif item == 'apnonce':
-            check = await self.utils.check_apnonce(answer)
+            cpid = await self.utils.get_cpid(devices[num]['identifier'], devices[num]['boardconfig'])
+            check = await self.utils.check_apnonce(cpid, answer)
 
         if check == False:
-            invalid_embed.description = f"{dropdown.answer} `{answer}` is not valid."
             invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            await message.edit(embed=invalid_embed)
+            return
+
+        if devices[num][item].lower() == answer.lower():
+            invalid_embed.description = f"`{answer}` is already set as the {dropdown.answer.lower()} for `{devices[num]['name']}`."
             await message.edit(embed=invalid_embed)
             return
 
         embed = discord.Embed(title='Edit Device', description=f"Are you **absolutely sure** you want to change `{devices[num]['name']}`'s {dropdown.answer.lower()} from `{devices[num][item]}` to `{answer}`?")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        if item in ('generator', 'apnonce'):
+            embed.description += f"\n\n***Warning:** Changing your {item} could result in invalid SHSH blobs being saved.*"
 
         buttons = [{
             'label': 'Confirm',
@@ -599,7 +614,7 @@ class DeviceCog(commands.Cog, name='Device'):
             embed = discord.Embed(title='Edit Device', description=f"`{devices[num]['name']}`'s {dropdown.answer.lower()} has been changed from `{devices[num][item]}` to `{answer}`.")
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-            devices[num][item] = answer
+            devices[num][item] = answer.lower() if item in ('generator', 'apnonce') else answer
 
             async with aiosqlite.connect('Data/autotss.db') as db:
                 await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))

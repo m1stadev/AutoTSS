@@ -33,7 +33,7 @@ class TSSCog(commands.Cog, name='TSS'):
         embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist! Use `{prefix}help` to see all the commands I can run.')
         await ctx.reply(embed=embed)
 
-    @tss_group.command(name='download', help='Download your saved SHSH blobs.')
+    @tss_group.command(name='download', aliases=('dl',), help='Download your saved SHSH blobs.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: commands.Context, user: commands.UserConverter=None) -> None:

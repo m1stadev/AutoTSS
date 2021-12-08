@@ -123,7 +123,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_name(self, name: str, user: str) -> Union[bool, int]: # This function will return different values based on where it errors out at
+    async def check_name(self, name: str, user: int) -> Union[bool, int]: # This function will return different values based on where it errors out at
         if not len(name) <= 20: # Length check
             return 0
 

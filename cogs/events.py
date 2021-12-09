@@ -18,7 +18,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def auto_clean_db(self) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT devices from autotss') as cursor:
                 data = await cursor.fetchall()
 
@@ -72,7 +72,7 @@ class EventsCog(commands.Cog, name='Events'):
                     else:
                         print('[AUTO] Saving SHSH Blobs.')
 
-                    async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+                    async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                         data = await cursor.fetchall()
 
                     start_time = await asyncio.to_thread(time.time)
@@ -109,7 +109,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT prefix from prefix WHERE guild = ?', (guild.id,)) as cursor:
                 if await cursor.fetchone() is not None:
                     await db.execute('DELETE from prefix where guild = ?', (guild.id,))
@@ -131,7 +131,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             await db.execute('DELETE from prefix where guild = ?', (guild.id,))
             await db.commit()
 
@@ -139,7 +139,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
                 data = await cursor.fetchone()
 
@@ -156,7 +156,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_member_remove(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
                 data = await cursor.fetchone()
 

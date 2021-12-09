@@ -31,11 +31,10 @@ async def startup():
     if sys.version_info.major < 3 and sys.version_info.minor < 9:
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
 
-    if await asyncio.to_thread(shutil.which, 'tsschecker') is None:
-        if sys.platform == 'win32':
-            tsschecker = await aiopath.AsyncPath('tsschecker.exe').is_file() # Assume 'tsschecker.exe' is a valid tsschecker binary
-        else:
-            tsschecker = False
+    if sys.platform != 'win32':
+        tsschecker = True if await asyncio.to_thread(shutil.which, 'tsschecker') is not None else False
+    else:
+        tsschecker = await aiopath.AsyncPath('tsschecker.exe').is_file() # Assume 'tsschecker.exe' is a valid tsschecker binary
 
     if tsschecker == False:
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')

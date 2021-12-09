@@ -416,7 +416,7 @@ class DeviceCog(commands.Cog, name='Device'):
             message = await view.message.edit(embed=embed)
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                url = await self.utils.backup_blobs(tmpdir, devices[num]['ecid'])
+                url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), devices[num]['ecid'])
 
             if url is None:
                 embed = discord.Embed(title='Remove Device', description=f"Device `{devices[num]['name']}` removed.")

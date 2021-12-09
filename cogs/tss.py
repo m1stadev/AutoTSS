@@ -1,13 +1,12 @@
-from discord.embeds import Embed
 from discord.ext import commands
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
+import aiopath
 import aiosqlite
 import asyncio
 import discord
-import glob
 import json
 import time
 
@@ -45,7 +44,7 @@ class TSSCog(commands.Cog, name='TSS'):
         elif await ctx.bot.is_owner(ctx.author) == False:
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -146,7 +145,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if user is None:
             user = ctx.author
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -204,7 +203,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -249,7 +248,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         await ctx.message.delete()
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss') as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         if num_devices == 0:
@@ -268,7 +267,7 @@ class TSSCog(commands.Cog, name='TSS'):
             return
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            ecids = [ecid.split('/')[-1] for ecid in glob.glob('Data/Blobs/*')]
+            ecids = [ecid.stem async for ecid in aiopath.AsyncPath('Data/Blobs').glob('*') if ecid.is_dir()]
             url = await self.utils.backup_blobs(tmpdir, *ecids)
 
         if url is None:
@@ -286,7 +285,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             data = await cursor.fetchall()
 
         num_devices = sum(len(json.loads(devices[1])) for devices in data)

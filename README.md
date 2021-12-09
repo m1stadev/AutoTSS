@@ -30,7 +30,7 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
 
 1. Build and install [`tsschecker`](https://github.com/1Conan/tsschecker) and its dependencies
 
-    If running on Windows, download the latest `tsschecker` release from [here](https://github.com/1Conan/tsschecker/releases), rename the binary to `tsschecker.exe`, then place it in the AutoTSS directory.
+    If running on Windows, download the latest `tsschecker` release from [here](https://github.com/1Conan/tsschecker/releases) and place it in the AutoTSS directory.
 
 2. Create a virtual env and install dependencies
 

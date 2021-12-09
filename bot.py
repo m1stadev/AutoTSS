@@ -34,7 +34,7 @@ async def startup():
     if sys.platform != 'win32':
         tsschecker = True if await asyncio.to_thread(shutil.which, 'tsschecker') is not None else False
     else:
-        tsschecker = await aiopath.AsyncPath('tsschecker.exe').is_file() # Assume 'tsschecker.exe' is a valid tsschecker binary
+        tsschecker = len([_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()]) > 0 # Assume file beginning with 'tsschecker' and ending in '.exe' is a valid tsschecker binary
 
     if tsschecker == False:
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
@@ -64,7 +64,7 @@ async def startup():
     bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
     db_path = aiopath.AsyncPath('Data/autotss.db')
-    await db_path.parents[0].mkdir(exist_ok=True)
+    await db_path.parent.mkdir(exist_ok=True)
 
     async with aiosqlite.connect(db_path) as db:
         await db.execute('''

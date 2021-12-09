@@ -55,8 +55,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
             return False
 
-        await asyncio.to_thread(shutil.make_archive, tmpdir.parents[0] / 'shsh_blobs', 'zip', tmpdir)
-        return await self._upload_file(tmpdir.parents[0] / 'shsh_blobs.zip')
+        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'shsh_blobs', 'zip', tmpdir)
+        return await self._upload_file(tmpdir.parent / 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
@@ -392,7 +392,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
                 manifest = await asyncio.to_thread(self.get_manifest, firm['url'], tmpdir)
-                saved_blob = await self._save_blob(device, firm, manifest, manifest.parents[0]) if manifest != False else False
+                saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
 
             if saved_blob is True:
                 device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})

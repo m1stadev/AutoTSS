@@ -10,6 +10,7 @@ import json
 import pathlib
 import remotezip
 import shutil
+import sys
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
@@ -320,7 +321,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         ]
 
         args = [
-            'tsschecker',
+            'tsschecker' if sys.platform != 'win32' else 'tsschecker.exe',
             '-d', device['identifier'],
             '-B', device['boardconfig'],
             '-e', f"0x{device['ecid']}",

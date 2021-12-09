@@ -3,10 +3,10 @@
 from discord.ext import commands
 
 import aiohttp
+import aiopath
 import aiosqlite
 import asyncio
 import discord
-import glob
 import os
 import shutil
 import sys
@@ -17,7 +17,7 @@ async def get_prefix(bot, message):
     if message.channel.type is discord.ChannelType.private:
         return 'b!'
 
-    async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,)) as cursor:
+    async with aiosqlite.connect(aiopath.AsyncPath('Data/autotss.db')) as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,)) as cursor:
         try:
             guild_prefix = (await cursor.fetchone())[0]
         except TypeError:
@@ -31,10 +31,12 @@ async def startup():
     if sys.version_info.major < 3 and sys.version_info.minor < 9:
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
 
-    if sys.platform == 'win32':
-        sys.exit('[ERROR] AutoTSS is not supported on Windows. Exiting.')
+    if sys.platform != 'win32':
+        tsschecker = True if await asyncio.to_thread(shutil.which, 'tsschecker') is not None else False
+    else:
+        tsschecker = len([_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()]) > 0 # Assume file beginning with 'tsschecker' and ending in '.exe' is a valid tsschecker binary
 
-    if await asyncio.to_thread(shutil.which, 'tsschecker') is None:
+    if tsschecker == False:
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
@@ -51,17 +53,20 @@ async def startup():
     )
 
     bot.load_extension('cogs.utils') # Load utils cog first
-    for cog in await asyncio.to_thread(glob.glob, 'cogs/*.py'):
-        if 'utils.py' in cog:
+    cogs = aiopath.AsyncPath('cogs')
+    async for cog in cogs.glob('*.py'):
+        if cog.stem == 'utils':
             continue
 
-        bot.load_extension(cog.replace('/', '.')[:-3])
+        bot.load_extension(f'cogs.{cog.stem}')
 
     cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
     bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
-    await asyncio.to_thread(os.makedirs, 'Data', exist_ok=True)
-    async with aiosqlite.connect('Data/autotss.db') as db:
+    db_path = aiopath.AsyncPath('Data/autotss.db')
+    await db_path.parent.mkdir(exist_ok=True)
+
+    async with aiosqlite.connect(db_path) as db:
         await db.execute('''
             CREATE TABLE IF NOT EXISTS autotss(
             user INTEGER,

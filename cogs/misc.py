@@ -35,7 +35,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             await ctx.reply(embed=embed)
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             await db.execute('UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
             await db.commit()
 
@@ -84,7 +84,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
     @commands.command(help="See AutoTSS's uptime")
     @commands.guild_only()
     async def uptime(self, ctx: commands.Context) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT start_time from uptime') as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
         uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))

@@ -34,7 +34,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
             await ctx.reply(embed=embed)
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
             if await cursor.fetchone() is None:
                 sql = 'INSERT INTO whitelist(channel, enabled, guild) VALUES(?,?,?)'
             else:
@@ -52,7 +52,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.has_permissions(administrator=True)
     async def toggle_whitelist(self, ctx: commands.Context) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
                 data = await cursor.fetchone()
 

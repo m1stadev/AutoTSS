@@ -26,17 +26,16 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 <sup>*** Requires users to manually specify a BuildManifest from a beta IPSW.</sup>
 
 ## Running
-
-While you can run your own instances, it's prefered for you to simply use the already hosted instance. Windows is not supported!
-
 To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps...
 
 1. Build and install [`tsschecker`](https://github.com/1Conan/tsschecker) and its dependencies
 
+    If running on Windows, download the latest `tsschecker` release from [here](https://github.com/1Conan/tsschecker/releases) and place it in the AutoTSS directory.
+
 2. Create a virtual env and install dependencies
 
         python3 -m venv --upgrade-deps env && source env/bin/activate
-        pip3 install -U -r requirements.txt
+        pip3 install -Ur requirements.txt
 
 3.  Set the `AUTOTSS_TOKEN` environment variable to the bot token you got from your Discord bot application
 

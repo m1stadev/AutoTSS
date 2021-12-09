@@ -2,20 +2,24 @@ from discord.ext import commands
 from typing import Optional, Union
 
 import aiofiles
+import aiopath
 import aiosqlite
 import asyncio
 import discord
-import glob
 import json
-import os
+import pathlib
 import remotezip
 import shutil
+import sys
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.saving_blobs = False
+
+    @property
+    def db_path(self) -> str: return aiopath.AsyncPath('Data/autotss.db')
 
     @property
     def invite(self) -> str:
@@ -26,30 +30,33 @@ class UtilsCog(commands.Cog, name='Utilities'):
         being lazy and using a long string. """
         return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
-    async def _upload_file(self, file: str, name: str) -> str:
-        async with aiofiles.open(file, 'rb') as f, self.bot.session.put(f'https://up.psty.io/{name}', data=f) as response:
-            resp = await response.text()
+    async def _upload_file(self, file: aiopath.AsyncPath) -> str:
+        async with file.open('rb') as f, self.bot.session.put(f'https://up.psty.io/{file.name}', data=f) as resp:
+            data = await resp.text()
 
-        return resp.splitlines()[-1].split(':', 1)[1][1:]
+        return data.splitlines()[-1].split(':', 1)[1][1:]
 
-    async def backup_blobs(self, tmpdir: str, *ecids: list[str]):
-        await asyncio.to_thread(os.mkdir, f'{tmpdir}/SHSH Blobs')
+    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]):
+        blobdir = aiopath.AsyncPath('Data/Blobs')
+        tmpdir = tmpdir / 'SHSH Blobs'
+        await tmpdir.mkdir()
 
         if len(ecids) == 1:
-            for firm in glob.glob(f'Data/Blobs/{ecids[0]}/*'):
-                await asyncio.to_thread(shutil.copytree, firm, f"{tmpdir}/SHSH Blobs/{firm.split('/')[-1]}")
+            async for firm in blobdir.glob(f'{ecids[0]}/*'):
+                await asyncio.to_thread(shutil.copytree, firm, tmpdir / firm.name)
+    
         else:
             for ecid in ecids:
                 try:
-                    await asyncio.to_thread(shutil.copytree, f'Data/Blobs/{ecid}', f'{tmpdir}/SHSH Blobs/{ecid}')
+                    await asyncio.to_thread(shutil.copytree, blobdir / ecid, tmpdir / ecid)
                 except FileNotFoundError:
                     pass
 
-        if len(glob.glob(f'{tmpdir}/SHSH Blobs/*')) == 0:
-            return
+        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
+            return False
 
-        await asyncio.to_thread(shutil.make_archive, f'{tmpdir}_blobs', 'zip', tmpdir)
-        return await self._upload_file(f'{tmpdir}_blobs.zip', 'shsh_blobs.zip')
+        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'shsh_blobs', 'zip', tmpdir)
+        return await self._upload_file(tmpdir.parent / 'shsh_blobs.zip')
 
     async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
@@ -88,7 +95,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         except ValueError or TypeError:
             return 0
 
-        async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+        async with aiosqlite.connect(self.db_path) as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
             async with db.execute('SELECT devices from autotss') as cursor:
                 try:
                     devices = [device[0] for device in (await cursor.fetchall())]
@@ -127,7 +134,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if not len(name) <= 20: # Length check
             return 0
 
-        async with aiosqlite.connect('Data/autotss.db') as db: # Make sure the user doesn't have any other devices with the same name added
+        async with aiosqlite.connect(self.db_path) as db: # Make sure the user doesn't have any other devices with the same name added
             async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
                 try:
                     devices = json.loads((await cursor.fetchone())[0])
@@ -147,20 +154,21 @@ class UtilsCog(commands.Cog, name='Utilities'):
         api = await self.fetch_ipswme_api(identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
-    def get_manifest(self, url: str, dir: str) -> Union[bool, str]:
+    def get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
         try:
             with remotezip.RemoteZip(url) as ipsw:
                 manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
         except remotezip.RemoteIOError:
             return False
 
-        with open(f'{dir}/BuildManifest.plist', 'wb') as f:
+        manifest_path = (pathlib.Path(path) / 'BuildManifest.plist')
+        with manifest_path.open('wb') as f:
             f.write(manifest)
 
-        return f'{dir}/BuildManifest.plist'
+        return aiopath.AsyncPath(manifest_path)
 
     async def get_prefix(self, guild: int) -> str:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
+        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
             try:
                 guild_prefix = (await cursor.fetchone())[0]
             except TypeError:
@@ -209,7 +217,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return buildids
 
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
         if (data == None) or (data[2] == False):
@@ -281,7 +289,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return discord.Embed.from_dict(embed)
 
     async def update_device_count(self) -> None:
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
@@ -302,7 +310,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     # SHSH Blob saving functions
 
-    async def _save_blob(self, device: dict, firm: dict, manifest: str, tmpdir: str) -> bool:
+    async def _save_blob(self, device: dict, firm: dict, manifest: str, tmpdir: aiopath.AsyncPath) -> bool:
         generators = list()
         save_path = [
             'Data',
@@ -313,7 +321,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         ]
 
         args = [
-            'tsschecker',
+            'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
             '-d', device['identifier'],
             '-B', device['boardconfig'],
             '-e', f"0x{device['ecid']}",
@@ -334,10 +342,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if device['generator'] is not None and device['generator'] not in generators:
             generators.append(device['generator'])
 
-        path = '/'.join(save_path)
-
+        save_path = aiopath.AsyncPath('/'.join(save_path))
         if len(generators) == 0:
-            if len(glob.glob(f'{path}/*.shsh*')) == 1:
+            if len([_ async for _ in save_path.glob('*.shsh*')]) == 1:
                 return True
 
             cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
@@ -347,11 +354,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return False
 
         else:
-            if len(glob.glob(f'{path}/*.shsh*')) == len(generators):
+            if len([_ async for _ in save_path.glob('*.shsh*')]) == len(generators):
                 return True
 
-            elif len(glob.glob(f'{path}/*.shsh*')) > 0:
-                await asyncio.to_thread(os.remove, *[f for f in glob.glob(f'{tmpdir}/*.shsh*')])
+            elif len([_ async for _ in save_path.glob('*.shsh*')]) > 0:
+                async for blob in save_path.glob('*.shsh*'):
+                    await blob.unlink()
 
             args.append('-g')
             for gen in generators:
@@ -364,11 +372,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
                 args.pop(-1)
 
-        if not await asyncio.to_thread(os.path.isdir, path):
-            await asyncio.to_thread(os.makedirs, path)
-
-        for blob in glob.glob(f'{tmpdir}/*.shsh*'):
-            await asyncio.to_thread(os.rename, blob, f"{path}/{blob.split('/')[-1]}")
+        await save_path.mkdir(parents=True, exist_ok=True)
+        async for blob in tmpdir.glob('*.shsh*'):
+            await blob.rename(save_path / blob.name)
 
         return True
 
@@ -386,7 +392,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
                 manifest = await asyncio.to_thread(self.get_manifest, firm['url'], tmpdir)
-                saved_blob = await self._save_blob(device, firm, manifest, tmpdir) if manifest != False else False
+                saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
 
             if saved_blob is True:
                 device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
@@ -402,7 +408,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         tasks = [self.save_device_blobs(device) for device in devices]
         data = await asyncio.gather(*tasks)
 
-        async with aiosqlite.connect('Data/autotss.db') as db:        
+        async with aiosqlite.connect(self.db_path) as db:        
             await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
             await db.commit()
 

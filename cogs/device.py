@@ -4,6 +4,7 @@ from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
+import aiopath
 import aiosqlite
 import asyncio
 import discord
@@ -50,7 +51,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
         max_devices = 10 #TODO: Export this option to a separate config file
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -315,7 +316,7 @@ class DeviceCog(commands.Cog, name='Device'):
         # Add device information into the database
         devices.append(device)
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)) as cursor:
                 if await cursor.fetchone() is None:
                     sql = 'INSERT INTO autotss(devices, enabled, user) VALUES(?,?,?)'
@@ -345,7 +346,7 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -423,7 +424,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 message = await message.edit(embed=embed)
 
             else:
-                await asyncio.to_thread(shutil.rmtree, f"Data/Blobs/{devices[num]['ecid']}")
+                await asyncio.to_thread(shutil.rmtree, aiopath.AsyncPath(f"Data/Blobs/{devices[num]['ecid']}"))
 
                 embed = discord.Embed(title='Remove Device')
                 embed.description = f"SHSH Blobs from `{devices[num]['name']}`: [Click here]({url})"
@@ -448,7 +449,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
             devices.pop(num)
 
-            async with aiosqlite.connect('Data/autotss.db') as db:
+            async with aiosqlite.connect(self.utils.db_path) as db:
                 await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
                 await db.commit()
 
@@ -468,7 +469,7 @@ class DeviceCog(commands.Cog, name='Device'):
         if user is None:
             user = ctx.author
 
-        async with aiosqlite.connect('Data/autotss.db') as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -556,7 +557,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.reply(embed=invalid_embed)
             return
    
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             async with db.execute('SELECT devices from autotss WHERE user = ?', (old_member.id,)) as cursor:
                 try:
                     old_devices = json.loads((await cursor.fetchone())[0])
@@ -602,7 +603,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await view.message.edit(embed=cancelled_embed)
             return
 
-        async with aiosqlite.connect('Data/autotss.db') as db:
+        async with aiosqlite.connect(self.utils.db_path) as db:
             await db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new_member.id, old_member.id))
             await db.commit()
 

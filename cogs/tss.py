@@ -112,7 +112,7 @@ class TSSCog(commands.Cog, name='TSS'):
         message = await message.edit(embed=embed) if message is not None else await ctx.reply(embed=embed)
 
         async with message.channel.typing(), aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            url = await self.utils.backup_blobs(tmpdir, *ecids)
+            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
         buttons = [{
             'label': 'Download',
@@ -266,9 +266,9 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.reply(embed=embed)
             return
 
+        ecids = [ecid.stem async for ecid in aiopath.AsyncPath('Data/Blobs').glob('*') if ecid.is_dir()]
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            ecids = [ecid.stem async for ecid in aiopath.AsyncPath('Data/Blobs').glob('*') if ecid.is_dir()]
-            url = await self.utils.backup_blobs(tmpdir, *ecids)
+            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
         if url is None:
             embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')

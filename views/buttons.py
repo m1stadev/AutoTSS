@@ -35,9 +35,10 @@ class SelectView(discord.ui.View):
 
 
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[discord.Embed], *, public: bool=False, timeout: int=60):
+    def __init__(self, embeds: list[discord.Embed], context: discord.ApplicationContext, *, public: bool=False, timeout: int=10):
         super().__init__(timeout=timeout)
 
+        self.ctx = context
         self.public = public
         self.embeds = embeds
         self.embed_num = 0
@@ -74,10 +75,10 @@ class PaginatorView(discord.ui.View):
         if self.public == True or interaction.channel.type == discord.ChannelType.private:
             return True
 
-        return interaction.user == self.message.reference.cached_message.author
+        return interaction.user == self.ctx.author
 
     async def on_timeout(self):
         for item in self.children:
             item.disabled = True
 
-        await self.message.edit(view=self)
+        await self.ctx.edit(view=self)

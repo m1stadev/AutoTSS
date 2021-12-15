@@ -95,7 +95,9 @@ class TSSCog(commands.Cog, name='TSS'):
 
         embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.edit(embed=embed) or await ctx.respond(embed=embed)
+        if not ctx.interaction.message:
+            await ctx.defer()
+            await ctx.respond(embed=embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
@@ -118,7 +120,7 @@ class TSSCog(commands.Cog, name='TSS'):
             embed.set_footer(text='This message will automatically be deleted in 5 seconds to protect your ECID(s).')
             await ctx.edit(embed=embed, view=view)
 
-            await ctx.interaction.delete(delay=5) #Issue: Can't delay message delete
+            await ctx.interaction.delete(delay=5)
             await ctx.message.delete()
 
     @tss.command(name='list', description='List your saved SHSH blobs.')

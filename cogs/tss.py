@@ -48,6 +48,9 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.respond(embed=embed)
             return
 
+        upload_embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
+        upload_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
         if len(devices) > 1:
             device_options = [discord.SelectOption(
                 label='All',
@@ -90,14 +93,11 @@ class TSSCog(commands.Cog, name='TSS'):
                 device = next(d for d in devices if d['name'] == dropdown.answer)
                 ecids = [device['ecid']]
 
+            await ctx.edit(embed=upload_embed)
+
         else:
             ecids = [devices[0]['ecid']]
-
-        embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        if not ctx.interaction.message:
-            await ctx.defer()
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=upload_embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
@@ -109,7 +109,7 @@ class TSSCog(commands.Cog, name='TSS'):
         }]
 
         view = SelectView(buttons, ctx, timeout=None)
-        embed = discord.Embed(title='Download Blobs')
+        embed = discord.Embed(title='Download Blobs', description='Download your SHSH Blobs:')
 
         try:
             await ctx.author.send(embed=embed, view=view)

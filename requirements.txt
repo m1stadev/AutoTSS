@@ -1,5 +1,5 @@
 aiofiles
 aiopath
 aiosqlite
-git+git://github.com/Pycord-Development/pycord@master
+git+git://github.com/Pycord-Development/pycord@125db3ab98eecc4985970f5082cca427c79278a0
 remotezip

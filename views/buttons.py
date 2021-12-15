@@ -14,9 +14,10 @@ class SelectButton(discord.ui.Button['SelectView']):
 
 
 class SelectView(discord.ui.View):
-    def __init__(self, buttons: list[dict], *, public: bool=False, timeout: int=60):
+    def __init__(self, buttons: list[dict], context: discord.ApplicationContext, *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
 
+        self.ctx = context
         self.public = public
         self.answer = None
 
@@ -27,11 +28,11 @@ class SelectView(discord.ui.View):
         if self.public == True or interaction.channel.type == discord.ChannelType.private:
             return True
 
-        return interaction.user == self.message.reference.cached_message.author
+        return interaction.user == self.ctx.author
 
     async def on_timeout(self):
         self.clear_items()
-        await self.message.edit(view=self)
+        await self.ctx.edit(view=self)
 
 
 class PaginatorView(discord.ui.View):

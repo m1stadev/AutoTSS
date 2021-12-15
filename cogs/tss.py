@@ -39,13 +39,13 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.")
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         total_blobs = sum([len(device['saved_blobs']) for device in devices])
         if total_blobs == 0:
             embed = discord.Embed(title='Error', description=f"Currently, {'you do' if user.id == ctx.author.id else f'{user.mention} does'} not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.")
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         upload_embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
@@ -74,7 +74,7 @@ class TSSCog(commands.Cog, name='TSS'):
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
             dropdown = DropdownView(device_options, ctx, 'Device')
-            await ctx.respond(embed=embed, view=dropdown)
+            await ctx.respond(embed=embed, view=dropdown, ephemeral=True)
 
             await dropdown.wait()
             if dropdown.answer is None:
@@ -97,7 +97,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         else:
             ecids = [devices[0]['ecid']]
-            await ctx.respond(embed=upload_embed)
+            await ctx.respond(embed=upload_embed, ephemeral=True)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
@@ -110,18 +110,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         view = SelectView(buttons, ctx, timeout=None)
         embed = discord.Embed(title='Download Blobs', description='Download your SHSH Blobs:')
-
-        try:
-            await ctx.author.send(embed=embed, view=view)
-            embed.description = "I've DMed the download link to you."
-            await ctx.edit(embed=embed)
-
-        except:
-            embed.set_footer(text='This message will automatically be deleted in 5 seconds to protect your ECID(s).')
-            await ctx.edit(embed=embed, view=view)
-
-            await ctx.interaction.delete(delay=5)
-            await ctx.message.delete()
+        await ctx.edit(embed=embed, view=view)
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
     @commands.guild_only()

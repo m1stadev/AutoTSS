@@ -395,7 +395,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
 
             if saved_blob is True:
-                device['saved_blobs'].append({x:y for x,y in firm.items() if x != 'url'})
+                device['saved_blobs'].append({x:y for x,y in firm.items() if x not in ('url', 'signed')})
                 stats['saved_blobs'].append(firm)
             else:
                 stats['failed_blobs'].append(firm)

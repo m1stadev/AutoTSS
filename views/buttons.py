@@ -36,7 +36,7 @@ class SelectView(discord.ui.View):
 
 
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[discord.Embed], context: discord.ApplicationContext, *, public: bool=False, timeout: int=10):
+    def __init__(self, embeds: list[discord.Embed], context: discord.ApplicationContext, *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
 
         self.ctx = context

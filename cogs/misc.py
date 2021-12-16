@@ -28,7 +28,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             'url': self.utils.invite
         }]
 
-        embed = discord.Embed(title='Invite', description=f'AutoTSS invite:')
+        embed = discord.Embed(title='Invite', description='AutoTSS invite:')
         embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
@@ -67,7 +67,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             start_time = (await cursor.fetchone())[0]
 
         uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))
-        uptime = await asyncio.to_thread(time.strftime, "%H:%M:%S", await asyncio.to_thread(time.gmtime, uptime))
+        uptime = await asyncio.to_thread(time.strftime, '%H:%M:%S', await asyncio.to_thread(time.gmtime, uptime))
         hours, minutes, seconds = [int(i) for i in uptime.split(':')]
 
         formatted_uptime = list()

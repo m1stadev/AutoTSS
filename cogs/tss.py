@@ -224,8 +224,6 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        await ctx.message.delete()
-
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 

@@ -1,4 +1,5 @@
 from discord.commands.commands import Option
+from discord.commands import permissions
 from discord.ext import commands
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -215,10 +216,10 @@ class TSSCog(commands.Cog, name='TSS'):
 
         await ctx.edit(embed=embed)
 
-    @tss.command(name='downloadall', description='Download SHSH blobs for all devices in AutoTSS.')
+    @tss.command(name='downloadall', description='Download SHSH blobs for all devices in AutoTSS.', default_permission=False)
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
-    @commands.is_owner()
+    @permissions.is_owner()
     async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -254,10 +255,10 @@ class TSSCog(commands.Cog, name='TSS'):
 
         await ctx.edit(embed=embed)
 
-    @tss.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.')
+    @tss.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.', default_permission=False)
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
-    @commands.is_owner()
+    @permissions.is_owner()
     async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return

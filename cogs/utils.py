@@ -87,7 +87,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return True
 
     async def check_ecid(self, ecid: str) -> Union[int, bool]:
-        if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
+        if not 7 <= len(ecid) <= 20: # All ECIDs are between 7-20 characters
             return 0
 
         try:

@@ -1,77 +1,68 @@
+from discord.commands import permissions
 from discord.ext import commands
 
 import aiopath
 import discord
 
 
+#TODO: Implement autocomplete for module command arguments
+
 class AdminCog(commands.Cog, name='Administrator'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = bot.get_cog('Utilities')
 
+    module = discord.SlashCommandGroup('module', 'Module commands', guild_ids=(729946499102015509,), permissions=[permissions.Permission("owner", 2, True)])
+
     async def get_modules(self): return sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 
-    @commands.group(name='module', aliases=('m',), help='Module management commands.', invoke_without_command=True)
-    @commands.guild_only()
-    @commands.is_owner()
-    async def module_group(self, ctx: commands.Context) -> None:
-        help_aliases = (self.bot.help_command.command_attrs['name'], *self.bot.help_command.command_attrs['aliases'])
-        if (ctx.subcommand_passed is None) or (ctx.subcommand_passed.lower() in help_aliases):
-            await ctx.send_help(ctx.command)
-            return
-
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-        invoked_cmd = f'{prefix + ctx.invoked_with} {ctx.subcommand_passed}'
-        embed = discord.Embed(title='Error', description=f'`{invoked_cmd}` does not exist! Use `{prefix}help` to see all the commands I can run.')
-        await ctx.reply(embed=embed)
-
-    @module_group.command(name='list', help='List all modules.')
+    @module.command(name='list', description='List all modules.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.is_owner()
-    async def list_modules(self, ctx: commands.Context) -> None:
+    async def list_modules(self, ctx: discord.ApplicationContext) -> None:
         embed = discord.Embed(title='All Modules', description=f"`{'`, `'.join(await self.get_modules())}`")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        await ctx.reply(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
-    @module_group.command(name='load', help='Load a module.')
+    @module.command(name='load', description='Load a module.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.is_owner()
-    async def load_module(self, ctx: commands.Context, *cogs: str) -> None:
+    async def load_module(self, ctx: discord.ApplicationContext, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Load Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             successful_loads = int()
             failed_loads = int()
 
             for module in (await self.get_modules() if modules[0] == 'all' else modules):
                 if not any(module == x for x in await self.get_modules()):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_loads += 1
                     continue
 
                 try:
                     self.bot.load_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully unloaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     successful_loads += 1
                 except discord.ext.commands.ExtensionAlreadyLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is already loaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_loads += 1
                 except discord.ext.commands.ExtensionFailed:
                     embed.add_field(name='Error', value=f'Module `{module}` has an error, cannot load!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_loads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_loads}** module{'s' if successful_loads != 1 else ''} successfully loaded, **{failed_loads}** module{'s' if failed_loads != 1 else ''} failed to load.")
-            await message.edit(embed=embed)
+            await ctx.edit(embed=embed)
             return
 
         if not any(modules[0] == x for x in await self.get_modules()):
@@ -79,7 +70,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(await self.get_modules())}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         try:
@@ -93,45 +84,45 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` has an error, cannot load!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.reply(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
-    @module_group.command(name='reload', help='Reload a module.')
+    @module.command(name='reload', description='Reload a module.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.is_owner()
-    async def reload_module(self, ctx: commands.Context, *cogs: str) -> None:
+    async def reload_module(self, ctx: discord.ApplicationContext, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Reload Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             successful_reloads = int()
             failed_reloads = int()
 
             for module in (await self.get_modules() if modules[0] == 'all' else modules):
                 if module not in (await self.get_modules()):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_reloads += 1
                     continue
 
                 try:
                     self.bot.reload_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully reloaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     successful_reloads += 1
                 except discord.ext.commands.ExtensionNotLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is not currently loaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_reloads += 1
                 except discord.ext.commands.ExtensionFailed:
                     embed.add_field(name='Error', value=f'Module `{module}` failed to reload!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_reloads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_reloads}** module{'s' if successful_reloads != 1 else ''} successfully reloaded, **{failed_reloads}** module{'s' if failed_reloads != 1 else ''} failed to reload.")
-            await message.edit(embed=embed)
+            await ctx.edit(embed=embed)
             return
 
         if modules[0] not in (await self.get_modules()):
@@ -139,7 +130,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(await self.get_modules())}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         try:
@@ -156,47 +147,47 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` has an error, cannot load!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.reply(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
-    @module_group.command(name='unload', help='Unload a module.')
+    @module.command(name='unload', description='Unload a module.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.default)
     @commands.is_owner()
-    async def unload_module(self, ctx: commands.Context, *cogs: str) -> None:
+    async def unload_module(self, ctx: discord.ApplicationContext, *cogs: str) -> None:
         modules = sorted([cog.lower() for cog in cogs])
 
         if len(modules) > 1 or modules[0] == 'all':
             embed = discord.Embed(title='Unload Module')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            message = await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             successful_unloads = int()
             failed_unloads = int()
 
             for module in (await self.get_modules() if modules[0] == 'all' else modules):
                 if not any(module == x for x in await self.get_modules()):
                     embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_unloads += 1
                     continue
 
                 if module == 'admin':
                     embed.add_field(name='Error', value=f'Module `{module}` cannot be unloaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_unloads += 1
                     continue
 
                 try:
                     self.bot.unload_extension(f'cogs.{module}')
                     embed.add_field(name='Success', value=f'Module `{module}` successfully unloaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     successful_unloads += 1
                 except discord.ext.commands.ExtensionNotLoaded:
                     embed.add_field(name='Error', value=f'Module `{module}` is already unloaded!', inline=False)
-                    message = await message.edit(embed=embed)
+                    await ctx.edit(embed=embed)
                     failed_unloads += 1
 
             embed.add_field(name='Finished', value=f"**{successful_unloads}** module{'s' if successful_unloads != 1 else ''} successfully unloaded, **{failed_unloads}** module{'s' if failed_unloads != 1 else ''} failed to unload.")
-            await message.edit(embed=embed)
+            await ctx.edit(embed=embed)
             return
 
         if not any(modules[0] == x for x in await self.get_modules()):
@@ -204,7 +195,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
             embed.add_field(name='Available modules:', value=f"`{'`, `'.join(await self.get_modules())}`", inline=False)
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         try:
@@ -215,7 +206,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed.add_field(name='Error', value=f'Module `{modules[0]}` is already unloaded!')
 
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.reply(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
 
 def setup(bot):

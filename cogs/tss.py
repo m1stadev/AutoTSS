@@ -1,4 +1,4 @@
-from discord.commands import permissions
+from discord import permissions
 from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView

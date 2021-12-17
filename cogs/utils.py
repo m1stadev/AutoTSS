@@ -53,7 +53,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                     pass
 
         if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
-            return False
+            return
 
         await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'shsh_blobs', 'zip', tmpdir)
         return await self._upload_file(tmpdir.parent / 'shsh_blobs.zip')

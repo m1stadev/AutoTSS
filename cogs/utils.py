@@ -36,7 +36,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return data.splitlines()[-1].split(':', 1)[1][1:]
 
-    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]):
+    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]) -> Optional[str]:
         blobdir = aiopath.AsyncPath('Data/Blobs')
         tmpdir = tmpdir / 'SHSH Blobs'
         await tmpdir.mkdir()

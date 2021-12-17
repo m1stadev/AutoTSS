@@ -1,6 +1,6 @@
-from discord.commands.commands import Option
 from discord.commands import permissions
 from discord.ext import commands
+from discord import Option
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
@@ -23,7 +23,7 @@ class TSSCog(commands.Cog, name='TSS'):
     @tss.command(name='download', description='Download your saved SHSH blobs.')
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
-    async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.Member, description='User to download SHSH blobs for', required=False)) -> None:
+    async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 

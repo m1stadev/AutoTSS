@@ -19,7 +19,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         self.saving_blobs = False
 
     @property
-    def db_path(self) -> str: return aiopath.AsyncPath('Data/autotss.db')
+    def db_path(self) -> str: return str(aiopath.AsyncPath('Data/autotss.db'))
 
     @property
     def invite(self) -> str:

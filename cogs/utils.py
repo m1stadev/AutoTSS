@@ -262,17 +262,17 @@ class UtilsCog(commands.Cog, name='Utilities'):
             },
             {
                 'name': 'All Commands',
-                'value': f'`{prefix}help`',
+                'value': '`/help`',
                 'inline': True
             },
             {
                 'name': 'Add Device',
-                'value': f'`{prefix}devices add`',
+                'value': '`/devices add`',
                 'inline': True
             },
             {
                 'name': 'Save SHSH Blobs',
-                'value': f'`{prefix}tss save`',
+                'value': '`/tss save`',
                 'inline': True
             },
             {

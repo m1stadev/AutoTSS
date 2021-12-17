@@ -1,4 +1,4 @@
-from discord.commands import permissions
+from discord import permissions
 from discord.ext import commands
 
 import aiopath
@@ -12,7 +12,7 @@ class AdminCog(commands.Cog, name='Administrator'):
         self.bot = bot
         self.utils = bot.get_cog('Utilities')
 
-    module = discord.SlashCommandGroup('module', 'Module commands', guild_ids=(729946499102015509,), permissions=[permissions.Permission("owner", 2, True)])
+    module = discord.SlashCommandGroup('module', 'Module commands', guild_ids=(729946499102015509,), permissions=[permissions.Permission('owner', 2, True)])
 
     async def get_modules(self): return sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 

@@ -224,21 +224,13 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
+        await ctx.defer(ephemeral=True)
+
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         if num_devices == 0:
             embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
-            await ctx.respond(embed=embed)
-            return
-
-        embed = discord.Embed(title='Download All Blobs', description='Uploading SHSH blobs...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-
-        try:
-            await ctx.author.send(embed=embed)
-        except:
-            embed = discord.Embed(title='Error', description="You don't have DMs enabled.")
             await ctx.respond(embed=embed)
             return
 
@@ -248,10 +240,18 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if url is None:
             embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
-        else:
-            embed.description = f'[Click here]({url}).'
+            await ctx.respond(embed=embed)
 
-        await ctx.edit(embed=embed)
+        else:
+            buttons = [{
+                'label': 'Download',
+                'style': discord.ButtonStyle.link,
+                'url': url
+            }]
+
+            view = SelectView(buttons, ctx, timeout=None)
+            embed = discord.Embed(title='Download Blobs', description='Download all SHSH Blobs:')
+            await ctx.respond(embed=embed, view=view)
 
     @tss.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.', default_permission=False)
     @commands.guild_only()

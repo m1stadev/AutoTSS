@@ -294,7 +294,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
-    async def whitelist_check(self, ctx: commands.Context) -> bool:
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
         if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.manage_messages):
             return True
 
@@ -302,7 +302,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed)
 
             return False
 

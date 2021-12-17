@@ -1,4 +1,4 @@
-from discord.commands import permissions
+from discord import permissions
 from discord.errors import NotFound, Forbidden
 from discord.ext import commands
 from discord import Option
@@ -158,8 +158,8 @@ class DeviceCog(commands.Cog, name='Device'):
         cpid = await self.utils.get_cpid(device['identifier'], device['boardconfig'])
         if 0x8020 <= cpid < 0x8900:
             generator_description.append('\n*If you choose to, you **will** need to provide a matching ApNonce for SHSH blobs to be saved correctly.*')
-            generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#getting-generator-and-apnonce-jailbroken-a12-only)*') #TODO: Change back to ios.cfw.guide links once they go to the proper section
-            generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://github.com/cfw-guide/ios.cfw.guide/blob/da046954bb732f6165b8b85eca09c65138ad8f72/docs/en_US/saving-blobs.md#get-your-device-specific-apnonce-and-generator)*')
+            generator_description.append('*Guide for jailbroken A12+ devices: [Click here](https://gist.github.com/m1stadev/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-jailbroken)*')
+            generator_description.append('*Guide for non-jailbroken A12+ devices: [Click here](https://gist.github.com/m1stadev/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-non-jailbroken)*')
 
         embed = discord.Embed(title='Add Device', description='\n'.join(generator_description)) # Ask the user if they'd like to save blobs with a custom generator
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)

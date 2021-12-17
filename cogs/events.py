@@ -10,24 +10,9 @@ import time
 class EventsCog(commands.Cog, name='Events'):
     def __init__(self, bot):
         self.bot = bot
+
         self.utils = self.bot.get_cog('Utilities')
-        self.auto_clean_db.start()
         self.blob_saver.start()
-
-    @tasks.loop()
-    async def auto_clean_db(self) -> None:
-        await self.bot.wait_until_ready()
-
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT devices from autotss') as cursor:
-                data = await cursor.fetchall()
-
-            for user_devices in data:
-                if len(json.loads(user_devices[0])) == 0:
-                    await db.execute('DELETE FROM autotss WHERE devices = ?', (user_devices[0],))
-                    await db.commit()
-
-        await asyncio.sleep(300)
 
     @tasks.loop()
     async def blob_saver(self) -> None:

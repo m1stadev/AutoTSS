@@ -21,8 +21,6 @@ class TSSCog(commands.Cog, name='TSS'):
     tss = discord.SlashCommandGroup('tss', 'TSS commands', guild_ids=(729946499102015509,))
 
     @tss.command(name='download', description='Download your saved SHSH blobs.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -114,8 +112,6 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.edit(embed=embed, view=view)
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def list_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to list SHSH blobs for', required=False)) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -175,8 +171,6 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.respond(embed=device_embeds[paginator.embed_num], view=paginator)
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return

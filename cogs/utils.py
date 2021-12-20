@@ -1,4 +1,3 @@
-from discord.ext import commands
 from typing import Optional, Union
 
 import aiofiles
@@ -13,7 +12,7 @@ import shutil
 import sys
 
 
-class UtilsCog(commands.Cog, name='Utilities'):
+class UtilsCog(discord.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.saving_blobs = False
@@ -166,17 +165,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
             f.write(manifest)
 
         return aiopath.AsyncPath(manifest_path)
-
-    async def get_prefix(self, guild: int) -> str:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
-            try:
-                guild_prefix = (await cursor.fetchone())[0]
-            except TypeError:
-                await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild, 'b!'))
-                await db.commit()
-                guild_prefix = 'b!'
-
-        return guild_prefix
 
     async def get_firms(self, identifier: str) -> list:
         api = await self.fetch_ipswme_api(identifier)

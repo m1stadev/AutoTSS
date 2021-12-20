@@ -7,7 +7,7 @@ import json
 import time
 
 
-class EventsCog(commands.Cog, name='Events'):
+class EventsCog(discord.Cog, name='Events'):
     def __init__(self, bot):
         self.bot = bot
 

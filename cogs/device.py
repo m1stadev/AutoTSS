@@ -1,6 +1,4 @@
-from discord import permissions
 from discord.errors import NotFound, Forbidden
-from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -14,7 +12,7 @@ import json
 import shutil
 
 
-class DeviceCog(commands.Cog, name='Device'):
+class DeviceCog(discord.Cog, name='Device'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')

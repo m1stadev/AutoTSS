@@ -1,7 +1,6 @@
 from discord import permissions, Option
 from discord.commands.context import AutocompleteContext
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
-from discord.ext import commands
 from views.buttons import SelectView
 
 import aiofiles
@@ -18,7 +17,7 @@ async def mod_autocomplete(ctx: AutocompleteContext) -> list:
 
     return [_ for _ in modules if _.startswith(ctx.value.lower())]
 
-class AdminCog(commands.Cog, name='Administrator'):
+class AdminCog(discord.Cog, name='Administrator'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = bot.get_cog('Utilities')

@@ -1,6 +1,5 @@
 from datetime import datetime
 from discord.commands import slash_command
-from discord.ext import commands
 from views.buttons import SelectView
 
 import aiosqlite
@@ -10,7 +9,7 @@ import math
 import time
 
 
-class MiscCog(commands.Cog, name='Miscellaneous'):
+class MiscCog(discord.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
 

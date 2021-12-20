@@ -1,12 +1,11 @@
 
 from discord import Option
-from discord.ext import commands
 
 import aiosqlite
 import discord
 
 
-class WhitelistCog(commands.Cog, name='Whitelist'):
+class WhitelistCog(discord.Cog, name='Whitelist'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')

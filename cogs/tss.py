@@ -1,5 +1,3 @@
-from discord import permissions
-from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -13,7 +11,7 @@ import json
 import time
 
 
-class TSSCog(commands.Cog, name='TSS'):
+class TSSCog(discord.Cog, name='TSS'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')

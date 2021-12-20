@@ -217,16 +217,20 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return buildids
 
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
-            data = await cursor.fetchone()
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+                data = await cursor.fetchone()
 
-        if (data == None) or (data[2] == False):
-            return None
+            if (data == None) or (data[2] == False):
+                return None
 
-        try:
-            return await self.bot.fetch_channel(data[1])
-        except discord.errors.NotFound:
-            return None
+            try:
+                return await self.bot.fetch_channel(data[1])
+            except discord.errors.NotFound:
+                await db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))')
+                await db.commit()
+
+                return None
 
     async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
         notes = (

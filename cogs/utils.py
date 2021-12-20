@@ -154,14 +154,14 @@ class UtilsCog(commands.Cog, name='Utilities'):
         api = await self.fetch_ipswme_api(identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
-    def get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
         try:
             with remotezip.RemoteZip(url) as ipsw:
                 manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
         except remotezip.RemoteIOError:
             return False
 
-        manifest_path = (pathlib.Path(path) / 'BuildManifest.plist')
+        manifest_path = (pathlib.Path(path) / 'manifest.plist')
         with manifest_path.open('wb') as f:
             f.write(manifest)
 
@@ -389,13 +389,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
         }
 
         firms = await self.get_firms(device['identifier'])
-
         for firm in [f for f in firms if f['signed'] == True]:
             if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await asyncio.to_thread(self.get_manifest, firm['url'], tmpdir)
+                manifest = await asyncio.to_thread(self._get_manifest, firm['url'], tmpdir)
                 saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
 
             if saved_blob is True:

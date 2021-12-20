@@ -94,31 +94,13 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT prefix from prefix WHERE guild = ?', (guild.id,)) as cursor:
-                if await cursor.fetchone() is not None:
-                    await db.execute('DELETE from prefix where guild = ?', (guild.id,))
-                    await db.commit()
-
-            await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild.id, 'b!'))
-            await db.commit()
-
-
-        embed = await self.utils.info_embed('b!', self.bot.user)
+        embed = await self.utils.info_embed(self.bot.user)
         for channel in guild.text_channels:
             try:
                 await channel.send(embed=embed)
                 break
             except:
                 pass
-
-    @commands.Cog.listener()
-    async def on_guild_remove(self, guild: discord.Guild) -> None:
-        await self.bot.wait_until_ready()
-
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            await db.execute('DELETE from prefix where guild = ?', (guild.id,))
-            await db.commit()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -155,60 +137,23 @@ class EventsCog(commands.Cog, name='Events'):
             await self.utils.update_device_count()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
-        await self.bot.wait_until_ready()
-
-        if message.channel.type == discord.ChannelType.private:
-            return
-
-        if message.content.replace(' ', '').replace('!', '') == self.bot.user.mention:
-            whitelist = await self.utils.get_whitelist(message.guild.id)
-            if (whitelist is not None) and (whitelist.id != message.channel.id):
-                return
-
-            prefix = await self.utils.get_prefix(message.guild.id)
-
-            embed = discord.Embed(title='AutoTSS', description=f'My prefix is `{prefix}`. To see all of my commands, run `{prefix}help`.')
-            embed.set_footer(text=message.author.name, icon_url=message.author.display_avatar.with_static_format('png').url)
-            try:
-                await message.reply(embed=embed)
-            except:
-                pass
-
-    @commands.Cog.listener()
     async def on_ready(self) -> None:
         await self.utils.update_device_count()
         print('AutoTSS is now online.')
 
-    @commands.Cog.listener() #TODO: Clean this up
-    async def on_command_error(self, ctx: commands.Context, error) -> None:
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:
         await self.bot.wait_until_ready()
 
         embed = discord.Embed(title='Error')
 
         if ctx.message.channel.type == discord.ChannelType.private:
             embed.description = 'AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed)
             return
 
         if await self.utils.whitelist_check(ctx) != True:
             return
-
-        prefix = await self.utils.get_prefix(ctx.guild.id)
-        if isinstance(error, commands.CommandNotFound):
-            if ctx.prefix.replace('!', '').replace(' ', '') == self.bot.user.mention:
-                return
-
-            embed.description = f"That command doesn't exist! Use `{prefix}help` to see all the commands I can run."
-            await ctx.reply(embed=embed)
-
-        elif isinstance(error, commands.MaxConcurrencyReached):
-            embed.description = f"`{prefix + ctx.command.qualified_name}` cannot be ran more than once at the same time!"
-            await ctx.reply(embed=embed)
-
-        elif isinstance(error, commands.ChannelNotFound):
-            embed = discord.Embed(title='Error', description='That channel does not exist.')
-            await ctx.reply(embed=embed)
 
         elif (isinstance(error, commands.errors.NotOwner)) or \
         (isinstance(error, commands.MissingPermissions)):

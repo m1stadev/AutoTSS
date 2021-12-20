@@ -31,10 +31,11 @@ async def startup():
     mentions = discord.AllowedMentions(everyone=False, roles=False)    
     (intents := discord.Intents.default()).members = True
 
-    bot = discord.AutoShardedBot(
+    bot = commands.AutoShardedBot(
         help_command=None,
         intents=intents,
-        allowed_mentions=mentions
+        allowed_mentions=mentions,
+        debug_guild=729946499102015509
     )
 
     bot.load_extension('cogs.utils') # Load utils cog first

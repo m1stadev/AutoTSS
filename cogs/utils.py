@@ -1,3 +1,4 @@
+from discord.ext import commands
 from typing import Optional, Union
 
 import aiofiles
@@ -12,7 +13,7 @@ import shutil
 import sys
 
 
-class UtilsCog(discord.Cog, name='Utilities'):
+class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot):
         self.bot = bot
         self.saving_blobs = False

@@ -1,3 +1,4 @@
+from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
@@ -11,12 +12,12 @@ import json
 import time
 
 
-class TSSCog(discord.Cog, name='TSS'):
+class TSSCog(commands.Cog, name='TSS'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
 
-    tss = discord.SlashCommandGroup('tss', 'TSS commands', guild_ids=(729946499102015509,))
+    tss = discord.SlashCommandGroup('tss', 'TSS commands')
 
     @tss.command(name='download', description='Download your saved SHSH blobs.')
     async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:

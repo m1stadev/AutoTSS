@@ -1,16 +1,17 @@
 
+from discord.ext import commands
 from discord import Option
 
 import aiosqlite
 import discord
 
 
-class WhitelistCog(discord.Cog, name='Whitelist'):
+class WhitelistCog(commands.Cog, name='Whitelist'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
 
-    whitelist = discord.SlashCommandGroup('whitelist', 'Whitelist commands', guild_ids=(729946499102015509,))
+    whitelist = discord.SlashCommandGroup('whitelist', 'Whitelist commands')
 
     @whitelist.command(name='set', description='Set the whitelist channel for AutoTSS commands.')
     async def set_whitelist_channel(self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel, description='Channel to allow AutoTSS commands in.')) -> None:

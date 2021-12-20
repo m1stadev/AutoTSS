@@ -57,7 +57,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        embed = await self.utils.info_embed(await self.utils.get_prefix(ctx.guild.id), ctx.author)
+        embed = await self.utils.info_embed(ctx.author)
         await ctx.respond(embed=embed)
 
     @slash_command(description="See AutoTSS's uptime", guild_ids=(729946499102015509,))

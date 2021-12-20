@@ -1,5 +1,6 @@
 from datetime import datetime
 from discord.commands import slash_command
+from discord.ext import commands
 from views.buttons import SelectView
 
 import aiosqlite
@@ -9,13 +10,13 @@ import math
 import time
 
 
-class MiscCog(discord.Cog, name='Miscellaneous'):
+class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot):
         self.bot = bot
 
         self.utils = self.bot.get_cog('Utilities')
 
-    @slash_command(description='Get the invite for AutoTSS', guild_ids=(729946499102015509,))
+    @slash_command(description='Get the invite for AutoTSS')
     async def invite(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -33,7 +34,7 @@ class MiscCog(discord.Cog, name='Miscellaneous'):
         view = SelectView(buttons, ctx, timeout=None)
         await ctx.respond(embed=embed, view=view)
 
-    @slash_command(description="See AutoTSS's latency", guild_ids=(729946499102015509,))
+    @slash_command(description="See AutoTSS's latency")
     async def ping(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -45,10 +46,10 @@ class MiscCog(discord.Cog, name='Miscellaneous'):
         current_time = await asyncio.to_thread(datetime.utcnow)
         await ctx.respond(embed=embed)
 
-        embed.description = f'Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
+        embed.description = f'API ping: {self.bot.latencies}\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
         await ctx.edit(embed=embed)
 
-    @slash_command(description='General info on AutoTSS', guild_ids=(729946499102015509,))
+    @slash_command(description='General info on AutoTSS')
     async def info(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -56,7 +57,7 @@ class MiscCog(discord.Cog, name='Miscellaneous'):
         embed = await self.utils.info_embed(ctx.author)
         await ctx.respond(embed=embed)
 
-    @slash_command(description="See AutoTSS's uptime", guild_ids=(729946499102015509,))
+    @slash_command(description="See AutoTSS's uptime")
     async def uptime(self, ctx: discord.ApplicationContext) -> None:
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]

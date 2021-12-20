@@ -106,62 +106,164 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed)
 
-
-    @admin.command(name='modunload', description='Unload a module.')
-    async def unload_module(self, ctx: discord.ApplicationContext, *cogs: str) -> None:
-        modules = sorted([cog.lower() for cog in cogs])
-
-        if len(modules) > 1 or modules[0] == 'all':
-            embed = discord.Embed(title='Unload Module')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.respond(embed=embed, ephemeral=True)
-            successful_unloads = int()
-            failed_unloads = int()
-
-            for module in (await self.get_modules() if modules[0] == 'all' else modules):
-                if not any(module == x for x in await self.get_modules()):
-                    embed.add_field(name='Error', value=f'Module `{module}` does not exist!', inline=False)
-                    await ctx.edit(embed=embed)
-                    failed_unloads += 1
-                    continue
-
-                if module == 'admin':
-                    embed.add_field(name='Error', value=f'Module `{module}` cannot be unloaded!', inline=False)
-                    await ctx.edit(embed=embed)
-                    failed_unloads += 1
-                    continue
-
-                try:
-                    self.bot.unload_extension(f'cogs.{module}')
-                    embed.add_field(name='Success', value=f'Module `{module}` successfully unloaded!', inline=False)
-                    await ctx.edit(embed=embed)
-                    successful_unloads += 1
-                except discord.ext.commands.ExtensionNotLoaded:
-                    embed.add_field(name='Error', value=f'Module `{module}` is already unloaded!', inline=False)
-                    await ctx.edit(embed=embed)
-                    failed_unloads += 1
-
-            embed.add_field(name='Finished', value=f"**{successful_unloads}** module{'s' if successful_unloads != 1 else ''} successfully unloaded, **{failed_unloads}** module{'s' if failed_unloads != 1 else ''} failed to unload.")
-            await ctx.edit(embed=embed)
+    @admin.command(name='downloadall', description='Download SHSH blobs for all devices in AutoTSS.')
+    async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
             return
 
-        if not any(modules[0] == x for x in await self.get_modules()):
-            embed = discord.Embed(title='Unload Module')
-            embed.add_field(name='Error', value=f'Module `{modules[0]}` does not exist!', inline=False)
-            embed.add_field(name='Available modules:', value=f"`{'`, `'.join(await self.get_modules())}`", inline=False)
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.respond(embed=embed, ephemeral=True)
+        await ctx.defer(ephemeral=True)
+
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
+
+        if num_devices == 0:
+            embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
+            await ctx.respond(embed=embed)
             return
 
-        try:
-            self.bot.unload_extension(f'cogs.{modules[0]}')
-            embed = discord.Embed(title='Unload Module', description=f'Module `{modules[0]}` has been unloaded.')
-        except discord.ext.commands.ExtensionNotLoaded:
-            embed = discord.Embed(title='Unload Module')
-            embed.add_field(name='Error', value=f'Module `{modules[0]}` is already unloaded!')
+        ecids = [ecid.stem async for ecid in aiopath.AsyncPath('Data/Blobs').glob('*') if ecid.is_dir()]
+        async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
+        if url is None:
+            embed = discord.Embed(title='Error', description='There are no SHSH blobs saved in AutoTSS.')
+            await ctx.respond(embed=embed)
+
+        else:
+            buttons = [{
+                'label': 'Download',
+                'style': discord.ButtonStyle.link,
+                'url': url
+            }]
+
+            view = SelectView(buttons, ctx, timeout=None)
+            embed = discord.Embed(title='Download Blobs', description='Download all SHSH Blobs:')
+            await ctx.respond(embed=embed, view=view)
+
+    @admin.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.')
+    async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
+        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+            data = await cursor.fetchall()
+
+        num_devices = sum(len(json.loads(devices[1])) for devices in data)
+        if num_devices == 0:
+            embed = discord.Embed(title='Error', description='There are no devices added to AutoTSS.')
+            await ctx.respond(embed=embed)
+            return
+
+        if self.utils.saving_blobs:
+            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            await ctx.respond(embed=embed)
+            return
+
+        self.utils.saving_blobs = True
+        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+
+        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.respond(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed)
+
+        start_time = await asyncio.to_thread(time.time)
+        data = await asyncio.gather(*[self.utils.sem_call(self.utils.save_user_blobs, user_data[0], json.loads(user_data[1])) for user_data in data])
+        finish_time = round(await asyncio.to_thread(time.time) - start_time)
+        self.utils.saving_blobs = False
+
+        blobs_saved = sum(user['blobs_saved'] for user in data)
+        devices_saved = sum(user['devices_saved'] for user in data)
+
+        if blobs_saved > 0:
+            embed.description = ' '.join((
+                f"Saved **{blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''}**",
+                f"for **{devices_saved} device{'s' if devices_saved > 1 else ''}**",
+                f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
+            ))
+
+        else:
+            embed.description = 'All SHSH blobs have already been saved.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
+
+        await self.utils.update_device_count()
+        await ctx.edit(embed=embed)
+
+    @admin.command(name='dtransfer', description="Transfer a user's devices to another user.")
+    @permissions.is_owner()
+    async def transfer_devices(self, ctx: discord.ApplicationContext, old: Option(discord.User, description='User to transfer devices from'), new: Option(discord.User, description='User to transfer devices to')) -> None:
+        cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
+        invalid_embed = discord.Embed(title='Error')
+        timeout_embed = discord.Embed(title='Transfer Devices', description='No response given in 1 minute, cancelling.')
+
+        for x in (cancelled_embed, invalid_embed, timeout_embed):
+            x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        if self.utils.saving_blobs == True: # Avoid any potential conflict with transferring devices while blobs are being saved
+            invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if old == new:
+            invalid_embed.description = "Silly goose, you can't transfer devices between the same user!"
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if new.bot == True:
+            invalid_embed.description = 'You cannot transfer devices to a bot account.'
+            await ctx.respond(embed=invalid_embed)
+            return
+   
+        async with aiosqlite.connect(self.utils.db_path) as db:
+            async with db.execute('SELECT devices from autotss WHERE user = ?', (old.id,)) as cursor:
+                try:
+                    old_devices = json.loads((await cursor.fetchone())[0])
+                except TypeError:
+                    old_devices = list()
+
+            async with db.execute('SELECT devices from autotss WHERE user = ?', (new.id,)) as cursor:
+                try:
+                    new_devices = json.loads((await cursor.fetchone())[0])
+                except TypeError:
+                    new_devices = list()
+
+        if len(old_devices) == 0:
+            invalid_embed.description = f'{old.mention} has no devices added to AutoTSS!'
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if len(new_devices) > 0:
+            invalid_embed.description = f'{new.mention} has devices added to AutoTSS already.'
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        embed = discord.Embed(title='Transfer Devices')
+        embed.description = f"Are you sure you'd like to transfer {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}?"
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        buttons = [{
+                'label': 'Yes',
+                'style': discord.ButtonStyle.success
+            }, {
+                'label': 'Cancel',
+                'style': discord.ButtonStyle.danger
+            }]
+
+        view = SelectView(buttons, ctx)
+        await ctx.respond(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            await ctx.edit(embed=timeout_embed)
+            return
+
+        if view.answer == 'Cancel':
+            await ctx.edit(embed=cancelled_embed)
+            return
+
+        async with aiosqlite.connect(self.utils.db_path) as db:
+            await db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id))
+            await db.commit()
+
+        embed.description = f"Successfully transferred {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}."
+        await ctx.edit(embed=embed)
 
 
 def setup(bot):

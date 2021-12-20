@@ -17,7 +17,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         self.utils = self.bot.get_cog('Utilities')
 
     @slash_command(description='Get the invite for AutoTSS', guild_ids=(729946499102015509,))
-    @commands.guild_only()
     async def invite(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -36,7 +35,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         await ctx.respond(embed=embed, view=view)
 
     @slash_command(description="See AutoTSS's latency", guild_ids=(729946499102015509,))
-    @commands.guild_only()
     async def ping(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -52,7 +50,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         await ctx.edit(embed=embed)
 
     @slash_command(description='General info on AutoTSS', guild_ids=(729946499102015509,))
-    @commands.guild_only()
     async def info(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -61,7 +58,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         await ctx.respond(embed=embed)
 
     @slash_command(description="See AutoTSS's uptime", guild_ids=(729946499102015509,))
-    @commands.guild_only()
     async def uptime(self, ctx: discord.ApplicationContext) -> None:
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]

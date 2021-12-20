@@ -22,8 +22,6 @@ class DeviceCog(commands.Cog, name='Device'):
     device = discord.SlashCommandGroup('devices', 'Device commands', guild_ids=(729946499102015509,))
 
     @device.command(name='add', description='Add a device to AutoTSS.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -309,8 +307,6 @@ class DeviceCog(commands.Cog, name='Device'):
         await self.utils.update_device_count()
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def remove_device(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -428,8 +424,6 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.edit(embed=cancelled_embed)
 
     @device.command(name='list', description='List your added devices.')
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
     async def list_devices(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to list SHSH blobs for', required=False)) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
@@ -499,8 +493,6 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.respond(embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
     @device.command(name='transfer', description="Transfer a user's devices to another user.", default_permission=False)
-    @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.default)
     @permissions.is_owner()
     async def transfer_devices(self, ctx: discord.ApplicationContext, old: Option(discord.User, description='User to transfer devices from'), new: Option(discord.User, description='User to transfer devices to')) -> None:
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')

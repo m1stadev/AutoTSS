@@ -227,7 +227,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             try:
                 return await self.bot.fetch_channel(data[1])
             except discord.errors.NotFound:
-                await db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))')
+                await db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))
                 await db.commit()
 
                 return None

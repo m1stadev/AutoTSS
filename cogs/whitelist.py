@@ -24,14 +24,14 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
             await ctx.respond(embed=embed)
             return
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
+        async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
             if await cursor.fetchone() is None:
                 sql = 'INSERT INTO whitelist(channel, enabled, guild) VALUES(?,?,?)'
             else:
                 sql = 'UPDATE whitelist SET channel = ?, enabled = ? WHERE guild = ?'
                 
-            await db.execute(sql, (channel.id, True, ctx.guild.id))
-            await db.commit()
+            await self.bot.db.execute(sql, (channel.id, True, ctx.guild.id))
+            await self.bot.db.commit()
 
         embed = discord.Embed(title='Whitelist', description=f'Enabled AutoTSS whitelisting and set whitelist channel to {channel.mention}.')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -43,23 +43,22 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
             embed = discord.Embed(title='Error', description='You do not have permission to run this command.')
             await ctx.respond(embed=embed, ephemeral=True)
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
-                data = await cursor.fetchone()
+        async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
+            data = await cursor.fetchone()
 
-            if type(data) == tuple:
-                channel = ctx.guild.get_channel(data[1])
-                if channel is None:
-                    embed = discord.Embed(title='Error', description=f'Channel `{data[1]}` no longer exists, please set a new whitelist channel.')
-                else:
-                    await db.execute('UPDATE whitelist SET enabled = ? WHERE guild = ?', (not data[2], ctx.guild.id))
-                    await db.commit()
-
-                    embed = discord.Embed(title='Whitelist')
-                    embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for AutoTSS to {channel.mention}."
-                    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        if type(data) == tuple:
+            channel = ctx.guild.get_channel(data[1])
+            if channel is None:
+                embed = discord.Embed(title='Error', description=f'Channel `{data[1]}` no longer exists, please set a new whitelist channel.')
             else:
-                embed = discord.Embed(title='Error', description='No whitelist channel is set.')
+                await self.bot.db.execute('UPDATE whitelist SET enabled = ? WHERE guild = ?', (not data[2], ctx.guild.id))
+                await self.bot.db.commit()
+
+                embed = discord.Embed(title='Whitelist')
+                embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for AutoTSS to {channel.mention}."
+                embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        else:
+            embed = discord.Embed(title='Error', description='No whitelist channel is set.')
 
         await ctx.respond(embed=embed)
 

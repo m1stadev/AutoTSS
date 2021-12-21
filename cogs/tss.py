@@ -29,7 +29,7 @@ class TSSCog(commands.Cog, name='TSS'):
         elif await ctx.bot.is_owner(ctx.author) == False:
             return
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -118,7 +118,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if user is None:
             user = ctx.author
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -174,7 +174,7 @@ class TSSCog(commands.Cog, name='TSS'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:

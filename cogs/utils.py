@@ -19,9 +19,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
         self.saving_blobs = False
 
     @property
-    def db_path(self) -> str: return str(aiopath.AsyncPath('Data/autotss.db'))
-
-    @property
     def invite(self) -> str:
         """ Returns an invite URL for the bot.
 
@@ -95,12 +92,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
         except ValueError or TypeError:
             return 0
 
-        async with aiosqlite.connect(self.db_path) as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
-            async with db.execute('SELECT devices from autotss') as cursor:
-                try:
-                    devices = [device[0] for device in (await cursor.fetchall())]
-                except TypeError:
-                    return 0
+        async with self.bot.db.execute('SELECT devices from autotss') as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+            try:
+                devices = [device[0] for device in (await cursor.fetchall())]
+            except TypeError:
+                return 0
 
         if any(ecid in device_info for device_info in devices): # There's no need to convert the json string to a dict here
             return -1
@@ -134,12 +130,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if not len(name) <= 20: # Length check
             return 0
 
-        async with aiosqlite.connect(self.db_path) as db: # Make sure the user doesn't have any other devices with the same name added
-            async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-                try:
-                    devices = json.loads((await cursor.fetchone())[0])
-                except:
-                    return True
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor: # Make sure the user doesn't have any other devices with the same name added
+            try:
+                devices = json.loads((await cursor.fetchone())[0])
+            except:
+                return True
 
         if any(x['name'] == name.lower() for x in devices):
             return -1
@@ -206,20 +201,17 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return buildids
 
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
-        async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
-                data = await cursor.fetchone()
+        async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+            data = await cursor.fetchone()
 
-            if (data == None) or (data[2] == False):
-                return None
+        if (data is None) or (data[2] == False):
+            return None
 
-            try:
-                return await self.bot.fetch_channel(data[1])
-            except discord.errors.NotFound:
-                await db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))
-                await db.commit()
-
-                return None
+        try:
+            return await self.bot.fetch_channel(data[1])
+        except discord.errors.NotFound:
+            await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))
+            await self.bot.db.commit()
 
     async def info_embed(self, member: discord.Member) -> discord.Embed:
         notes = (
@@ -282,7 +274,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return discord.Embed.from_dict(embed)
 
     async def update_device_count(self) -> None:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
@@ -399,10 +391,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
     async def save_user_blobs(self, user: int, devices: list[dict]) -> None:
         tasks = [self.save_device_blobs(device) for device in devices]
         data = await asyncio.gather(*tasks)
-
-        async with aiosqlite.connect(self.db_path) as db:        
-            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
-            await db.commit()
+  
+        await self.bot.db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
+        await self.bot.db.commit()
 
         user_stats = {
             'blobs_saved': sum([len(d['saved_blobs']) for d in data]),

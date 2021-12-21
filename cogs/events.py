@@ -57,7 +57,7 @@ class EventsCog(commands.Cog, name='Events'):
                     else:
                         print('[AUTO] Saving SHSH Blobs.')
 
-                    async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+                    async with self.bot.db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
                         data = await cursor.fetchall()
 
                     start_time = await asyncio.to_thread(time.time)
@@ -106,35 +106,29 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
-                data = await cursor.fetchone()
-
-            if data is None:
+        async with self.bot.db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+            if await cursor.fetchone() is None:
                 return
 
-            if len(member.mutual_guilds) == 0:
-                await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
-                await db.commit()
+        if len(member.mutual_guilds) == 0:
+            await self.bot.db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id))
+            await self.bot.db.commit()
 
-            await self.utils.update_device_count()
+        await self.utils.update_device_count()
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
-                data = await cursor.fetchone()
-
-            if data is None:
+        async with self.bot.db.execute('SELECT * from autotss WHERE user = ?', (member.id,)) as cursor:
+            if await cursor.fetchone() is None:
                 return
 
-            if len(member.mutual_guilds) == 0:
-                await db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
-                await db.commit()
+        if len(member.mutual_guilds) == 0:
+            await self.bot.db.execute('UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id))
+            await self.bot.db.commit()
 
-            await self.utils.update_device_count()
+        await self.utils.update_device_count()
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:

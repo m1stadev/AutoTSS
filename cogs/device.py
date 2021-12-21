@@ -34,13 +34,14 @@ class DeviceCog(commands.Cog, name='Device'):
 
         max_devices = 10 #TODO: Export this option to a separate config file
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
                 devices = list()
-                await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
-                await db.commit()
+
+        await self.bot.db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
+        await self.bot.db.commit()
 
         if (len(devices) >= max_devices) and (await self.bot.is_owner(ctx.author) == False): # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             invalid_embed.description = f'You cannot add over {max_devices} devices to AutoTSS.'
@@ -289,15 +290,14 @@ class DeviceCog(commands.Cog, name='Device'):
         # Add device information into the database
         devices.append(device)
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)) as cursor:
-                if await cursor.fetchone() is None:
-                    sql = 'INSERT INTO autotss(devices, enabled, user) VALUES(?,?,?)'
-                else:
-                    sql = 'UPDATE autotss SET devices = ?, enabled = ? WHERE user = ?'
+        async with self.bot.db.execute('SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+            if await cursor.fetchone() is None:
+                sql = 'INSERT INTO autotss(devices, enabled, user) VALUES(?,?,?)'
+            else:
+                sql = 'UPDATE autotss SET devices = ?, enabled = ? WHERE user = ?'
 
-            await db.execute(sql, (json.dumps(devices), True, ctx.author.id))
-            await db.commit()
+        await self.bot.db.execute(sql, (json.dumps(devices), True, ctx.author.id))
+        await self.bot.db.commit()
 
         embed = discord.Embed(title='Add Device', description=f"Device `{device['name']}` added successfully!")
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -317,7 +317,7 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:
@@ -409,12 +409,13 @@ class DeviceCog(commands.Cog, name='Device'):
                 await ctx.edit(embed=embed)
 
             devices.pop(num)
-            async with aiosqlite.connect(self.utils.db_path) as db:
-                if len(devices) == 0:
-                    await db.execute('DELETE FROM autotss WHERE user = ?', (ctx.author.id,))
-                else:
-                    await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
-                await db.commit()
+
+            if len(devices) == 0:
+                await self.bot.db.execute('DELETE FROM autotss WHERE user = ?', (ctx.author.id,))
+            else:
+                await self.bot.db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps(devices), ctx.author.id))
+
+            await self.bot.db.commit()
 
             await ctx.edit(embed=embed)
             await self.utils.update_device_count()
@@ -430,7 +431,7 @@ class DeviceCog(commands.Cog, name='Device'):
         if user is None:
             user = ctx.author
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
             except TypeError:

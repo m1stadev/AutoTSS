@@ -59,7 +59,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's uptime")
     async def uptime(self, ctx: discord.ApplicationContext) -> None:
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT start_time from uptime') as cursor:
+        async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
         uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))

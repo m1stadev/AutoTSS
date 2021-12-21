@@ -51,8 +51,7 @@ async def startup():
 
     db_path = aiopath.AsyncPath('Data/autotss.db')
     await db_path.parent.mkdir(exist_ok=True)
-
-    async with aiosqlite.connect(db_path) as db:
+    async with aiosqlite.connect(db_path) as db, aiohttp.ClientSession() as session:
         await db.execute('''
             CREATE TABLE IF NOT EXISTS autotss(
             user INTEGER,
@@ -86,9 +85,9 @@ async def startup():
         await db.execute(sql, (await asyncio.to_thread(time.time),))
         await db.commit()
 
-    async with aiohttp.ClientSession() as session:
         cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
         bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
+        bot.db = db
         bot.session = session
 
         try:

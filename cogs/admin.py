@@ -110,7 +110,7 @@ class AdminCog(commands.Cog, name='Administrator'):
     async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss') as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         if num_devices == 0:
@@ -141,7 +141,7 @@ class AdminCog(commands.Cog, name='Administrator'):
     async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer()
 
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
+        async with self.bot.db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             data = await cursor.fetchall()
 
         num_devices = sum(len(json.loads(devices[1])) for devices in data)
@@ -210,18 +210,17 @@ class AdminCog(commands.Cog, name='Administrator'):
             await ctx.respond(embed=invalid_embed)
             return
    
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            async with db.execute('SELECT devices from autotss WHERE user = ?', (old.id,)) as cursor:
-                try:
-                    old_devices = json.loads((await cursor.fetchone())[0])
-                except TypeError:
-                    old_devices = list()
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (old.id,)) as cursor:
+            try:
+                old_devices = json.loads((await cursor.fetchone())[0])
+            except TypeError:
+                old_devices = list()
 
-            async with db.execute('SELECT devices from autotss WHERE user = ?', (new.id,)) as cursor:
-                try:
-                    new_devices = json.loads((await cursor.fetchone())[0])
-                except TypeError:
-                    new_devices = list()
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (new.id,)) as cursor:
+            try:
+                new_devices = json.loads((await cursor.fetchone())[0])
+            except TypeError:
+                new_devices = list()
 
         if len(old_devices) == 0:
             invalid_embed.description = f'{old.mention} has no devices added to AutoTSS.'
@@ -256,9 +255,8 @@ class AdminCog(commands.Cog, name='Administrator'):
             await ctx.edit(embed=cancelled_embed)
             return
 
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            await db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id))
-            await db.commit()
+        await self.bot.db.execute('UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id))
+        await self.bot.db.commit()
 
         embed.description = f"Successfully transferred {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}."
         await ctx.edit(embed=embed)

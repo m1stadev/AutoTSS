@@ -1,6 +1,5 @@
 from discord.ext import commands, tasks
 
-import aiosqlite
 import asyncio
 import discord
 import json

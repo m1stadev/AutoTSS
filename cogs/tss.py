@@ -5,7 +5,6 @@ from views.selects import DropdownView
 
 import aiofiles
 import aiopath
-import aiosqlite
 import asyncio
 import discord
 import json

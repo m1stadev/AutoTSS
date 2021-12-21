@@ -6,7 +6,6 @@ from views.buttons import SelectView
 
 import aiofiles
 import aiopath
-import aiosqlite
 import asyncio
 import discord
 import json

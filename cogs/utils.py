@@ -3,7 +3,6 @@ from typing import Optional, Union
 
 import aiofiles
 import aiopath
-import aiosqlite
 import asyncio
 import discord
 import json

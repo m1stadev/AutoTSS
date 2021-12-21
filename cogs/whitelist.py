@@ -2,7 +2,6 @@
 from discord.ext import commands
 from discord import Option
 
-import aiosqlite
 import discord
 
 

@@ -35,6 +35,26 @@ class SelectView(discord.ui.View):
         await self.ctx.edit(view=self)
 
 
+class PaginatorButton(discord.ui.Button['PaginatorView']):
+    def __init__(self, emoji: str, disabled: bool):
+        super().__init__(
+            emoji=emoji,
+            style=discord.ButtonStyle.secondary,
+            disabled=disabled
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if self == self.view.children[0]:
+            self.view.embed_num = 0
+        elif self == self.view.children[1]:
+            self.view.embed_num -= 1
+        elif self == self.view.children[2]:
+            self.view.embed_num += 1
+        elif self == self.view.children[3]:
+            self.view.embed_num = len(self.view.embeds) - 1
+
+        await self.view.update_view()
+
 class PaginatorView(discord.ui.View):
     def __init__(self, embeds: list[discord.Embed], context: discord.ApplicationContext, *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
@@ -44,33 +64,17 @@ class PaginatorView(discord.ui.View):
         self.embeds = embeds
         self.embed_num = 0
 
-    async def update_interaction(self, interaction: discord.Interaction):
+        for emoji in ('⏪', '⬅️', '➡️', '⏩'):
+            disabled = False if (emoji == '➡️') or (emoji == '⏩' and len(self.embeds) >= 3) else True
+            self.add_item(PaginatorButton(emoji, disabled))
+
+    async def update_view(self):
         self.children[0].disabled = False if self.embed_num > 1 else True
         self.children[1].disabled = False if self.embed_num > 0 else True
         self.children[2].disabled = False if self.embed_num < (len(self.embeds) - 1) else True
         self.children[3].disabled = False if self.embed_num < (len(self.embeds) - 2) else True
 
-        await interaction.response.edit_message(embed=self.embeds[self.embed_num], view=self)
-
-    @discord.ui.button(emoji='⏪', style=discord.ButtonStyle.secondary, disabled=True)
-    async def page_beginning(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.embed_num = 0
-        await self.update_interaction(interaction)
-
-    @discord.ui.button(emoji='⬅️', style=discord.ButtonStyle.secondary, disabled=True)
-    async def page_backward(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.embed_num -= 1
-        await self.update_interaction(interaction)
-
-    @discord.ui.button(emoji='➡️', style=discord.ButtonStyle.secondary)
-    async def page_forward(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.embed_num += 1
-        await self.update_interaction(interaction)
-
-    @discord.ui.button(emoji='⏩', style=discord.ButtonStyle.secondary)
-    async def page_end(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.embed_num = len(self.embeds) - 1
-        await self.update_interaction(interaction)
+        await self.ctx.edit(embed=self.embeds[self.embed_num], view=self)
 
     async def interaction_check(self, interaction: discord.Interaction):
         if self.public == True or interaction.channel.type == discord.ChannelType.private:

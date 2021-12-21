@@ -1,6 +1,7 @@
 from discord.errors import NotFound, Forbidden
+from discord.ext import commands
 from discord import Option
-from views.buttons import SelectView, PaginatorView
+from views.buttons import CancelView, SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
@@ -12,12 +13,12 @@ import json
 import shutil
 
 
-class DeviceCog(discord.Cog, name='Device'):
+class DeviceCog(commands.Cog, name='Device'):
     def __init__(self, bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
 
-    device = discord.SlashCommandGroup('devices', 'Device commands', guild_ids=(729946499102015509,))
+    device = discord.SlashCommandGroup('devices', 'Device commands')
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
@@ -41,7 +42,7 @@ class DeviceCog(discord.Cog, name='Device'):
                 await db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
                 await db.commit()
 
-        if (len(devices) >= max_devices) and (await ctx.bot.is_owner(ctx.author) == False): # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
+        if (len(devices) >= max_devices) and (await self.bot.is_owner(ctx.author) == False): # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             invalid_embed.description = f'You cannot add over {max_devices} devices to AutoTSS.'
             await ctx.respond(embed=invalid_embed, ephemeral=True)
             return
@@ -51,7 +52,7 @@ class DeviceCog(discord.Cog, name='Device'):
             descriptions = (
                 'Enter a name for your device.',
                 "Enter your device's identifier. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).",
-                f"Enter your device's ECID (hex).\n*If you'd like to keep your ECID private, you can DM your ECID to {self.bot.user.mention}.*",
+                f"Enter your device's ECID (hex).\n\n*If you'd like to keep your ECID private, you can DM your ECID to {self.bot.user.mention}.*",
                 "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device."
             )
 

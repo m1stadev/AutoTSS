@@ -108,9 +108,6 @@ class AdminCog(commands.Cog, name='Administrator'):
 
     @admin.command(name='downloadall', description='Download SHSH blobs for all devices in AutoTSS.')
     async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         await ctx.defer(ephemeral=True)
 
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT devices from autotss') as cursor:
@@ -142,8 +139,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
     @admin.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.')
     async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
+        await ctx.defer()
 
         async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             data = await cursor.fetchall()
@@ -197,6 +193,8 @@ class AdminCog(commands.Cog, name='Administrator'):
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
+        await ctx.defer()
+
         if self.utils.saving_blobs == True: # Avoid any potential conflict with transferring devices while blobs are being saved
             invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
             await ctx.respond(embed=invalid_embed)
@@ -226,7 +224,7 @@ class AdminCog(commands.Cog, name='Administrator'):
                     new_devices = list()
 
         if len(old_devices) == 0:
-            invalid_embed.description = f'{old.mention} has no devices added to AutoTSS!'
+            invalid_embed.description = f'{old.mention} has no devices added to AutoTSS.'
             await ctx.respond(embed=invalid_embed)
             return
 

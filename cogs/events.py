@@ -7,7 +7,7 @@ import time
 
 
 class EventsCog(commands.Cog, name='Events'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         self.utils = self.bot.get_cog('Utilities')

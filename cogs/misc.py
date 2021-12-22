@@ -10,7 +10,7 @@ import time
 
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         self.utils = self.bot.get_cog('Utilities')

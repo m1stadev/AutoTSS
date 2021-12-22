@@ -6,7 +6,7 @@ import discord
 
 
 class WhitelistCog(commands.Cog, name='Whitelist'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
 

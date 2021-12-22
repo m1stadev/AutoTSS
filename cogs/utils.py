@@ -13,7 +13,7 @@ import sys
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.saving_blobs = False
 

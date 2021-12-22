@@ -12,7 +12,7 @@ import time
 
 
 class TSSCog(commands.Cog, name='TSS'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.utils = self.bot.get_cog('Utilities')
 

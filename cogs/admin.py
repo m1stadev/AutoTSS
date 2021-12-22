@@ -1,4 +1,3 @@
-from discord.commands.context import AutocompleteContext
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord import permissions, Option
@@ -12,13 +11,13 @@ import json
 import time
 
 
-async def mod_autocomplete(ctx: AutocompleteContext) -> list:
+async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:
     modules = sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 
     return [_ for _ in modules if _.startswith(ctx.value.lower())]
 
 class AdminCog(commands.Cog, name='Administrator'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.utils = bot.get_cog('Utilities')
 

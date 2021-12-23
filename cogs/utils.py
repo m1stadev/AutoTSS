@@ -305,12 +305,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
         ]
 
         args = [
-            'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
+            'tsschecker' if sys.platform != 'win32' else next(str(_) async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
             '-d', device['identifier'],
             '-B', device['boardconfig'],
             '-e', f"0x{device['ecid']}",
-            '-m', manifest,
-            '--save-path', tmpdir,
+            '-m', str(manifest),
+            '--save-path', str(tmpdir),
             '-s'
         ]
 

@@ -35,7 +35,10 @@ async def startup():
         help_command=None,
         intents=intents,
         allowed_mentions=mentions,
-        debug_guild=729946499102015509
+        debug_guilds=[
+            729946499102015509,
+            661668632174002195
+        ]
     )
 
     bot.load_extension('cogs.utils') # Load utils cog first

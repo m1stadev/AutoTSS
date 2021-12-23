@@ -376,7 +376,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
-        await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+        await self.bot.change_presence(activity=discord.Game(name=f"Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
     async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
         if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.manage_messages):

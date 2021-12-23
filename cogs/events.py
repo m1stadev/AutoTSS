@@ -36,7 +36,7 @@ class EventsCog(commands.Cog, name='Events'):
             return
 
         self.utils.saving_blobs = True
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+        await self.bot.change_presence(activity=discord.Game(name='Currently saving SHSH blobs!'))
 
         description = None
         for device in api.keys():

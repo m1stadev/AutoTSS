@@ -161,7 +161,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             return
 
         self.utils.saving_blobs = True
-        await self.bot.change_presence(activity=discord.Game(name='Ping me for help! | Currently saving SHSH blobs!'))
+        await self.bot.change_presence(activity=discord.Game(name='Currently saving SHSH blobs!'))
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)

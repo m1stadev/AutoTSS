@@ -384,7 +384,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
 
             return False
 

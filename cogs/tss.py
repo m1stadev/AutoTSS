@@ -26,7 +26,7 @@ class TSSCog(commands.Cog, name='TSS'):
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
-        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator)
+        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
     @tss.command(name='download', description='Download your saved SHSH blobs.')
     async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:
@@ -132,7 +132,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.")
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         device_embeds = list()
@@ -169,11 +169,11 @@ class TSSCog(commands.Cog, name='TSS'):
             device_embeds.append(discord.Embed.from_dict(device_embed))
 
         if len(device_embeds) == 1:
-            await ctx.respond(embed=device_embeds[0])
+            await ctx.respond(embed=device_embeds[0], ephemeral=True)
             return
 
         paginator = PaginatorView(device_embeds, ctx)
-        await ctx.respond(embed=device_embeds[paginator.embed_num], view=paginator)
+        await ctx.respond(embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
@@ -188,17 +188,17 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         if self.utils.saving_blobs:
             embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return
 
         embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
         start_time = await asyncio.to_thread(time.time)
         user = await self.utils.save_user_blobs(ctx.author.id, devices)

@@ -27,7 +27,7 @@ class DeviceCog(commands.Cog, name='Device'):
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.device.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
-        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator)
+        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
@@ -325,7 +325,7 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        await ctx.defer()
+        await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
@@ -335,7 +335,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
         if len(devices) == 0:
             embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed)
             return
 
         confirm_embed = discord.Embed(title='Remove Device')
@@ -368,7 +368,7 @@ class DeviceCog(commands.Cog, name='Device'):
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
             dropdown = DropdownView(device_options, ctx, 'Device to remove...')
-            await ctx.respond(embed=embed, view=dropdown, ephemeral=True)
+            await ctx.respond(embed=embed, view=dropdown)
             await dropdown.wait()
             if dropdown.answer is None:
                 await ctx.edit(embed=timeout_embed)
@@ -385,7 +385,7 @@ class DeviceCog(commands.Cog, name='Device'):
         else:
             num = 0
             confirm_embed.description = f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?"
-            await ctx.respond(embed=confirm_embed, view=view, ephemeral=True)
+            await ctx.respond(embed=confirm_embed, view=view)
 
         await view.wait()
         if view.answer is None:

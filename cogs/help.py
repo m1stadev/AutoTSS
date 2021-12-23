@@ -56,7 +56,7 @@ class HelpCog(commands.Cog, name='Help'):
 
             cmd_embeds = sorted(cmd_embeds.values(), key=lambda _: _.title)
             paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
-            await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator)
+            await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
         else:
             command = command.replace('/', '').lower()
@@ -79,15 +79,17 @@ class HelpCog(commands.Cog, name='Help'):
 
             if cmd is None:
                 embed = discord.Embed(title='Error', description='Command not found.')
-                await ctx.respond(embed=embed)
+                await ctx.respond(embed=embed, ephemeral=True)
+
             elif isinstance(cmd, discord.SlashCommand):
                 embed = await self.utils.cmd_help_embed(ctx, cmd)
-                await ctx.respond(embed=embed, ephemeral='admin' in cmd.name)
+                await ctx.respond(embed=embed, ephemeral=True)
+
             elif isinstance(cmd, discord.SlashCommandGroup):
                 cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in cmd.subcommands]
 
                 paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
-                await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral='admin' in cmd.name)
+                await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
 
 def setup(bot):

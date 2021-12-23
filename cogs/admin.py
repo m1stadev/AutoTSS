@@ -144,7 +144,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
     @admin.command(name='saveall', description='Manually save SHSH blobs for all devices in AutoTSS.')
     async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
-        await ctx.defer()
+        await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute('SELECT * from autotss WHERE enabled = ?', (True,)) as cursor:
             data = await cursor.fetchall()

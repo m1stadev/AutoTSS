@@ -31,7 +31,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         view = SelectView(buttons, ctx, timeout=None)
-        await ctx.respond(embed=embed, view=view)
+        await ctx.respond(embed=embed, view=view, ephemeral=True)
 
     @slash_command(description="See AutoTSS's latency.")
     async def ping(self, ctx: discord.ApplicationContext) -> None:
@@ -43,10 +43,10 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         current_time = await asyncio.to_thread(datetime.utcnow)
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
 
         embed.description = f'API ping: {self.bot.latencies}\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
-        await ctx.edit(embed=embed)
+        await ctx.edit(embed=embed, ephemeral=True)
 
     @slash_command(description='General info on AutoTSS.')
     async def info(self, ctx: discord.ApplicationContext) -> None:

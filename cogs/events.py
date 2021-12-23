@@ -137,20 +137,9 @@ class EventsCog(commands.Cog, name='Events'):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:
         await self.bot.wait_until_ready()
-
-        embed = discord.Embed(title='Error')
-
-        if ctx.message.channel.type == discord.ChannelType.private:
-            embed.description = 'AutoTSS cannot be used in DMs. Please use AutoTSS in a Discord server.'
-            await ctx.respond(embed=embed)
-            return
-
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
-        elif (isinstance(error, commands.errors.NotOwner)) or \
+        if (isinstance(error, commands.errors.NotOwner)) or \
         (isinstance(error, commands.MissingPermissions)):
-            return
+            pass
 
         else:
             raise error

@@ -45,8 +45,10 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         current_time = await asyncio.to_thread(datetime.utcnow)
         await ctx.respond(embed=embed, ephemeral=True)
 
-        embed.description = f'API ping: {self.bot.latencies}\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
-        await ctx.edit(embed=embed, ephemeral=True)
+        shard_ping = [_[1] for _ in self.bot.latencies]
+        embed.description = f'API ping: `{round(sum(shard_ping) / len(shard_ping) * 1000)}ms`\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
+
+        await ctx.edit(embed=embed)
 
     @slash_command(description='General info on AutoTSS.')
     async def info(self, ctx: discord.ApplicationContext) -> None:
@@ -93,6 +95,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         }
 
         await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
+
 
 def setup(bot):
     bot.add_cog(MiscCog(bot))

@@ -92,7 +92,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             }
         }
 
-        await ctx.respond(embed=discord.Embed.from_dict(embed))
+        await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
 
 def setup(bot):
     bot.add_cog(MiscCog(bot))

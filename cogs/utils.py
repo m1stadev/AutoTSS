@@ -375,7 +375,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
                 manifest = await asyncio.to_thread(self._get_manifest, firm['url'], tmpdir)
-                saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
+                saved_blob = await self._save_blob(device, firm, str(manifest), manifest.parent) if manifest != False else False
 
             if saved_blob is True:
                 device['saved_blobs'].append({x:y for x,y in firm.items() if x not in ('url', 'signed')})

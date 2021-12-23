@@ -20,9 +20,6 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='help', description='View all TSS commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -118,9 +115,6 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
     async def list_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to list SHSH blobs for', required=False)) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         if user is None:
             user = ctx.author
 
@@ -177,9 +171,6 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])

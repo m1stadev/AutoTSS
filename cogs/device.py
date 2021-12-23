@@ -21,9 +21,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='help', description='View all device commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.device.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -31,9 +28,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         timeout_embed = discord.Embed(title='Add Device', description='No response given in 5 minutes, cancelling.')
         cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error')
@@ -315,9 +309,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
     async def remove_device(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
         timeout_embed = discord.Embed(title='Remove Device', description='No response given in 1 minute, cancelling.')
@@ -435,9 +426,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='list', description='List your added devices.')
     async def list_devices(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to list SHSH blobs for', required=False)) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         if user is None:
             user = ctx.author
 

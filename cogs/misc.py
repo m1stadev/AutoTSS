@@ -17,9 +17,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description='Get the invite for AutoTSS.')
     async def invite(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         buttons = [{
             'label': 'Invite',
             'style': discord.ButtonStyle.link,
@@ -35,9 +32,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's latency.")
     async def ping(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         embed = discord.Embed(title='Pong!', description='Testing ping...')
         embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
@@ -60,9 +54,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's statistics.")
     async def stats(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 

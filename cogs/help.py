@@ -35,9 +35,6 @@ class HelpCog(commands.Cog, name='Help'):
 
     @slash_command(name='help', description='See usage and descriptions for commands.')
     async def _help(self, ctx: discord.ApplicationContext, command: Option(str, autocomplete=cmd_autocomplete, required=False)) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         if command is None:
             cmd_embeds = dict()
             for cog in ctx.bot.cogs:

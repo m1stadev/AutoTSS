@@ -1,7 +1,7 @@
 from discord.errors import NotFound, Forbidden
 from discord.ext import commands
 from discord import Option
-from views.buttons import CancelView, SelectView, PaginatorView
+from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 
 import aiofiles
@@ -18,6 +18,13 @@ class DeviceCog(commands.Cog, name='Device'):
         self.utils = self.bot.get_cog('Utilities')
 
     device = discord.SlashCommandGroup('devices', 'Device commands')
+
+    @device.command(name='help', description='View all device commands.')
+    async def _help(self, ctx: discord.ApplicationContext) -> None:
+        cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.device.subcommands]
+
+        paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
+        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator)
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:

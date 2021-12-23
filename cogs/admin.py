@@ -1,7 +1,7 @@
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord import permissions, Option
-from views.buttons import SelectView
+from views.buttons import PaginatorView, SelectView
 
 import aiofiles
 import aiopath
@@ -24,6 +24,13 @@ class AdminCog(commands.Cog, name='Administrator'):
     admin = discord.SlashCommandGroup('admin', 'Administrator commands', permissions=[permissions.Permission('owner', 2, True)])
 
     async def get_modules(self): return sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
+
+    @admin.command(name='help', description='View all administrator commands.')
+    async def _help(self, ctx: discord.ApplicationContext) -> None:
+        cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.admin.subcommands]
+
+        paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
+        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
 
     @admin.command(name='modlist', description='List all modules.')
     async def list_modules(self, ctx: discord.ApplicationContext) -> None:

@@ -1,6 +1,7 @@
 
 from discord.ext import commands
 from discord import Option
+from views.buttons import PaginatorView
 
 import discord
 
@@ -11,6 +12,13 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         self.utils = self.bot.get_cog('Utilities')
 
     whitelist = discord.SlashCommandGroup('whitelist', 'Whitelist commands')
+
+    @whitelist.command(name='help', description='View all whitelist commands.')
+    async def _help(self, ctx: discord.ApplicationContext) -> None:
+        cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.whitelist.subcommands]
+
+        paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
+        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator)
 
     @whitelist.command(name='set', description='Set the whitelist channel for AutoTSS commands.')
     async def set_whitelist_channel(self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel, description='Channel to allow AutoTSS commands in.')) -> None:

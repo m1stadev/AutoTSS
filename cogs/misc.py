@@ -58,6 +58,9 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's statistics.")
     async def stats(self, ctx: discord.ApplicationContext) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 

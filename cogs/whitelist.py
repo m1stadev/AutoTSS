@@ -15,6 +15,9 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
 
     @whitelist.command(name='help', description='View all whitelist commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.whitelist.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)

@@ -20,6 +20,9 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='help', description='View all TSS commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
+        if await self.utils.whitelist_check(ctx) != True:
+            return
+
         cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -27,9 +30,6 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='download', description='Download your saved SHSH blobs.')
     async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
         if user is None:
             user = ctx.author
         elif (user != ctx.author) and (await ctx.bot.is_owner(ctx.author) == False):

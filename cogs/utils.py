@@ -63,8 +63,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
         await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'shsh_blobs', 'zip', tmpdir)
         return await self._upload_file(tmpdir.parent / 'shsh_blobs.zip')
 
-    async def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
-
     async def check_apnonce(self, cpid: int, nonce: str) -> bool:
         try:
             int(nonce, 16)

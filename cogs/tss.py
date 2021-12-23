@@ -65,7 +65,7 @@ class TSSCog(commands.Cog, name='TSS'):
             for device in devices:
                 device_options.append(discord.SelectOption(
                     label=device['name'],
-                    description=f"ECID: {await self.utils.censor_ecid(device['ecid'])} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
+                    description=f"ECID: {device['ecid']} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
                     emoji='📱'
                 ))
 

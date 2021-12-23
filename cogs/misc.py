@@ -5,8 +5,7 @@ from views.buttons import SelectView
 
 import asyncio
 import discord
-import math
-import time
+import sys
 
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
@@ -56,24 +55,15 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed = await self.utils.info_embed(ctx.author)
         await ctx.respond(embed=embed)
 
-    @slash_command(description="See AutoTSS's uptime.")
-    async def uptime(self, ctx: discord.ApplicationContext) -> None:
+    @slash_command(description="See AutoTSS's statistics.")
+    async def stats(self, ctx: discord.ApplicationContext) -> None:
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
-        uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))
-        uptime = await asyncio.to_thread(time.strftime, '%H:%M:%S', await asyncio.to_thread(time.gmtime, uptime))
-        hours, minutes, seconds = [int(i) for i in uptime.split(':')]
-
-        formatted_uptime = list()
-        if hours > 0:
-            formatted_uptime.append(f"**{hours}** hour{'s' if hours != 1 else ''}")
-        if minutes > 0:
-            formatted_uptime.append(f"**{minutes}** minute{'s' if minutes != 1 else ''}")
-        if seconds > 0:
-            formatted_uptime.append(f"**{seconds}** second{'s' if seconds != 1 else ''}")
-
-        embed = discord.Embed(title='Uptime', description=', '.join(formatted_uptime))
+        embed = discord.Embed(title='AutoTSS Statistics')
+        embed.add_field(name='Bot started', value=await self.utils.get_uptime(start_time))
+        embed.add_field(name='Python Version', value='.'.join(str(_) for _ in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)))
+        embed.add_field(name='tsschecker version', value=await self.utils.get_tsschecker_version())
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
         await ctx.respond(embed=embed)
 

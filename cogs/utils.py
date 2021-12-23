@@ -1,3 +1,4 @@
+from datetime import datetime
 from discord.ext import commands
 from typing import Optional, Union
 
@@ -198,6 +199,22 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 })
 
         return buildids
+
+    async def get_tsschecker_version(self) -> str:
+        args = (
+            'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
+            '-h'
+        )
+
+        cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+        stdout = (await cmd.communicate())[0]
+
+        return stdout.decode().splitlines()[0].split(': ')[-1]
+
+    async def get_uptime(self, time: int) -> str:
+        start_time = datetime.fromtimestamp(time)
+
+        return discord.utils.format_dt(start_time, style='R')
 
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
         async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:

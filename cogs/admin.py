@@ -189,7 +189,6 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.edit(embed=embed)
 
     @admin.command(name='dtransfer', description="Transfer a user's devices to another user.")
-    @permissions.is_owner()
     async def transfer_devices(self, ctx: discord.ApplicationContext, old: Option(discord.User, description='User to transfer devices from'), new: Option(discord.User, description='User to transfer devices to')) -> None:
         cancelled_embed = discord.Embed(title='Transfer Devices', description='Cancelled.')
         invalid_embed = discord.Embed(title='Error')

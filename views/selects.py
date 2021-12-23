@@ -18,9 +18,10 @@ class DropdownSelect(discord.ui.Select['DropdownView']):
         self.view.stop()
 
 class DropdownView(discord.ui.View):
-    def __init__(self, options: list[discord.SelectOption], placeholder: str='\u200b', *, public: bool=False, timeout: int=60):
+    def __init__(self, options: list[discord.SelectOption], context: discord.ApplicationContext, placeholder: str='\u200b', *, public: bool=False, timeout: int=60):
         super().__init__(timeout=timeout)
 
+        self.ctx = context
         self.public = public
         self.options = options
         self.add_item(DropdownSelect(options, placeholder))
@@ -30,8 +31,8 @@ class DropdownView(discord.ui.View):
         if self.public == True or interaction.channel.type == discord.ChannelType.private:
             return True
 
-        return interaction.user == self.message.reference.cached_message.author
+        return interaction.user == self.ctx.author
 
     async def on_timeout(self):
         self.clear_items()
-        await self.message.edit(view=self)
+        await self.ctx.edit(view=self)

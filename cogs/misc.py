@@ -1,64 +1,40 @@
 from datetime import datetime
+from discord.commands import slash_command
 from discord.ext import commands
+from views.buttons import SelectView
 
-import aiosqlite
 import asyncio
 import discord
-import math
-import time
+import sys
+import textwrap
 
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         self.utils = self.bot.get_cog('Utilities')
 
-    @commands.command(help='Set the command prefix for AutoTSS.')
-    @commands.guild_only()
-    async def prefix(self, ctx: commands.Context, *, prefix: str=None) -> None:
+    @slash_command(description='Get the invite for AutoTSS.')
+    async def invite(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        if prefix is None:
-            prefix = await self.utils.get_prefix(ctx.guild.id)
-            embed = discord.Embed(title='Prefix', description=f'My prefix is `{prefix}`.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
-            return
+        buttons = [{
+            'label': 'Invite',
+            'style': discord.ButtonStyle.link,
+            'url': self.utils.invite
+        }]
 
-        if not ctx.author.guild_permissions.administrator:
-            return
-
-        if len(prefix) > 4:
-            embed = discord.Embed(title='Error', description='Prefixes are limited to 4 characters or less.')
-            await ctx.reply(embed=embed)
-            return
-
-        async with aiosqlite.connect(self.utils.db_path) as db:
-            await db.execute('UPDATE prefix SET prefix = ? WHERE guild = ?', (prefix, ctx.guild.id))
-            await db.commit()
-
-        embed = discord.Embed(title='Prefix', description=f'Prefix changed to `{prefix}`.')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-
-        await ctx.reply(embed=embed)
-
-    @commands.command(help='Get the invite for AutoTSS.')
-    @commands.guild_only()
-    async def invite(self, ctx: commands.Context) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
-
-        embed = discord.Embed(title='Invite', description=f'[Click here]({self.utils.invite}).')
+        embed = discord.Embed(title='Invite', description='AutoTSS invite:')
         embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
         embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        await ctx.reply(embed=embed)
+        view = SelectView(buttons, ctx, timeout=None)
+        await ctx.respond(embed=embed, view=view)
 
-    @commands.command(help="See AutoTSS's latency.", aliases=('latency', 'ms'))
-    @commands.guild_only()
-    async def ping(self, ctx: commands.Context) -> None:
+    @slash_command(description="See AutoTSS's latency.")
+    async def ping(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
@@ -67,41 +43,53 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
         current_time = await asyncio.to_thread(datetime.utcnow)
-        message = await ctx.reply(embed=embed)
+        await ctx.respond(embed=embed)
 
-        embed.description = f'Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
-        await message.edit(embed=embed)
+        embed.description = f'API ping: {self.bot.latencies}\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
+        await ctx.edit(embed=embed)
 
-    @commands.command(help='General info on AutoTSS.')
-    @commands.guild_only()
-    async def info(self, ctx: commands.Context) -> None:
+    @slash_command(description='General info on AutoTSS.')
+    async def info(self, ctx: discord.ApplicationContext) -> None:
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        embed = await self.utils.info_embed(await self.utils.get_prefix(ctx.guild.id), ctx.author)
-        await ctx.reply(embed=embed)
+        embed = await self.utils.info_embed(ctx.author)
+        await ctx.respond(embed=embed)
 
-    @commands.command(help="See AutoTSS's uptime")
-    @commands.guild_only()
-    async def uptime(self, ctx: commands.Context) -> None:
-        async with aiosqlite.connect(self.utils.db_path) as db, db.execute('SELECT start_time from uptime') as cursor:
+    @slash_command(description="See AutoTSS's statistics.")
+    async def stats(self, ctx: discord.ApplicationContext) -> None:
+        async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
-        uptime = await asyncio.to_thread(math.floor, await asyncio.to_thread(time.time) - float(start_time))
-        uptime = await asyncio.to_thread(time.strftime, "%H:%M:%S", await asyncio.to_thread(time.gmtime, uptime))
-        hours, minutes, seconds = [int(i) for i in uptime.split(':')]
+        embed = {
+            'title': 'AutoTSS Statistics',
+            'fields': [{
+                'name': 'Bot Started',
+                'value': await self.utils.get_uptime(start_time),
+                'inline': True
+            },
+            {
+                'name': 'Python Version',
+                'value': '.'.join(str(_) for _ in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)),
+                'inline': True
+            },
+            {
+                'name': 'TSSChecker Version',
+                'value': await self.utils.get_tsschecker_version(),
+                'inline': False
+            },
+            {
+                'name': 'SHSH Blobs Saved',
+                'value': f"**{','.join(textwrap.wrap(str(await self.utils.shsh_count())[::-1], 3))[::-1]}**",
+                'inline': False
+            }],
+            'footer': {
+                'text': ctx.author.display_name,
+                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
+            }
+        }
 
-        formatted_uptime = list()
-        if hours > 0:
-            formatted_uptime.append(f"**{hours}** hour{'s' if hours != 1 else ''}")
-        if minutes > 0:
-            formatted_uptime.append(f"**{minutes}** minute{'s' if minutes != 1 else ''}")
-        if seconds > 0:
-            formatted_uptime.append(f"**{seconds}** second{'s' if seconds != 1 else ''}")
-
-        embed = discord.Embed(title='Uptime', description=', '.join(formatted_uptime))
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.reply(embed=embed)
+        await ctx.respond(embed=discord.Embed.from_dict(embed))
 
 def setup(bot):
     bot.add_cog(MiscCog(bot))

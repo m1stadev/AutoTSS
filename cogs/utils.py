@@ -1,9 +1,10 @@
+from datetime import datetime
+from discord.enums import SlashCommandOptionType
 from discord.ext import commands
 from typing import Optional, Union
 
 import aiofiles
 import aiopath
-import aiosqlite
 import asyncio
 import discord
 import json
@@ -11,15 +12,20 @@ import pathlib
 import remotezip
 import shutil
 import sys
+import textwrap
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.saving_blobs = False
 
-    @property
-    def db_path(self) -> str: return aiopath.AsyncPath('Data/autotss.db')
+    READABLE_INPUT_TYPES = {
+        discord.TextChannel: 'channel',
+        SlashCommandOptionType.string: 'string',
+        SlashCommandOptionType.channel: 'channel',
+        SlashCommandOptionType.user: 'user'
+    }
 
     @property
     def invite(self) -> str:
@@ -36,7 +42,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return data.splitlines()[-1].split(':', 1)[1][1:]
 
-    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]):
+    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]) -> Optional[str]:
         blobdir = aiopath.AsyncPath('Data/Blobs')
         tmpdir = tmpdir / 'SHSH Blobs'
         await tmpdir.mkdir()
@@ -53,7 +59,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                     pass
 
         if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
-            return False
+            return
 
         await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'shsh_blobs', 'zip', tmpdir)
         return await self._upload_file(tmpdir.parent / 'shsh_blobs.zip')
@@ -87,7 +93,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return True
 
     async def check_ecid(self, ecid: str) -> Union[int, bool]:
-        if not 9 <= len(ecid) <= 16: # All ECIDs are between 9-16 characters
+        if not 7 <= len(ecid) <= 20: # All ECIDs are between 7-20 characters
             return 0
 
         try:
@@ -95,12 +101,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
         except ValueError or TypeError:
             return 0
 
-        async with aiosqlite.connect(self.db_path) as db: # Make sure the ECID the user provided isn't already a device added to AutoTSS.
-            async with db.execute('SELECT devices from autotss') as cursor:
-                try:
-                    devices = [device[0] for device in (await cursor.fetchall())]
-                except TypeError:
-                    return 0
+        async with self.bot.db.execute('SELECT devices from autotss') as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+            try:
+                devices = [device[0] for device in (await cursor.fetchall())]
+            except TypeError:
+                return 0
 
         if any(ecid in device_info for device_info in devices): # There's no need to convert the json string to a dict here
             return -1
@@ -134,12 +139,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if not len(name) <= 20: # Length check
             return 0
 
-        async with aiosqlite.connect(self.db_path) as db: # Make sure the user doesn't have any other devices with the same name added
-            async with db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor:
-                try:
-                    devices = json.loads((await cursor.fetchone())[0])
-                except:
-                    return True
+        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user,)) as cursor: # Make sure the user doesn't have any other devices with the same name added
+            try:
+                devices = json.loads((await cursor.fetchone())[0])
+            except:
+                return True
 
         if any(x['name'] == name.lower() for x in devices):
             return -1
@@ -154,29 +158,18 @@ class UtilsCog(commands.Cog, name='Utilities'):
         api = await self.fetch_ipswme_api(identifier)
         return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
 
-    def get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
         try:
             with remotezip.RemoteZip(url) as ipsw:
                 manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
         except remotezip.RemoteIOError:
             return False
 
-        manifest_path = (pathlib.Path(path) / 'BuildManifest.plist')
+        manifest_path = (pathlib.Path(path) / 'manifest.plist')
         with manifest_path.open('wb') as f:
             f.write(manifest)
 
         return aiopath.AsyncPath(manifest_path)
-
-    async def get_prefix(self, guild: int) -> str:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (guild,)) as cursor:
-            try:
-                guild_prefix = (await cursor.fetchone())[0]
-            except TypeError:
-                await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (guild, 'b!'))
-                await db.commit()
-                guild_prefix = 'b!'
-
-        return guild_prefix
 
     async def get_firms(self, identifier: str) -> list:
         api = await self.fetch_ipswme_api(identifier)
@@ -216,19 +209,109 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return buildids
 
+    async def get_tsschecker_version(self) -> str:
+        args = (
+            'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
+            '-h'
+        )
+
+        cmd = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+        stdout = (await cmd.communicate())[0]
+
+        return stdout.decode().splitlines()[0].split(': ')[-1]
+
+    async def get_uptime(self, time: int) -> str:
+        start_time = datetime.fromtimestamp(time)
+
+        return discord.utils.format_dt(start_time, style='R')
+
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
+        async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
 
-        if (data == None) or (data[2] == False):
+        if (data is None) or (data[2] == False):
             return None
 
         try:
             return await self.bot.fetch_channel(data[1])
         except discord.errors.NotFound:
-            return None
+            await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))
+            await self.bot.db.commit()
 
-    async def info_embed(self, prefix: str, member: discord.Member) -> discord.Embed:
+    async def cmd_help_embed(self, ctx: discord.ApplicationContext, cmd: discord.SlashCommand):
+        embed = {
+            'title': f"/{' '.join((cmd.full_parent_name, cmd.name)) or cmd.name} ",
+            'description': cmd.description,
+            'fields': list(),
+            'footer': {
+                'text': ctx.author.display_name,
+                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
+            }
+        }
+
+        for arg in cmd.options:
+            embed['title'] += f'<{arg.name}> ' if arg.required else f'[{arg.name}] '
+            embed['fields'].append({
+                'name': f'<{arg.name}>' if arg.required else f'[{arg.name}]',
+                'value': f"```Description: {arg.description or 'No description'}\nInput Type: {self.READABLE_INPUT_TYPES[arg.input_type]}\nRequired: {arg.required}```",
+                'inline': True
+            })
+
+        return discord.Embed.from_dict(embed)
+
+    async def cog_help_embed(self, ctx: discord.ApplicationContext, cog: str) -> list[discord.Embed]:
+        embed = {
+            'title': f"{cog.capitalize() if cog != 'tss' else cog.upper()} Commands",
+            'fields': list(),
+            'footer': {
+                'text': ctx.author.display_name,
+                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
+            }
+        }
+
+        for cmd in self.bot.cogs[cog].get_commands():
+            if isinstance(cmd, discord.SlashCommandGroup):
+                continue
+
+            cmd_field = {
+                'name': f"/{cmd.name} ",
+                'value': cmd.description,
+                'inline': False
+            }
+
+            for arg in cmd.options:
+                cmd_field['name'] += f'<{arg.name}> ' if arg.required else f'[{arg.name}] '
+
+            embed['fields'].append(cmd_field)
+
+        embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
+        return discord.Embed.from_dict(embed)
+
+    async def group_help_embed(self, ctx: discord.ApplicationContext, group: discord.SlashCommandGroup) -> list[discord.Embed]:
+        embed = {
+            'title': f"{group.name.capitalize() if group.name != 'tss' else group.name.upper()} Commands",
+            'fields': list(),
+            'footer': {
+                'text': ctx.author.display_name,
+                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
+            }
+        }
+
+        for cmd in group.subcommands:
+            cmd_field = {
+                'name': f"/{' '.join((group.name, cmd.name))} ",
+                'value': cmd.description,
+                'inline': False
+            }
+            for arg in cmd.options:
+                cmd_field['name'] += f'<{arg.name}> ' if arg.required else f'[{arg.name}] '
+
+            embed['fields'].append(cmd_field)
+
+        embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
+        return discord.Embed.from_dict(embed)
+
+    async def info_embed(self, member: discord.Member) -> discord.Embed:
         notes = (
             'There is a limit of **10 devices per user**.',
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
@@ -262,17 +345,17 @@ class UtilsCog(commands.Cog, name='Utilities'):
             },
             {
                 'name': 'All Commands',
-                'value': f'`{prefix}help`',
+                'value': '`/help`',
                 'inline': True
             },
             {
                 'name': 'Add Device',
-                'value': f'`{prefix}devices add`',
+                'value': '`/devices add`',
                 'inline': True
             },
             {
                 'name': 'Save SHSH Blobs',
-                'value': f'`{prefix}tss save`',
+                'value': '`/tss save`',
                 'inline': True
             },
             {
@@ -288,13 +371,15 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
+    async def shsh_count(self) -> int: return len([_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')])
+
     async def update_device_count(self) -> None:
-        async with aiosqlite.connect(self.db_path) as db, db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
             num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
 
         await self.bot.change_presence(activity=discord.Game(name=f"Ping me for help! | Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
 
-    async def whitelist_check(self, ctx: commands.Context) -> bool:
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
         if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.manage_messages):
             return True
 
@@ -302,7 +387,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if (whitelist is not None) and (whitelist.id != ctx.channel.id):
             embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
             embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.reply(embed=embed)
+            await ctx.respond(embed=embed)
 
             return False
 
@@ -321,12 +406,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
         ]
 
         args = [
-            'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
+            'tsschecker' if sys.platform != 'win32' else next(str(_) async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
             '-d', device['identifier'],
             '-B', device['boardconfig'],
             '-e', f"0x{device['ecid']}",
-            '-m', manifest,
-            '--save-path', tmpdir,
+            '-m', str(manifest),
+            '--save-path', str(tmpdir),
             '-s'
         ]
 
@@ -385,14 +470,13 @@ class UtilsCog(commands.Cog, name='Utilities'):
         }
 
         firms = await self.get_firms(device['identifier'])
-
         for firm in [f for f in firms if f['signed'] == True]:
             if any(firm['buildid'] == saved_firm['buildid'] for saved_firm in device['saved_blobs']): # If we've already saved blobs for this version, skip
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await asyncio.to_thread(self.get_manifest, firm['url'], tmpdir)
-                saved_blob = await self._save_blob(device, firm, manifest, manifest.parent) if manifest != False else False
+                manifest = await asyncio.to_thread(self._get_manifest, firm['url'], tmpdir)
+                saved_blob = await self._save_blob(device, firm, str(manifest), manifest.parent) if manifest != False else False
 
             if saved_blob is True:
                 device['saved_blobs'].append({x:y for x,y in firm.items() if x not in ('url', 'signed')})
@@ -407,10 +491,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
     async def save_user_blobs(self, user: int, devices: list[dict]) -> None:
         tasks = [self.save_device_blobs(device) for device in devices]
         data = await asyncio.gather(*tasks)
-
-        async with aiosqlite.connect(self.db_path) as db:        
-            await db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
-            await db.commit()
+  
+        await self.bot.db.execute('UPDATE autotss SET devices = ? WHERE user = ?', (json.dumps([d['device'] for d in data]), user))
+        await self.bot.db.commit()
 
         user_stats = {
             'blobs_saved': sum([len(d['saved_blobs']) for d in data]),

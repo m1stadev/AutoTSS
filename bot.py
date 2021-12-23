@@ -13,20 +13,6 @@ import sys
 import time
 
 
-async def get_prefix(bot, message):
-    if message.channel.type is discord.ChannelType.private:
-        return 'b!'
-
-    async with aiosqlite.connect(aiopath.AsyncPath('Data/autotss.db')) as db, db.execute('SELECT prefix FROM prefix WHERE guild = ?', (message.guild.id,)) as cursor:
-        try:
-            guild_prefix = (await cursor.fetchone())[0]
-        except TypeError:
-            await db.execute('INSERT INTO prefix(guild, prefix) VALUES(?,?)', (message.guild.id, 'b!'))
-            await db.commit()
-            guild_prefix = 'b!'
-
-    return commands.when_mentioned_or(guild_prefix)(bot, message)
-
 async def startup():
     if sys.version_info.major < 3 and sys.version_info.minor < 9:
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
@@ -47,7 +33,6 @@ async def startup():
 
     bot = commands.AutoShardedBot(
         help_command=None,
-        command_prefix=get_prefix,
         intents=intents,
         allowed_mentions=mentions
     )
@@ -65,21 +50,12 @@ async def startup():
 
     db_path = aiopath.AsyncPath('Data/autotss.db')
     await db_path.parent.mkdir(exist_ok=True)
-
-    async with aiosqlite.connect(db_path) as db:
+    async with aiosqlite.connect(db_path) as db, aiohttp.ClientSession() as session:
         await db.execute('''
             CREATE TABLE IF NOT EXISTS autotss(
             user INTEGER,
             devices JSON,
             enabled BOOLEAN
-            )
-            ''')
-        await db.commit()
-
-        await db.execute('''
-            CREATE TABLE IF NOT EXISTS prefix(
-            guild INTEGER,
-            prefix TEXT
             )
             ''')
         await db.commit()
@@ -108,9 +84,9 @@ async def startup():
         await db.execute(sql, (await asyncio.to_thread(time.time),))
         await db.commit()
 
-    async with aiohttp.ClientSession() as session:
         cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
         bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
+        bot.db = db
         bot.session = session
 
         try:

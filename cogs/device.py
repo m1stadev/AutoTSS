@@ -38,7 +38,7 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (timeout_embed, cancelled_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        max_devices = 10 #TODO: Export this option to a separate config file
+        await ctx.defer()
 
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
@@ -49,6 +49,7 @@ class DeviceCog(commands.Cog, name='Device'):
         await self.bot.db.execute('INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)', (ctx.author.id, json.dumps(devices), True))
         await self.bot.db.commit()
 
+        max_devices = 10 #TODO: Export this option to a separate config file
         if (len(devices) >= max_devices) and (await self.bot.is_owner(ctx.author) == False): # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             invalid_embed.description = f'You cannot add over {max_devices} devices to AutoTSS.'
             await ctx.respond(embed=invalid_embed, ephemeral=True)
@@ -322,6 +323,8 @@ class DeviceCog(commands.Cog, name='Device'):
 
         for x in (cancelled_embed, invalid_embed, timeout_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+
+        await ctx.defer()
 
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:

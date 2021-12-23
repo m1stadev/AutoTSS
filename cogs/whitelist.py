@@ -50,6 +50,8 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
             embed = discord.Embed(title='Error', description='You do not have permission to run this command.')
             await ctx.respond(embed=embed, ephemeral=True)
 
+        await ctx.defer()
+
         async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)) as cursor:
             data = await cursor.fetchone()
 

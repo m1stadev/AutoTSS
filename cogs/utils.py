@@ -12,6 +12,7 @@ import pathlib
 import remotezip
 import shutil
 import sys
+import textwrap
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
@@ -369,6 +370,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         }
 
         return discord.Embed.from_dict(embed)
+
+    async def shsh_count(self) -> int: return len([_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')])
 
     async def update_device_count(self) -> None:
         async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:

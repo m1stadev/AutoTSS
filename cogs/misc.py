@@ -6,6 +6,7 @@ from views.buttons import SelectView
 import asyncio
 import discord
 import sys
+import textwrap
 
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
@@ -60,12 +61,35 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
-        embed = discord.Embed(title='AutoTSS Statistics')
-        embed.add_field(name='Bot started', value=await self.utils.get_uptime(start_time))
-        embed.add_field(name='Python Version', value='.'.join(str(_) for _ in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)))
-        embed.add_field(name='tsschecker version', value=await self.utils.get_tsschecker_version())
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.respond(embed=embed)
+        embed = {
+            'title': 'AutoTSS Statistics',
+            'fields': [{
+                'name': 'Bot Started',
+                'value': await self.utils.get_uptime(start_time),
+                'inline': True
+            },
+            {
+                'name': 'Python Version',
+                'value': '.'.join(str(_) for _ in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)),
+                'inline': True
+            },
+            {
+                'name': 'TSSChecker Version',
+                'value': await self.utils.get_tsschecker_version(),
+                'inline': False
+            },
+            {
+                'name': 'SHSH Blobs Saved',
+                'value': f"**{','.join(textwrap.wrap(str(await self.utils.shsh_count())[::-1], 3))[::-1]}**",
+                'inline': False
+            }],
+            'footer': {
+                'text': ctx.author.display_name,
+                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
+            }
+        }
+
+        await ctx.respond(embed=discord.Embed.from_dict(embed))
 
 def setup(bot):
     bot.add_cog(MiscCog(bot))

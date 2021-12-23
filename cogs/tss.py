@@ -32,7 +32,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if user is None:
             user = ctx.author
-        elif await ctx.bot.is_owner(ctx.author) == False:
+        elif (user != ctx.author) and (await ctx.bot.is_owner(ctx.author) == False):
             return
 
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:

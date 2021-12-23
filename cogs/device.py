@@ -41,8 +41,6 @@ class DeviceCog(commands.Cog, name='Device'):
         for x in (timeout_embed, cancelled_embed):
             x.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
 
-        await ctx.defer()
-
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])

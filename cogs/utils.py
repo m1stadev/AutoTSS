@@ -12,7 +12,6 @@ import pathlib
 import remotezip
 import shutil
 import sys
-import textwrap
 
 
 class UtilsCog(commands.Cog, name='Utilities'):

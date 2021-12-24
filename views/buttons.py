@@ -69,7 +69,7 @@ class PaginatorView(discord.ui.View):
         self.embed_num = 0
 
         for emoji in ('⏪', '⬅️', '➡️', '⏩'):
-            disabled = (emoji != '➡️') or (emoji != '⏩' and len(self.embeds) < 3)
+            disabled = (emoji in ('➡️', '⏩')) or (emoji == '⏩' and len(self.embeds) < 3)
             self.add_item(PaginatorButton(emoji, disabled))
 
     async def update_view(self):

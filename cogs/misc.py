@@ -57,7 +57,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
-        embed = {
+        embed = discord.Embed.from_dict({
             'title': 'AutoTSS Statistics',
             'fields': [{
                 'name': 'Bot Started',
@@ -70,7 +70,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
                 'inline': True
             },
             {
-                'name': 'TSSChecker Version',
+                'name': 'TSSchecker Version',
                 'value': await self.utils.get_tsschecker_version(),
                 'inline': False
             },
@@ -83,9 +83,9 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
                 'text': ctx.author.display_name,
                 'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
             }
-        }
+        })
 
-        await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
 
 def setup(bot):

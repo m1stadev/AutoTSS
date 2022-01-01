@@ -49,7 +49,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         if await self.utils.whitelist_check(ctx) != True:
             return
 
-        embed = await self.utils.info_embed(ctx.author)
+        embed = self.utils.info_embed(ctx.author)
         await ctx.respond(embed=embed)
 
     @slash_command(description="See AutoTSS's statistics.")

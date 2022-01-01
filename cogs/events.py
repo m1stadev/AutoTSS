@@ -93,7 +93,7 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.bot.wait_until_ready()
 
-        embed = await self.utils.info_embed(self.bot.user)
+        embed = self.utils.info_embed(self.bot.user)
         for channel in guild.text_channels:
             try:
                 await channel.send(embed=embed)

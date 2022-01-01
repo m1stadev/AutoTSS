@@ -310,7 +310,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
         return discord.Embed.from_dict(embed)
 
-    async def info_embed(self, member: discord.Member) -> discord.Embed:
+    def info_embed(self, member: discord.Member) -> discord.Embed:
         notes = (
             'There is a limit of **10 devices per user**.',
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",

@@ -206,7 +206,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
             else:
                 device['generator'] = answer
-                if await self.utils.check_generator(device['generator']) is False:
+                if self.utils.check_generator(device['generator']) is False:
                     invalid_embed.description = f"Generator `{device['generator']}` is not valid."
                     invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                     await ctx.edit(embed=invalid_embed)
@@ -274,7 +274,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
             else:
                 device['apnonce'] = answer
-                if await self.utils.check_apnonce(cpid, device['apnonce']) is False:
+                if self.utils.check_apnonce(cpid, device['apnonce']) is False:
                     invalid_embed.description = f"Device ApNonce `{device['apnonce']}` is not valid."
                     invalid_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
                     await ctx.edit(embed=invalid_embed)

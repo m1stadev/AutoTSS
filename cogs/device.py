@@ -453,7 +453,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 },
                 {
                     'name': 'ECID',
-                    'value': f"`{device['ecid']}`",
+                    'value': f"`{device['ecid'] if user == ctx.author else self.utils.censor_ecid(device['ecid'])}`",
                     'inline': False
                 },
                 {

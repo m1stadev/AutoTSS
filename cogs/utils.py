@@ -65,6 +65,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
+    def check_apnonce(self, cpid: int, nonce: str) -> bool:
         try:
             int(nonce, 16)
         except ValueError or TypeError:
@@ -110,7 +111,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_generator(self, generator: str) -> bool:
+    def check_generator(self, generator: str) -> bool:
         if not generator.startswith('0x'): # Generator must start wth '0x'
             return False
 

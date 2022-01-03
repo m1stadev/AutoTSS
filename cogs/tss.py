@@ -171,6 +171,8 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
+        await ctx.defer(ephemeral=True)
+    
         async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
             try:
                 devices = json.loads((await cursor.fetchone())[0])
@@ -187,14 +189,11 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
-        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-        await ctx.respond(embed=embed, ephemeral=True)
-
         start_time = await asyncio.to_thread(time.time)
         user = await self.utils.save_user_blobs(ctx.author.id, devices)
         finish_time = round(await asyncio.to_thread(time.time) - start_time)
 
+        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
         if user['blobs_saved'] > 0:
             embed.description = ' '.join((
                 f"Saved **{user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''}**",
@@ -204,7 +203,7 @@ class TSSCog(commands.Cog, name='TSS'):
         else:
             embed.description = 'All SHSH blobs have already been saved for your devices.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
-        await ctx.edit(embed=embed)
+        await ctx.respond(embed=embed)
 
 def setup(bot):
     bot.add_cog(TSSCog(bot))

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from discord.ext import commands
+from dotenv.main import load_dotenv
 
 import aiohttp
 import aiopath
@@ -25,6 +26,7 @@ async def startup():
     if tsschecker == False:
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
+    load_dotenv()
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
         sys.exit("[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting.")
 
@@ -102,4 +104,3 @@ if __name__ == '__main__':
         asyncio.run(startup())
     except KeyboardInterrupt:
         pass
-

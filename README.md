@@ -37,9 +37,7 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
         python3 -m venv --upgrade-deps env && source env/bin/activate
         pip3 install -Ur requirements.txt
 
-3.  Set the `AUTOTSS_TOKEN` environment variable to the bot token you got from your Discord bot application
-
-    This can be done by exporting `AUTOTSS_TOKEN` in should shell configuration file, then reloading your shell
+3.  Create a `.env` file with the contents `AUTOTSS_TOKEN=<TOKEN>`, replacing `<TOKEN>` with your bot token.
 
 4. Start your instance
 

@@ -8,6 +8,7 @@ import aiopath
 import aiosqlite
 import asyncio
 import discord
+import json
 import os
 import shutil
 import sys
@@ -30,7 +31,7 @@ async def startup():
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
         sys.exit("[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting.")
 
-    mentions = discord.AllowedMentions(everyone=False, roles=False)    
+    mentions = discord.AllowedMentions(everyone=False, roles=False)
     (intents := discord.Intents.default()).members = True
 
     bot = commands.AutoShardedBot(
@@ -85,6 +86,11 @@ async def startup():
 
         await db.execute(sql, (await asyncio.to_thread(time.time),))
         await db.commit()
+
+        async with db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
+
+        bot.activity = discord.Game(name=f"Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}.")
 
         cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
         bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)

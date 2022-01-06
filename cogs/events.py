@@ -131,7 +131,6 @@ class EventsCog(commands.Cog, name='Events'):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        await self.utils.update_device_count()
         print('AutoTSS is now online.')
 
     @commands.Cog.listener()

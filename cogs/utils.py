@@ -60,7 +60,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
             return
 
-        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'SHSH Blobs', 'zip', tmpdir)
+        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'Blobs', 'zip', tmpdir)
         return await self._upload_file(tmpdir.parent / 'Blobs.zip')
 
     def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]

@@ -14,6 +14,9 @@ import shutil
 import sys
 
 
+API_URL = 'https://api.ipsw.me/v4'
+BETA_API_URL = 'https://api.m1sta.xyz/betas'
+
 class UtilsCog(commands.Cog, name='Utilities'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -26,43 +29,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         SlashCommandOptionType.user: 'user'
     }
 
-    @property
-    def invite(self) -> str:
-        """ Returns an invite URL for the bot.
 
-        This is a much better implementation that utilizes
-        available tools in the discord library rather than
-        being lazy and using a long string. """
-        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
-
-    async def _upload_file(self, file: aiopath.AsyncPath) -> str:
-        async with file.open('rb') as f, self.bot.session.put(f'https://up.psty.io/{file.name}', data=f) as resp:
-            data = await resp.text()
-
-        return data.splitlines()[-1].split(':', 1)[1][1:]
-
-    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]) -> Optional[str]:
-        blobdir = aiopath.AsyncPath('Data/Blobs')
-        tmpdir = tmpdir / 'SHSH Blobs'
-        await tmpdir.mkdir()
-
-        if len(ecids) == 1:
-            async for firm in blobdir.glob(f'{ecids[0]}/*'):
-                await asyncio.to_thread(shutil.copytree, firm, tmpdir / firm.name)
-    
-        else:
-            for ecid in ecids:
-                try:
-                    await asyncio.to_thread(shutil.copytree, blobdir / ecid, tmpdir / ecid)
-                except FileNotFoundError:
-                    pass
-
-        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
-            return
-
-        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'Blobs', 'zip', tmpdir)
-        return await self._upload_file(tmpdir.parent / 'Blobs.zip')
-
+    # Data verification functions
     def censor_ecid(self, ecid: str) -> str: return ('*' * len(ecid))[:-4] + ecid[-4:]
 
     def check_apnonce(self, cpid: int, nonce: str) -> bool:
@@ -126,7 +94,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return True
 
     async def check_identifier(self, identifier: str) -> bool:
-        async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
+        async with self.bot.session.get(f'{API_URL}/devices') as resp:
             api = await resp.json()
 
         if identifier not in [device['identifier'] for device in api]:
@@ -149,65 +117,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def fetch_ipswme_api(self, identifier: str) -> dict:
-        async with self.bot.session.get(f'https://api.ipsw.me/v4/device/{identifier}?type=ipsw') as resp:
-            return await resp.json()
 
-    async def get_cpid(self, identifier: str, boardconfig: str) -> str:
-        api = await self.fetch_ipswme_api(identifier)
-        return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
-
-    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
-        try:
-            with remotezip.RemoteZip(url) as ipsw:
-                manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
-        except remotezip.RemoteIOError:
-            return False
-
-        manifest_path = (pathlib.Path(path) / 'manifest.plist')
-        with manifest_path.open('wb') as f:
-            f.write(manifest)
-
-        return aiopath.AsyncPath(manifest_path)
-
-    async def get_firms(self, identifier: str) -> list:
-        api = await self.fetch_ipswme_api(identifier)
-
-        buildids = list()
-        for firm in api['firmwares']:
-            buildids.append({
-                    'version': firm['version'],
-                    'buildid': firm['buildid'],
-                    'url': firm['url'],
-                    'type': 'Release',
-                    'signed': firm['signed']
-
-                })
-
-        beta_api_url = f'https://api.m1sta.xyz/betas/{identifier}'
-        async with self.bot.session.get(beta_api_url) as resp:
-            if resp.status != 200:
-                return buildids
-            else:
-                beta_api = await resp.json()
-
-        for firm in beta_api:
-            if any(firm['buildid'] == f['buildid'] for f in buildids):
-                continue
-
-            if 'signed' not in firm.keys():
-                continue
-
-            buildids.append({
-                    'version': firm['version'],
-                    'buildid': firm['buildid'],
-                    'url': firm['url'],
-                    'type': 'Beta',
-                    'signed': firm['signed']
-                })
-
-        return buildids
-
+    # Miscellaneous data functions
     async def get_tsschecker_version(self) -> str:
         args = (
             'tsschecker' if sys.platform != 'win32' else next(_ async for _ in aiopath.AsyncPath(__file__).parent.glob('tsschecker*.exe') if await _.is_file()),
@@ -224,6 +135,10 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.utils.format_dt(start_time, style='R')
 
+    @property
+    def invite(self) -> str:
+        return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
+
     async def get_whitelist(self, guild: int) -> Optional[Union[bool, discord.TextChannel]]:
         async with self.bot.db.execute('SELECT * FROM whitelist WHERE guild = ?', (guild,)) as cursor:
             data = await cursor.fetchone()
@@ -237,6 +152,34 @@ class UtilsCog(commands.Cog, name='Utilities'):
             await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild,))
             await self.bot.db.commit()
 
+    async def get_cpid(self, identifier: str, boardconfig: str) -> str:
+        api = await self.fetch_ipswme_api(identifier)
+        return next(board['cpid'] for board in api['boards'] if board['boardconfig'].lower() == boardconfig.lower())
+
+    async def shsh_count(self) -> int: return len([_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')])
+
+    async def update_device_count(self) -> None:
+        async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
+            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
+
+        await self.bot.change_presence(activity=discord.Game(name=f"Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
+        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.manage_messages):
+            return True
+
+        whitelist = await self.get_whitelist(ctx.guild.id)
+        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
+            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
+            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            await ctx.respond(embed=embed, ephemeral=True)
+
+            return False
+
+        return True
+
+
+    # Help embed functions
     async def cmd_help_embed(self, ctx: discord.ApplicationContext, cmd: discord.SlashCommand):
         embed = {
             'title': f"/{' '.join((cmd.full_parent_name, cmd.name)) or cmd.name} ",
@@ -370,29 +313,89 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def shsh_count(self) -> int: return len([_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')])
 
-    async def update_device_count(self) -> None:
-        async with self.bot.db.execute('SELECT devices from autotss WHERE enabled = ?', (True,)) as cursor:
-            num_devices = sum(len(json.loads(devices[0])) for devices in await cursor.fetchall())
+    # SHSH Blob functions
+    async def _upload_file(self, file: aiopath.AsyncPath) -> str:
+        async with file.open('rb') as f, self.bot.session.put(f'https://up.psty.io/{file.name}', data=f) as resp:
+            data = await resp.text()
 
-        await self.bot.change_presence(activity=discord.Game(name=f"Saving SHSH blobs for {num_devices} device{'s' if num_devices != 1 else ''}."))
+        return data.splitlines()[-1].split(':', 1)[1][1:]
 
-    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
-        if (await ctx.bot.is_owner(ctx.author)) or (ctx.author.guild_permissions.manage_messages):
-            return True
+    async def backup_blobs(self, tmpdir: aiopath.AsyncPath, *ecids: list[str]) -> Optional[str]:
+        blobdir = aiopath.AsyncPath('Data/Blobs')
+        tmpdir = tmpdir / 'SHSH Blobs'
+        await tmpdir.mkdir()
 
-        whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(title='Hey!', description=f'AutoTSS can only be used in {whitelist.mention}.')
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
-            await ctx.respond(embed=embed, ephemeral=True)
+        if len(ecids) == 1:
+            async for firm in blobdir.glob(f'{ecids[0]}/*'):
+                await asyncio.to_thread(shutil.copytree, firm, tmpdir / firm.name)
+    
+        else:
+            for ecid in ecids:
+                try:
+                    await asyncio.to_thread(shutil.copytree, blobdir / ecid, tmpdir / ecid)
+                except FileNotFoundError:
+                    pass
 
+        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
+            return
+
+        await asyncio.to_thread(shutil.make_archive, tmpdir.parent / 'Blobs', 'zip', tmpdir)
+        return await self._upload_file(tmpdir.parent / 'Blobs.zip')
+
+    async def fetch_ipswme_api(self, identifier: str) -> dict:
+        async with self.bot.session.get(f'{API_URL}/device/{identifier}') as resp:
+            return await resp.json()
+
+    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+        try:
+            with remotezip.RemoteZip(url) as ipsw:
+                manifest = ipsw.read(next(f for f in ipsw.namelist() if 'BuildManifest' in f))
+        except remotezip.RemoteIOError:
             return False
 
-        return True
+        manifest_path = (pathlib.Path(path) / 'manifest.plist')
+        with manifest_path.open('wb') as f:
+            f.write(manifest)
 
-    # SHSH Blob saving functions
+        return aiopath.AsyncPath(manifest_path)
+
+    async def get_firms(self, identifier: str) -> list:
+        api = await self.fetch_ipswme_api(identifier)
+
+        buildids = list()
+        for firm in api['firmwares']:
+            buildids.append({
+                    'version': firm['version'],
+                    'buildid': firm['buildid'],
+                    'url': firm['url'],
+                    'type': 'Release',
+                    'signed': firm['signed']
+
+                })
+
+        async with self.bot.session.get(f'{BETA_API_URL}/{identifier}') as resp:
+            if resp.status != 200:
+                return buildids
+            else:
+                beta_api = await resp.json()
+
+        for firm in beta_api:
+            if any(firm['buildid'] == f['buildid'] for f in buildids):
+                continue
+
+            if 'signed' not in firm.keys():
+                continue
+
+            buildids.append({
+                    'version': firm['version'],
+                    'buildid': firm['buildid'],
+                    'url': firm['url'],
+                    'type': 'Beta',
+                    'signed': firm['signed']
+                })
+
+        return buildids
 
     async def _save_blob(self, device: dict, firm: dict, manifest: str, tmpdir: aiopath.AsyncPath) -> bool:
         generators = list()
@@ -508,6 +511,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
     async def sem_call(self, func, *args):
         async with self.sem:
             return await func(*args)
+
 
 def setup(bot):
     bot.add_cog(UtilsCog(bot))

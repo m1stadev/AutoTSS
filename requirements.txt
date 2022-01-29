@@ -1,6 +1,7 @@
 aiofiles
 aiopath
 aiosqlite
-git+git://github.com/Pycord-Development/pycord@master
+loguru
+py-cord==2.0.0b1
 python-dotenv
 remotezip

@@ -1,3 +1,4 @@
+from aiocache import cached
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
@@ -156,6 +157,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
     def invite(self) -> str:
         return discord.utils.oauth_url(self.bot.user.id, permissions=discord.Permissions(93184), scopes=('bot', 'applications.commands'))
 
+    @cached(ttl=3600)
     async def shsh_count(self) -> int: return len([_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')])
 
     async def update_device_count(self) -> None:

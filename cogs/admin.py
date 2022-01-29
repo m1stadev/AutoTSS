@@ -1,4 +1,3 @@
-from discord.commands import permissions
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord import Option
@@ -22,7 +21,7 @@ class AdminCog(commands.Cog, name='Administrator'):
         self.bot = bot
         self.utils = bot.get_cog('Utilities')
 
-    admin = discord.SlashCommandGroup('admin', 'Administrator commands', permissions=[permissions.CommandPermission('owner', 2, True)])
+    admin = discord.SlashCommandGroup('admin', 'Administrator commands', permissions=[discord.CommandPermission('owner', 2, True)])
 
     async def get_modules(self): return sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 

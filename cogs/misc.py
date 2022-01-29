@@ -54,6 +54,8 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's statistics.")
     async def stats(self, ctx: discord.ApplicationContext) -> None:
+        await ctx.defer(ephemeral=True)
+
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
@@ -85,7 +87,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             }
         })
 
-        await ctx.respond(embed=embed, ephemeral=True)
+        await ctx.respond(embed=embed)
 
 
 def setup(bot):

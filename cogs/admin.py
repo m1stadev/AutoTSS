@@ -1,6 +1,7 @@
+from discord.commands import permissions
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
-from discord import permissions, Option
+from discord import Option
 from views.buttons import PaginatorView, SelectView
 
 import aiofiles

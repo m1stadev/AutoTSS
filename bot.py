@@ -2,7 +2,6 @@
 
 from discord.ext import commands
 from dotenv.main import load_dotenv
-from utils import logger
 
 import aiohttp
 import aiopath
@@ -49,9 +48,7 @@ async def startup():
     (intents := discord.Intents.default()).members = False
 
     bot = commands.AutoShardedBot(
-        help_command=None,
-        intents=intents,
-        allowed_mentions=mentions
+        help_command=None, intents=intents, allowed_mentions=mentions
     )
 
     bot.load_extension('cogs.utils')  # Load utils cog first

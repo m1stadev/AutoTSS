@@ -26,7 +26,7 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 <sup>*** Requires users to manually specify a BuildManifest from a beta IPSW.</sup>
 
 ## Running
-To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps...
+To locally host your own instance, [create a Discord bot](https://discord.com/developers) and follow these steps:
 
 1. Build and install [`tsschecker`](https://github.com/1Conan/tsschecker) and its dependencies
 
@@ -37,9 +37,18 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
         python3 -m venv --upgrade-deps env && source env/bin/activate
         pip3 install -Ur requirements.txt
 
-3.  Create a `.env` file with the contents `AUTOTSS_TOKEN=<TOKEN>`, replacing `<TOKEN>` with your bot token.
+3.  Create a `.env` file and set the following variables:
+    - `AUTOTSS_TOKEN`: Your bot token.
+    - `OWNER_IDS`: Your Discord account's user ID
+        - (Optional) Add multiple user IDs by separating each one with a comma and space (e.g. `<ID 1>, <ID 2>, etc.`).
+    - (Optional) `DISCORD_WEBHOOK`: URL to a Discord webhook for logging.
+    - Example `.env` file:
 
-4. Start your instance
+          AUTOTSS_TOKEN=<TOKEN>
+          OWNER_IDS=123456789012345678
+
+
+4. Start the bot
 
         python3 bot.py
 

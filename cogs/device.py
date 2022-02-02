@@ -53,12 +53,6 @@ class DeviceCog(commands.Cog, name='Device'):
             except TypeError:
                 devices = list()
 
-        await self.bot.db.execute(
-            'INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)',
-            (ctx.author.id, ujson.dumps(devices), True),
-        )
-        await self.bot.db.commit()
-
         max_devices = 10  # TODO: Export this option to a separate config file
         if (len(devices) >= max_devices) and (
             await self.bot.is_owner(ctx.author) == False

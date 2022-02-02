@@ -2,7 +2,7 @@
 
 from discord.ext import commands
 from dotenv.main import load_dotenv
-from utils import logger
+from utils.logger import Logger
 
 import aiohttp
 import aiopath
@@ -40,19 +40,41 @@ async def startup():
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
     load_dotenv()
+
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
         sys.exit(
             "[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting."
         )
 
+    try:
+        owner_ids = [int(_) for _ in os.environ['OWNER_IDS'].split(', ')]
+    except KeyError:
+        sys.exit(
+            "[ERROR] Owner IDs not set in 'OWNER_IDS' environment variable. Exiting."
+        )
+    except ValueError:
+        sys.exit(
+            "[ERROR] Owner IDs specified in 'OWNER_IDS' environment variable are invalid. Exiting."
+        )
+
     mentions = discord.AllowedMentions(everyone=False, roles=False)
     (intents := discord.Intents.default()).members = False
-
-    bot = commands.AutoShardedBot(
-        help_command=None,
-        intents=intents,
-        allowed_mentions=mentions
-    )
+    if len(owner_ids) == 1:
+        bot = commands.AutoShardedBot(
+            help_command=None,
+            intents=intents,
+            allowed_mentions=mentions,
+            debug_guild=729946499102015509,
+            owner_id=owner_ids[0],
+        )
+    else:
+        bot = commands.AutoShardedBot(
+            help_command=None,
+            intents=intents,
+            allowed_mentions=mentions,
+            debug_guild=729946499102015509,
+            owner_ids=owner_ids,
+        )
 
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')
@@ -124,6 +146,7 @@ async def startup():
         # Setup bot attributes
         bot.db = db
         bot.session = session
+        bot.logger = Logger(bot).logger
 
         try:
             await bot.start(os.environ['AUTOTSS_TOKEN'])

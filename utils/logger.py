@@ -56,8 +56,12 @@ class Logger:
         )
 
         for logger in (logging.getLogger('discord'), logging.getLogger(__name__)):
+            logger = logging.getLogger('discord')
             logger.setLevel(logging.WARN)
             logger.addHandler(stdout_log)
             logger.addHandler(webhook_log)
 
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(stdout_log)
+        self.logger.addHandler(webhook_log)

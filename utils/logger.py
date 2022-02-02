@@ -47,21 +47,21 @@ class WebhookLogger(logging.Handler):
 
 class Logger:
     def __init__(self, bot: commands.Bot):
-        stdout_log = logging.StreamHandler(sys.stdout)
-        stdout_log.setFormatter(logging.Formatter(fmt='log - {message}', style='{'))
-
         webhook_log = WebhookLogger(bot)
-        webhook_log.setFormatter(
-            logging.Formatter(fmt='{asctime}s - {levelname}s - {message}s', style='{')
+        stdout_log = logging.StreamHandler(sys.stdout)
+        stdout_log.setFormatter(
+            logging.Formatter(
+                fmt='[{asctime}] [{levelname}] {message}',
+                datefmt='%m/%d/%y %H:%m:%S',
+                style='{',
+            )
         )
 
-        for logger in (logging.getLogger('discord'), logging.getLogger(__name__)):
-            logger = logging.getLogger('discord')
-            logger.setLevel(logging.WARN)
-            logger.addHandler(stdout_log)
-            logger.addHandler(webhook_log)
-
+        discord_log = logging.getLogger('discord')
+        discord_log.setLevel(logging.WARN)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(stdout_log)
-        self.logger.addHandler(webhook_log)
+
+        for logger in (self.logger, discord_log):
+            logger.addHandler(stdout_log)
+            logger.addHandler(webhook_log)

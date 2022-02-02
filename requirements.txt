@@ -5,3 +5,4 @@ aiosqlite
 py-cord==2.0.0b1
 python-dotenv
 remotezip
+ujson

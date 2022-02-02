@@ -7,7 +7,7 @@ import aiofiles
 import aiopath
 import asyncio
 import discord
-import json
+import ujson
 import time
 
 
@@ -20,59 +20,89 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='help', description='View all TSS commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        cmd_embeds = [await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
+        cmd_embeds = [
+            await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands
+        ]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
-        await ctx.respond(embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True)
+        await ctx.respond(
+            embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True
+        )
 
     @tss.command(name='download', description='Download your saved SHSH blobs.')
-    async def download_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to download SHSH blobs for', required=False)) -> None:
+    async def download_blobs(
+        self,
+        ctx: discord.ApplicationContext,
+        user: Option(
+            discord.User, description='User to download SHSH blobs for', required=False
+        ),
+    ) -> None:
         if user is None:
             user = ctx.author
         elif (user != ctx.author) and (await ctx.bot.is_owner(ctx.author) == False):
             return
 
-        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with self.bot.db.execute(
+            'SELECT devices from autotss WHERE user = ?', (user.id,)
+        ) as cursor:
             try:
-                devices = json.loads((await cursor.fetchone())[0])
+                devices = ujson.loads((await cursor.fetchone())[0])
             except TypeError:
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.")
+            embed = discord.Embed(
+                title='Error',
+                description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.",
+            )
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
         total_blobs = sum([len(device['saved_blobs']) for device in devices])
         if total_blobs == 0:
-            embed = discord.Embed(title='Error', description=f"Currently, {'you do' if user.id == ctx.author.id else f'{user.mention} does'} not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.")
+            embed = discord.Embed(
+                title='Error',
+                description=f"Currently, {'you do' if user.id == ctx.author.id else f'{user.mention} does'} not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.",
+            )
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
-        upload_embed = discord.Embed(title='Download Blobs', description='Uploading SHSH blobs...')
-        upload_embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        upload_embed = discord.Embed(
+            title='Download Blobs', description='Uploading SHSH blobs...'
+        )
+        upload_embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
 
         if len(devices) > 1:
-            device_options = [discord.SelectOption(
-                label='All',
-                description=f"Devices: {len(devices)} | Total SHSH blob{'s' if total_blobs != 1 else ''} saved: {total_blobs}",
-                emoji='📱'
-            )]
+            device_options = [
+                discord.SelectOption(
+                    label='All',
+                    description=f"Devices: {len(devices)} | Total SHSH blob{'s' if total_blobs != 1 else ''} saved: {total_blobs}",
+                    emoji='📱',
+                )
+            ]
 
             for device in devices:
-                device_options.append(discord.SelectOption(
-                    label=device['name'],
-                    description=f"ECID: {device['ecid']} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
-                    emoji='📱'
-                ))
+                device_options.append(
+                    discord.SelectOption(
+                        label=device['name'],
+                        description=f"ECID: {device['ecid']} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
+                        emoji='📱',
+                    )
+                )
 
-            device_options.append(discord.SelectOption(
-                label='Cancel',
-                emoji='❌'
-            ))
+            device_options.append(discord.SelectOption(label='Cancel', emoji='❌'))
 
-            embed = discord.Embed(title='Download Blobs', description="Choose which device you'd like to download SHSH blobs for")
-            embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+            embed = discord.Embed(
+                title='Download Blobs',
+                description="Choose which device you'd like to download SHSH blobs for",
+            )
+            embed.set_footer(
+                text=ctx.author.display_name,
+                icon_url=ctx.author.display_avatar.with_static_format('png').url,
+            )
 
             dropdown = DropdownView(device_options, ctx, 'Device')
             await ctx.respond(embed=embed, view=dropdown, ephemeral=True)
@@ -103,29 +133,38 @@ class TSSCog(commands.Cog, name='TSS'):
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
-        buttons = [{
-            'label': 'Download',
-            'style': discord.ButtonStyle.link,
-            'url': url
-        }]
+        buttons = [{'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}]
 
         view = SelectView(buttons, ctx, timeout=None)
-        embed = discord.Embed(title='Download Blobs', description='Download your SHSH Blobs:')
+        embed = discord.Embed(
+            title='Download Blobs', description='Download your SHSH Blobs:'
+        )
         await ctx.edit(embed=embed, view=view)
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
-    async def list_blobs(self, ctx: discord.ApplicationContext, user: Option(discord.User, description='User to list SHSH blobs for', required=False)) -> None:
+    async def list_blobs(
+        self,
+        ctx: discord.ApplicationContext,
+        user: Option(
+            discord.User, description='User to list SHSH blobs for', required=False
+        ),
+    ) -> None:
         if user is None:
             user = ctx.author
 
-        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (user.id,)) as cursor:
+        async with self.bot.db.execute(
+            'SELECT devices from autotss WHERE user = ?', (user.id,)
+        ) as cursor:
             try:
-                devices = json.loads((await cursor.fetchone())[0])
+                devices = ujson.loads((await cursor.fetchone())[0])
             except TypeError:
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.")
+            embed = discord.Embed(
+                title='Error',
+                description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.",
+            )
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
@@ -138,8 +177,10 @@ class TSSCog(commands.Cog, name='TSS'):
                 'fields': list(),
                 'footer': {
                     'text': ctx.author.display_name,
-                    'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
-                }
+                    'icon_url': str(
+                        ctx.author.display_avatar.with_static_format('png').url
+                    ),
+                },
             }
 
             blobs_list = dict()
@@ -151,10 +192,9 @@ class TSSCog(commands.Cog, name='TSS'):
                 blobs_list[major_ver] += f"iOS {firm['version']}, "
 
             for ver in sorted(blobs_list, reverse=True):
-                device_embed['fields'].append({
-                    'name': f'iOS {ver}',
-                    'value': blobs_list[ver][:-2]
-                })
+                device_embed['fields'].append(
+                    {'name': f'iOS {ver}', 'value': blobs_list[ver][:-2]}
+                )
 
             if len(device_embed['fields']) == 0:
                 del device_embed['fields']
@@ -167,25 +207,34 @@ class TSSCog(commands.Cog, name='TSS'):
             return
 
         paginator = PaginatorView(device_embeds, ctx)
-        await ctx.respond(embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True)
+        await ctx.respond(
+            embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True
+        )
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
-    
-        async with self.bot.db.execute('SELECT devices from autotss WHERE user = ?', (ctx.author.id,)) as cursor:
+
+        async with self.bot.db.execute(
+            'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
+        ) as cursor:
             try:
-                devices = json.loads((await cursor.fetchone())[0])
+                devices = ujson.loads((await cursor.fetchone())[0])
             except TypeError:
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(title='Error', description='You have no devices added to AutoTSS.')
+            embed = discord.Embed(
+                title='Error', description='You have no devices added to AutoTSS.'
+            )
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
         if self.utils.saving_blobs:
-            embed = discord.Embed(title='Hey!', description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.")
+            embed = discord.Embed(
+                title='Hey!',
+                description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.",
+            )
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
@@ -193,17 +242,23 @@ class TSSCog(commands.Cog, name='TSS'):
         user = await self.utils.save_user_blobs(ctx.author.id, devices)
         finish_time = round(await asyncio.to_thread(time.time) - start_time)
 
-        embed = discord.Embed(title='Save Blobs', description='Saving SHSH blobs for all of your devices...')
+        embed = discord.Embed(
+            title='Save Blobs',
+            description='Saving SHSH blobs for all of your devices...',
+        )
         if user['blobs_saved'] > 0:
-            embed.description = ' '.join((
-                f"Saved **{user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''}**",
-                f"for **{user['devices_saved']} device{'s' if user['devices_saved'] != 1 else ''}**",
-                f"in **{finish_time} second{'s' if finish_time != 1 else ''}**."
-            ))
+            embed.description = ' '.join(
+                (
+                    f"Saved **{user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''}**",
+                    f"for **{user['devices_saved']} device{'s' if user['devices_saved'] != 1 else ''}**",
+                    f"in **{finish_time} second{'s' if finish_time != 1 else ''}**.",
+                )
+            )
         else:
             embed.description = 'All SHSH blobs have already been saved for your devices.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
         await ctx.respond(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(TSSCog(bot))

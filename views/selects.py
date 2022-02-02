@@ -6,10 +6,7 @@ import discord
 class DropdownSelect(discord.ui.Select['DropdownView']):
     def __init__(self, options: list[discord.SelectOption], placeholder: str):
         super().__init__(
-            placeholder=placeholder,
-            min_values=1,
-            max_values=1,
-            options=options
+            placeholder=placeholder, min_values=1, max_values=1, options=options
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -17,8 +14,17 @@ class DropdownSelect(discord.ui.Select['DropdownView']):
         await self.view.on_timeout()
         self.view.stop()
 
+
 class DropdownView(discord.ui.View):
-    def __init__(self, options: list[discord.SelectOption], context: discord.ApplicationContext, placeholder: str='\u200b', *, public: bool=False, timeout: int=60):
+    def __init__(
+        self,
+        options: list[discord.SelectOption],
+        context: discord.ApplicationContext,
+        placeholder: str = '\u200b',
+        *,
+        public: bool = False,
+        timeout: int = 60
+    ):
         super().__init__(timeout=timeout)
 
         self.ctx = context
@@ -28,7 +34,10 @@ class DropdownView(discord.ui.View):
         self.answer = None
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if self.public == True or interaction.channel.type == discord.ChannelType.private:
+        if (
+            self.public == True
+            or interaction.channel.type == discord.ChannelType.private
+        ):
             return True
 
         return interaction.user == self.ctx.author

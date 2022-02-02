@@ -17,15 +17,22 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description='Get the invite for AutoTSS.')
     async def invite(self, ctx: discord.ApplicationContext) -> None:
-        buttons = [{
-            'label': 'Invite',
-            'style': discord.ButtonStyle.link,
-            'url': self.utils.invite
-        }]
+        buttons = [
+            {
+                'label': 'Invite',
+                'style': discord.ButtonStyle.link,
+                'url': self.utils.invite,
+            }
+        ]
 
         embed = discord.Embed(title='Invite', description='AutoTSS invite:')
-        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
-        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        embed.set_thumbnail(
+            url=self.bot.user.display_avatar.with_static_format('png').url
+        )
+        embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
 
         view = SelectView(buttons, ctx, timeout=None)
         await ctx.respond(embed=embed, view=view, ephemeral=True)
@@ -33,8 +40,13 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
     @slash_command(description="See AutoTSS's latency.")
     async def ping(self, ctx: discord.ApplicationContext) -> None:
         embed = discord.Embed(title='Pong!', description='Testing ping...')
-        embed.set_thumbnail(url=self.bot.user.display_avatar.with_static_format('png').url)
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.display_avatar.with_static_format('png').url)
+        embed.set_thumbnail(
+            url=self.bot.user.display_avatar.with_static_format('png').url
+        )
+        embed.set_footer(
+            text=ctx.author.name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
 
         current_time = await asyncio.to_thread(datetime.utcnow)
         await ctx.respond(embed=embed, ephemeral=True)
@@ -59,34 +71,47 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
         embed = {
             'title': 'AutoTSS Statistics',
-            'fields': [{
-                'name': 'Bot Started',
-                'value': await self.utils.get_uptime(start_time),
-                'inline': True
-            },
-            {
-                'name': 'Python Version',
-                'value': '.'.join(str(_) for _ in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)),
-                'inline': True
-            },
-            {
-                'name': 'TSSchecker Version',
-                'value': f'`{await self.utils.get_tsschecker_version()}`',
-                'inline': False
-            }],
+            'fields': [
+                {
+                    'name': 'Bot Started',
+                    'value': await self.utils.get_uptime(start_time),
+                    'inline': True,
+                },
+                {
+                    'name': 'Python Version',
+                    'value': '.'.join(
+                        str(_)
+                        for _ in (
+                            sys.version_info.major,
+                            sys.version_info.minor,
+                            sys.version_info.micro,
+                        )
+                    ),
+                    'inline': True,
+                },
+                {
+                    'name': 'TSSchecker Version',
+                    'value': f'`{await self.utils.get_tsschecker_version()}`',
+                    'inline': False,
+                },
+            ],
             'footer': {
                 'text': ctx.author.display_name,
-                'icon_url': str(ctx.author.display_avatar.with_static_format('png').url)
-            }
+                'icon_url': str(
+                    ctx.author.display_avatar.with_static_format('png').url
+                ),
+            },
         }
 
         await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
 
-        embed['fields'].append({
-            'name': 'SHSH Blobs Saved',
-            'value': f"**{','.join(textwrap.wrap(str(await self.utils.shsh_count())[::-1], 3))[::-1]}**",
-            'inline': False
-        })
+        embed['fields'].append(
+            {
+                'name': 'SHSH Blobs Saved',
+                'value': f"**{','.join(textwrap.wrap(str(await self.utils.shsh_count())[::-1], 3))[::-1]}**",
+                'inline': False,
+            }
+        )
 
         await ctx.edit(embed=discord.Embed.from_dict(embed))
 

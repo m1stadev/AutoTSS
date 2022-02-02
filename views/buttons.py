@@ -18,7 +18,14 @@ class SelectButton(discord.ui.Button['SelectView']):
 
 
 class SelectView(discord.ui.View):
-    def __init__(self, buttons: list[dict], context: discord.ApplicationContext, *, public: bool=False, timeout: int=60):
+    def __init__(
+        self,
+        buttons: list[dict],
+        context: discord.ApplicationContext,
+        *,
+        public: bool = False,
+        timeout: int = 60
+    ):
         super().__init__(timeout=timeout)
 
         self.ctx = context
@@ -29,7 +36,10 @@ class SelectView(discord.ui.View):
             self.add_item(SelectButton(button))
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if self.public == True or interaction.channel.type == discord.ChannelType.private:
+        if (
+            self.public == True
+            or interaction.channel.type == discord.ChannelType.private
+        ):
             return True
 
         return interaction.user == self.ctx.author
@@ -42,9 +52,7 @@ class SelectView(discord.ui.View):
 class PaginatorButton(discord.ui.Button['PaginatorView']):
     def __init__(self, emoji: str, disabled: bool):
         super().__init__(
-            emoji=emoji,
-            style=discord.ButtonStyle.secondary,
-            disabled=disabled
+            emoji=emoji, style=discord.ButtonStyle.secondary, disabled=disabled
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -59,8 +67,16 @@ class PaginatorButton(discord.ui.Button['PaginatorView']):
 
         await self.view.update_view()
 
+
 class PaginatorView(discord.ui.View):
-    def __init__(self, embeds: list[discord.Embed], context: discord.ApplicationContext, *, public: bool=False, timeout: int=60):
+    def __init__(
+        self,
+        embeds: list[discord.Embed],
+        context: discord.ApplicationContext,
+        *,
+        public: bool = False,
+        timeout: int = 60
+    ):
         super().__init__(timeout=timeout)
 
         self.ctx = context
@@ -69,19 +85,30 @@ class PaginatorView(discord.ui.View):
         self.embed_num = 0
 
         for emoji in ('⏪', '⬅️', '➡️', '⏩'):
-            disabled = False if (emoji == '➡️') or (emoji == '⏩' and len(self.embeds) >= 3) else True
+            disabled = (
+                False
+                if (emoji == '➡️') or (emoji == '⏩' and len(self.embeds) >= 3)
+                else True
+            )
             self.add_item(PaginatorButton(emoji, disabled))
 
     async def update_view(self):
         self.children[0].disabled = False if self.embed_num > 1 else True
         self.children[1].disabled = False if self.embed_num > 0 else True
-        self.children[2].disabled = False if self.embed_num < (len(self.embeds) - 1) else True
-        self.children[3].disabled = False if self.embed_num < (len(self.embeds) - 2) else True
+        self.children[2].disabled = (
+            False if self.embed_num < (len(self.embeds) - 1) else True
+        )
+        self.children[3].disabled = (
+            False if self.embed_num < (len(self.embeds) - 2) else True
+        )
 
         await self.ctx.edit(embed=self.embeds[self.embed_num], view=self)
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if self.public == True or interaction.channel.type == discord.ChannelType.private:
+        if (
+            self.public == True
+            or interaction.channel.type == discord.ChannelType.private
+        ):
             return True
 
         return interaction.user == self.ctx.author
@@ -105,7 +132,9 @@ class CancelView(discord.ui.View):
         self.stop()
         raise ViewStoppedError('Cancel button was pressed.')
 
-    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
+    async def on_error(
+        self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction
+    ) -> None:
         raise error
 
     async def interaction_check(self, interaction: discord.Interaction):

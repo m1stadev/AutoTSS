@@ -64,7 +64,6 @@ async def startup():
             help_command=None,
             intents=intents,
             allowed_mentions=mentions,
-            debug_guild=729946499102015509,
             owner_id=owner_ids[0],
         )
     else:
@@ -72,7 +71,6 @@ async def startup():
             help_command=None,
             intents=intents,
             allowed_mentions=mentions,
-            debug_guild=729946499102015509,
             owner_ids=owner_ids,
         )
 

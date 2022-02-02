@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from asyncio.log import logger
 from discord.ext import commands
 from dotenv.main import load_dotenv
 from utils import logger

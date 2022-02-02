@@ -1,4 +1,3 @@
-# imports
 from datetime import datetime
 from discord.ext import commands
 from dotenv.main import load_dotenv
@@ -13,13 +12,11 @@ load_dotenv()
 
 
 class WebhookLogger(logging.Handler):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, url: str):
         super().__init__()
 
         self.bot = bot
-        self.webhook = discord.Webhook.from_url(
-            os.environ['LOGGING_WEBHOOK_URL'], session=self.bot.session
-        )
+        self.webhook = discord.Webhook.from_url(url, session=self.bot.session)
 
     def emit(self, record: logging.LogRecord):
         if self.webhook is None:
@@ -28,15 +25,27 @@ class WebhookLogger(logging.Handler):
         embed = discord.Embed(
             title=record.levelname.capitalize(),
             description=record.message,
-            timestamp=datetime.fromtimestamp(record.created),
         )
+
+        if record.name == 'discord':
+            module = f'discord.{record.module}'
+        else:
+            module = record.module
+
+        embed.add_field(name='Module', value=f'`{module}`')
+        embed.add_field(
+            name='Time',
+            value=discord.utils.format_dt(datetime.fromtimestamp(record.created)),
+        )
+
+        embed.set_author(name=record.funcName)
 
         message = {'embed': embed}
 
         if record.levelno in (logging.ERROR, logging.CRITICAL):
             message['content'] = self.bot.get_user(self.bot.owner_id).mention
 
-        asyncio.ensure_future(self.post_content(**message))
+        asyncio.create_task(self.post_content(**message))
 
     async def post_content(self, **message):
         try:

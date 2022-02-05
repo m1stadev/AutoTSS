@@ -148,7 +148,7 @@ async def startup():
         if 'DISCORD_WEBHOOK' in os.environ.keys():
             bot.logger = Logger(bot, os.environ['DISCORD_WEBHOOK']).logger
         else:
-            bot.logger = Logger().loger
+            bot.logger = Logger().logger
 
         try:
             await bot.start(os.environ['AUTOTSS_TOKEN'])

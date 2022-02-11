@@ -2,7 +2,7 @@ aiocache
 aiofiles
 aiopath
 aiosqlite
-py-cord==2.0.0b1
+py-cord==2.0.0b4
 python-dotenv
 remotezip
 ujson

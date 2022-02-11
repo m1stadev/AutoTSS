@@ -17,14 +17,19 @@ class EventsCog(commands.Cog, name='Events'):
     async def blob_saver(self) -> None:
         await self.bot.wait_until_ready()
 
+        self.bot.logger.info('[AUTO] Auto blob saver started.')
         async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
+            self.bot.logger.debug('Fetched device identifiers from IPSW.me.')
             devices = [
                 d
                 for d in await resp.json()
                 if any(
-                    x in d['identifier'] for x in ('iPhone', 'AppleTV', 'iPod', 'iPad')
+                    d['identifier'].startswith(x)
+                    for x in ('iPhone', 'AppleTV', 'iPod', 'iPad')
                 )
             ]
+
+        self.bot.logger.debug('[AUTO] Fetching all signed firmwares.')
 
         api = dict()
         for device in [d['identifier'] for d in devices]:
@@ -33,14 +38,20 @@ class EventsCog(commands.Cog, name='Events'):
         try:
             self._api
         except AttributeError:
+            self.bot.logger.warn(
+                '[AUTO] No firmware cache found, storing current firmwares as cache and restarting.',
+            )
             self._api = api
             return
 
         if self.utils.saving_blobs:
-            print(f"[AUTO] SHSH blob saver already running, continuing.")
+            self.bot.logger.info(
+                '[AUTO] SHSH blob saver already running, sleeping for 5m.'
+            )
             await asyncio.sleep(300)
             return
 
+        self.bot.logger.debug('[AUTO] Manual SHSH blob saving is now disabled.')
         self.utils.saving_blobs = True
         await self.bot.change_presence(
             activity=discord.Game(name='Currently saving SHSH blobs!')
@@ -49,15 +60,16 @@ class EventsCog(commands.Cog, name='Events'):
         description = None
         for device in api.keys():
             if device not in self._api.keys():  # If new device is added to the API
-                print(f"[AUTO] New device has been detected: {device}.")
+                self.bot.logger.debug(f'[AUTO] New device has been detected: {device}.')
                 self._api[device] = api[device]
                 continue
 
+            firm_type = 'iOS' if 'AppleTV' not in device else 'tvOS'
             for firm in api[device]:
                 if firm['signed'] == True:
                     if firm not in self._api[device]:  # If firmware was just released
-                        print(
-                            f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been released, saving SHSH blobs."
+                        self.bot.logger.debug(
+                            f"[AUTO] {firm_type} {firm['version']} ({firm['buildid']}) has been released, saving SHSH blobs."
                         )
 
                     elif any(
@@ -65,12 +77,12 @@ class EventsCog(commands.Cog, name='Events'):
                         for oldfirm in self._api[device]
                         if oldfirm['buildid'] == firm['buildid']
                     ):  # If firmware has been resigned
-                        print(
-                            f"[AUTO] iOS {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs."
+                        self.bot.logger.debug(
+                            f"[AUTO] {firm_type} {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs."
                         )
 
                     else:
-                        print('[AUTO] Saving SHSH Blobs.')
+                        self.bot.logger.debug('[AUTO] Saving SHSH Blobs.')
 
                     async with self.bot.db.execute(
                         'SELECT * from autotss WHERE enabled = ?', (True,)
@@ -96,14 +108,14 @@ class EventsCog(commands.Cog, name='Events'):
                     if blobs_saved > 0:
                         description = ' '.join(
                             (
-                                f"Saved {blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''}",
+                                f"[AUTO] Saved {blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''}",
                                 f"for {devices_saved} device{'s' if devices_saved > 1 else ''}",
                                 f"in {finish_time} second{'s' if finish_time != 1 else ''}.",
                             )
                         )
 
                     else:
-                        description = 'All SHSH blobs have already been saved.'
+                        description = '[AUTO] All SHSH blobs have already been saved.'
 
                     break
 
@@ -111,9 +123,12 @@ class EventsCog(commands.Cog, name='Events'):
                 self._api[device] = api[device]
 
             if description is not None:
-                print(f"[AUTO] {description}")
+                self.bot.logger.info(description)
                 break
 
+        self.bot.logger.info('[AUTO] Auto blob saver finished.')
+
+        self.bot.logger.debug('[AUTO] Manual SHSH blob saving is now allowed.')
         self.utils.saving_blobs = False
         await self.utils.update_device_count()
         await asyncio.sleep(300)
@@ -145,6 +160,9 @@ class EventsCog(commands.Cog, name='Events'):
                 'UPDATE autotss SET enabled = ? WHERE user = ?', (True, member.id)
             )
             await self.bot.db.commit()
+            self.bot.logger.debug(
+                f'Re-enabled automatic SHSH blob saving for {member.name}#{member.discriminator}.'
+            )
 
         await self.utils.update_device_count()
 
@@ -163,12 +181,15 @@ class EventsCog(commands.Cog, name='Events'):
                 'UPDATE autotss SET enabled = ? WHERE user = ?', (False, member.id)
             )
             await self.bot.db.commit()
+            self.bot.logger.debug(
+                f'Disabled automatic SHSH blob saving for {member.name}#{member.discriminator}.'
+            )
 
         await self.utils.update_device_count()
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        print('AutoTSS is now online.')
+        self.bot.logger.info('AutoTSS is now online.')
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:

@@ -507,7 +507,9 @@ class DeviceCog(commands.Cog, name='Device'):
         self,
         ctx: discord.ApplicationContext,
         user: Option(
-            discord.User, description='User to list SHSH blobs for', required=False
+            commands.UserConverter,
+            description='User to list SHSH blobs for',
+            required=False,
         ),
     ) -> None:
         if user is None:
@@ -522,12 +524,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(
-                title='Error',
-                description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.",
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise NoDevicesFound(user)
 
         device_embeds = list()
         for device in devices:

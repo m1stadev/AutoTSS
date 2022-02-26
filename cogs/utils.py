@@ -569,7 +569,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await self._get_manifest(firm['url'], tmpdir)
+                manifest = await (await asyncio.to_thread(self._get_manifest, firm['url'], tmpdir))
                 saved_blob = (
                     await self._save_blob(device, firm, str(manifest), manifest.parent)
                     if manifest != False

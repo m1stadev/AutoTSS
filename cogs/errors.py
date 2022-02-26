@@ -4,6 +4,10 @@ import asyncio
 import discord
 
 
+class TooManyDevices(Exception):
+    pass
+
+
 class ViewTimeoutException(asyncio.exceptions.TimeoutError):
     def __init__(self, timeout: int, *args):
         self.timeout = timeout

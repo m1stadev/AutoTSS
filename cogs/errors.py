@@ -10,6 +10,12 @@ class NoDevicesFound(Exception):
         super().__init__(*args)
 
 
+class NoSHSHFound(Exception):
+    def __init__(self, user: discord.User, *args):
+        self.user = user
+        super().__init__(*args)
+
+
 class TooManyDevices(Exception):
     def __init__(self, max_devices: int, *args):
         super().__init__(
@@ -74,7 +80,12 @@ class ErrorsCog(commands.Cog, name='Errors'):
 
         elif isinstance(exc, NoDevicesFound):
             embed.description = (
-                f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no devices to AutoTSS.",
+                f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no devices added.",
+            )
+
+        elif isinstance(exc, NoSHSHFound):
+            embed.description = (
+                f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no SHSH blobs saved.",
             )
 
         elif isinstance(

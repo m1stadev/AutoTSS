@@ -170,17 +170,6 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_ready(self) -> None:
         print('AutoTSS is now online.')
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:
-        await self.bot.wait_until_ready()
-        if (isinstance(error, commands.errors.NotOwner)) or (
-            isinstance(error, commands.MissingPermissions)
-        ):
-            pass
-
-        else:
-            raise error
-
 
 def setup(bot):
     bot.add_cog(EventsCog(bot))

@@ -35,9 +35,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
     @admin.command(name='help', description='View all administrator commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        cmd_embeds = [
-            await self.utils.cmd_help_embed(ctx, _) for _ in self.admin.subcommands
-        ]
+        cmd_embeds = [self.utils.cmd_help_embed(ctx, _) for _ in self.admin.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
         await ctx.respond(

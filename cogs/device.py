@@ -22,7 +22,7 @@ class DeviceCog(commands.Cog, name='Device'):
     @device.command(name='help', description='View all device commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
         cmd_embeds = [
-            await self.utils.cmd_help_embed(ctx, _) for _ in self.device.subcommands
+            self.utils.cmd_help_embed(ctx, _) for _ in self.device.subcommands
         ]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)

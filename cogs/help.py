@@ -52,13 +52,13 @@ class HelpCog(commands.Cog, name='Help'):
                         ):
                             continue
 
-                        cmd_embeds[cog] = await self.utils.group_help_embed(ctx, cmd)
+                        cmd_embeds[cog] = self.utils.group_help_embed(ctx, cmd)
 
                     elif isinstance(cmd, discord.SlashCommand):
                         if cog in cmd_embeds.keys():
                             continue
 
-                        cmd_embeds[cog] = await self.utils.cog_help_embed(ctx, cog)
+                        cmd_embeds[cog] = self.utils.cog_help_embed(ctx, cog)
 
             cmd_embeds = sorted(cmd_embeds.values(), key=lambda _: _.title)
             paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -93,12 +93,12 @@ class HelpCog(commands.Cog, name='Help'):
                 await ctx.respond(embed=embed, ephemeral=True)
 
             elif isinstance(cmd, discord.SlashCommand):
-                embed = await self.utils.cmd_help_embed(ctx, cmd)
+                embed = self.utils.cmd_help_embed(ctx, cmd)
                 await ctx.respond(embed=embed, ephemeral=True)
 
             elif isinstance(cmd, discord.SlashCommandGroup):
                 cmd_embeds = [
-                    await self.utils.cmd_help_embed(ctx, _) for _ in cmd.subcommands
+                    self.utils.cmd_help_embed(ctx, _) for _ in cmd.subcommands
                 ]
 
                 paginator = PaginatorView(cmd_embeds, ctx, timeout=180)

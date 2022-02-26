@@ -20,9 +20,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='help', description='View all TSS commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        cmd_embeds = [
-            await self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands
-        ]
+        cmd_embeds = [self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
         await ctx.respond(

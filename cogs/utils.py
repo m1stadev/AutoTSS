@@ -236,7 +236,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return True
 
     # Help embed functions
-    async def cmd_help_embed(
+    def cmd_help_embed(
         self, ctx: discord.ApplicationContext, cmd: discord.SlashCommand
     ):
         embed = {
@@ -263,7 +263,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def cog_help_embed(
+    def cog_help_embed(
         self, ctx: discord.ApplicationContext, cog: str
     ) -> list[discord.Embed]:
         embed = {
@@ -297,7 +297,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
         return discord.Embed.from_dict(embed)
 
-    async def group_help_embed(
+    def group_help_embed(
         self, ctx: discord.ApplicationContext, group: discord.SlashCommandGroup
     ) -> list[discord.Embed]:
         embed = {

@@ -5,7 +5,10 @@ import discord
 
 
 class TooManyDevices(Exception):
-    pass
+    def __init__(self, max_devices: int, *args):
+        super().__init__(
+            f'You cannot add over {max_devices} devices to AutoTSS.', *args
+        )
 
 
 class ViewTimeoutException(asyncio.exceptions.TimeoutError):

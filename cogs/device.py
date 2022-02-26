@@ -1,3 +1,4 @@
+from .errors import NoDevicesFound, TooManyDevices, ViewTimeoutException
 from discord.errors import NotFound, Forbidden
 from discord.ext import commands
 from discord import Option
@@ -10,6 +11,8 @@ import asyncio
 import discord
 import ujson
 import shutil
+
+MAX_DEVICES = 10  # TODO: Export this option to a separate config file
 
 
 class DeviceCog(commands.Cog, name='Device'):
@@ -32,18 +35,11 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
-        timeout_embed = discord.Embed(
-            title='Add Device',
-            description='No response given in 5 minutes, cancelling.',
-        )
         cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
-        invalid_embed = discord.Embed(title='Error')
-
-        for x in (timeout_embed, cancelled_embed):
-            x.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
+        cancelled_embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
 
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
@@ -53,17 +49,17 @@ class DeviceCog(commands.Cog, name='Device'):
             except TypeError:
                 devices = list()
 
-        max_devices = 10  # TODO: Export this option to a separate config file
-        if (len(devices) >= max_devices) and (
+        if (len(devices) >= MAX_DEVICES) and (
             await self.bot.is_owner(ctx.author) == False
         ):  # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
-            invalid_embed.description = (
-                f'You cannot add over {max_devices} devices to AutoTSS.'
-            )
-            await ctx.respond(embed=invalid_embed, ephemeral=True)
-            return
+            raise TooManyDevices(MAX_DEVICES)
 
         device = dict()
+        embed = discord.Embed(title='Add Device')
+        embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
         for x in range(
             4
         ):  # Loop that gets all of the required information to save blobs with from the user
@@ -74,14 +70,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 "Enter your device's Board Config. This value ends in `ap`, and can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device Id`), [System Info](https://arx8x.github.io/depictions/systeminfo.html) under the `Platform` section, or by running `gssc | grep HWModelStr` in a terminal on your iOS device.",
             )
 
-            embed = discord.Embed(
-                title='Add Device',
-                description='\n'.join((descriptions[x], 'Type `cancel` to cancel.')),
-            )
-            embed.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
+            embed.description = '\n'.join((descriptions[x], 'Type `cancel` to cancel.'))
 
             if (x == 3) and (
                 'boardconfig' in device.keys()
@@ -110,9 +99,8 @@ class DeviceCog(commands.Cog, name='Device'):
                 else:
                     answer = response.content.lower()
 
-            except asyncio.exceptions.TimeoutError:
-                await ctx.edit(embed=timeout_embed)
-                return
+            except asyncio.exceptions.TimeoutError as e:
+                raise ViewTimeoutException(300) from e
 
             # Delete the message
             try:
@@ -134,18 +122,13 @@ class DeviceCog(commands.Cog, name='Device'):
                 name_check = await self.utils.check_name(device['name'], ctx.author.id)
                 if name_check != True:
                     if name_check == 0:
-                        invalid_embed.description = f"Device name `{device['name']}` is not valid. A device's name cannot be over 20 characters long."
+                        raise commands.BadArgument(
+                            "A device's name cannot be over 20 characters long."
+                        )
                     elif name_check == -1:
-                        invalid_embed.description = f"Device name `{device['name']}` is not valid. You cannot use a device's name more than once."
-
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                        raise commands.BadArgument(
+                            "You cannot use a device's name more than once."
+                        )
 
             elif x == 1:
                 device['identifier'] = answer.replace(' ', '').replace(
@@ -159,17 +142,7 @@ class DeviceCog(commands.Cog, name='Device'):
                     device['identifier'] = 'P'.join(device['identifier'].split('p'))
 
                 if await self.utils.check_identifier(device['identifier']) is False:
-                    invalid_embed.description = (
-                        f"Device Identifier `{answer}` is not valid."
-                    )
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                    raise commands.BadArgument('Invalid device identifier provided.')
 
                 # If there's only one board for the device, grab the boardconfig now
                 api = await self.utils.fetch_ipswme_api(device['identifier'])
@@ -185,20 +158,10 @@ class DeviceCog(commands.Cog, name='Device'):
                 device['ecid'] = answer[2:] if answer.startswith('0x') else answer
                 ecid_check = await self.utils.check_ecid(device['ecid'])
                 if ecid_check != True:
-                    invalid_embed.description = f"Device ECID `{answer}` is not valid."
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
+                    error = 'Invalid device ECID provided.'
                     if ecid_check == -1:
-                        invalid_embed.description += (
-                            ' This ECID has already been added to AutoTSS.'
-                        )
-
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                        error += ' This ECID has already been added to AutoTSS.'
+                    raise commands.BadArgument(error)
 
             elif x == 3:
                 device['boardconfig'] = answer.replace(' ', '').replace('deviceid:', '')
@@ -208,17 +171,7 @@ class DeviceCog(commands.Cog, name='Device'):
                     )
                     is False
                 ):
-                    invalid_embed.description = (
-                        f"Device boardconfig `{answer}` is not valid."
-                    )
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                    raise commands.BadArgument('Invalid device boardconfig provided.')
 
         generator_description = [
             'Would you like to save SHSH blobs with a custom generator?',
@@ -255,9 +208,7 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed, view=view)
         await view.wait()
         if view.answer is None:
-            timeout_embed.description = 'No response given in 1 minute, cancelling.'
-            await ctx.edit(embed=timeout_embed)
-            return
+            raise ViewTimeoutException(view.timeout)
 
         if view.answer == 'Yes':
             embed = discord.Embed(
@@ -278,8 +229,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 )
                 answer = discord.utils.remove_markdown(response.content).lower()
             except asyncio.exceptions.TimeoutError:
-                await ctx.edit(embed=timeout_embed)
-                return
+                raise ViewTimeoutException(300)
 
             try:
                 await response.delete()
@@ -293,17 +243,7 @@ class DeviceCog(commands.Cog, name='Device'):
             else:
                 device['generator'] = answer
                 if self.utils.check_generator(device['generator']) is False:
-                    invalid_embed.description = (
-                        f"Generator `{device['generator']}` is not valid."
-                    )
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                    raise commands.BadArgument('Invalid nonce generator provided.')
 
         elif view.answer == 'No':
             device['generator'] = None
@@ -347,9 +287,7 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed, view=view)
         await view.wait()
         if view.answer is None:
-            timeout_embed.description = 'No response given in 1 minute, cancelling.'
-            await ctx.edit(embed=timeout_embed)
-            return
+            raise ViewTimeoutException(view.timeout)
 
         if view.answer == 'Yes':
             embed = discord.Embed(
@@ -370,8 +308,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 )
                 answer = discord.utils.remove_markdown(response.content.lower())
             except asyncio.exceptions.TimeoutError:
-                await ctx.edit(embed=timeout_embed)
-                return
+                raise ViewTimeoutException(300)
 
             try:
                 await response.delete()
@@ -385,17 +322,7 @@ class DeviceCog(commands.Cog, name='Device'):
             else:
                 device['apnonce'] = answer
                 if self.utils.check_apnonce(cpid, device['apnonce']) is False:
-                    invalid_embed.description = (
-                        f"Device ApNonce `{device['apnonce']}` is not valid."
-                    )
-                    invalid_embed.set_footer(
-                        text=ctx.author.display_name,
-                        icon_url=ctx.author.display_avatar.with_static_format(
-                            'png'
-                        ).url,
-                    )
-                    await ctx.edit(embed=invalid_embed)
-                    return
+                    raise commands.BadArgument('Invalid device ApNonce provided.')
 
         elif view.answer == 'No':
             device['apnonce'] = None

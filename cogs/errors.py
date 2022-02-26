@@ -5,11 +5,9 @@ import discord
 
 
 class NoDevicesFound(Exception):
-    def __init__(self, user: discord.User = None, *args):
-        super().__init__(
-            f"{'You have' if user is None else f'{user.mention} has'} no devices to AutoTSS.",
-            *args,
-        )
+    def __init__(self, user: discord.User, *args):
+        self.user = user
+        super().__init__(*args)
 
 
 class TooManyDevices(Exception):
@@ -74,14 +72,14 @@ class ErrorsCog(commands.Cog, name='Errors'):
         elif isinstance(exc, commands.UserNotFound):
             embed.description = 'I could not find that user.'
 
+        elif isinstance(exc, NoDevicesFound):
+            embed.description = (
+                f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no devices to AutoTSS.",
+            )
+
         elif isinstance(
             exc,
-            (
-                commands.BadArgument,
-                ViewTimeoutException,
-                TooManyDevices,
-                NoDevicesFound,
-            ),
+            (commands.BadArgument, ViewTimeoutException, TooManyDevices),
         ):
             embed.description = str(exc)
 

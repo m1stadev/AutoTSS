@@ -5,7 +5,11 @@ import discord
 
 
 class NoDevicesFound(Exception):
-    pass
+    def __init__(self, user: discord.User = None, *args):
+        super().__init__(
+            f"{'You have' if user is None else f'{user.mention} has'} no devices to AutoTSS.",
+            *args,
+        )
 
 
 class TooManyDevices(Exception):

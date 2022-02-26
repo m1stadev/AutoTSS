@@ -362,17 +362,10 @@ class DeviceCog(commands.Cog, name='Device'):
     @device.command(name='remove', description='Remove a device from AutoTSS.')
     async def remove_device(self, ctx: discord.ApplicationContext) -> None:
         cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
-        invalid_embed = discord.Embed(title='Error', description='Invalid input given.')
-        timeout_embed = discord.Embed(
-            title='Remove Device',
-            description='No response given in 1 minute, cancelling.',
+        cancelled_embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
         )
-
-        for x in (cancelled_embed, invalid_embed, timeout_embed):
-            x.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
 
         await ctx.defer(ephemeral=True)
 
@@ -385,11 +378,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(
-                title='Error', description='You have no devices added to AutoTSS.'
-            )
-            await ctx.respond(embed=embed)
-            return
+            raise NoDevicesFound()
 
         confirm_embed = discord.Embed(title='Remove Device')
         confirm_embed.set_footer(
@@ -429,8 +418,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.respond(embed=embed, view=dropdown)
             await dropdown.wait()
             if dropdown.answer is None:
-                await ctx.edit(embed=timeout_embed)
-                return
+                raise ViewTimeoutException(dropdown.timeout)
 
             if dropdown.answer == 'Cancel':
                 await ctx.edit(embed=cancelled_embed)
@@ -449,8 +437,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
         await view.wait()
         if view.answer is None:
-            await ctx.edit(embed=timeout_embed)
-            return
+            raise ViewTimeoutException(view.timeout)
 
         if view.answer == 'Confirm':
             embed = discord.Embed(

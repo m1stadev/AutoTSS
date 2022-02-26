@@ -74,11 +74,14 @@ class ErrorsCog(commands.Cog, name='Errors'):
         elif isinstance(exc, commands.UserNotFound):
             embed.description = 'I could not find that user.'
 
-        elif isinstance(exc, NoDevicesFound):
-            embed.description = 'You have no devices added to AutoTSS.'
-
         elif isinstance(
-            exc, (commands.BadArgument, ViewTimeoutException, TooManyDevices)
+            exc,
+            (
+                commands.BadArgument,
+                ViewTimeoutException,
+                TooManyDevices,
+                NoDevicesFound,
+            ),
         ):
             embed.description = str(exc)
 

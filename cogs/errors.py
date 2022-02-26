@@ -4,6 +4,10 @@ import asyncio
 import discord
 
 
+class NoDevicesFound(Exception):
+    pass
+
+
 class TooManyDevices(Exception):
     def __init__(self, max_devices: int, *args):
         super().__init__(
@@ -66,7 +70,12 @@ class ErrorsCog(commands.Cog, name='Errors'):
         elif isinstance(exc, commands.UserNotFound):
             embed.description = 'I could not find that user.'
 
-        elif isinstance(exc, (commands.BadArgument, ViewTimeoutException)):
+        elif isinstance(exc, NoDevicesFound):
+            embed.description = 'You have no devices added to AutoTSS.'
+
+        elif isinstance(
+            exc, (commands.BadArgument, ViewTimeoutException, TooManyDevices)
+        ):
             embed.description = str(exc)
 
         else:

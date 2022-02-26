@@ -66,6 +66,8 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description="See AutoTSS's statistics.")
     async def stats(self, ctx: discord.ApplicationContext) -> None:
+        await ctx.defer(ephemeral=True)
+
         async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
             start_time = (await cursor.fetchone())[0]
 
@@ -94,6 +96,11 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
                     'value': f'`{await self.utils.get_tsschecker_version()}`',
                     'inline': False,
                 },
+                {
+                    'name': 'SHSH Blobs Saved',
+                    'value': f"**{','.join(textwrap.wrap(str(await asyncio.to_thread(self.utils.shsh_count))[::-1], 3))[::-1]}**",
+                    'inline': False,
+                },
             ],
             'footer': {
                 'text': ctx.author.display_name,
@@ -104,16 +111,6 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         }
 
         await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
-
-        embed['fields'].append(
-            {
-                'name': 'SHSH Blobs Saved',
-                'value': f"**{','.join(textwrap.wrap(str(await self.utils.shsh_count())[::-1], 3))[::-1]}**",
-                'inline': False,
-            }
-        )
-
-        await ctx.edit(embed=discord.Embed.from_dict(embed))
 
 
 def setup(bot):

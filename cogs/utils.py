@@ -1,4 +1,3 @@
-from aiocache import cached
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
@@ -8,6 +7,7 @@ import aiofiles
 import aiopath
 import asyncio
 import discord
+import glob
 import ujson
 import pathlib
 import remotezip
@@ -193,10 +193,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
             scopes=('bot', 'applications.commands'),
         )
 
-    @cached(ttl=3600)
-    async def shsh_count(self) -> int:
+    def shsh_count(self) -> int:
         return len(
-            [_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')]
+            [blob for blob in glob.glob(pathlib.Path('Data/Blobs/**/*.shsh*'))]
         )
 
     async def update_device_count(self) -> None:

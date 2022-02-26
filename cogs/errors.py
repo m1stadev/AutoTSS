@@ -4,6 +4,10 @@ import asyncio
 import discord
 
 
+class CancelledException(Exception):
+    pass
+
+
 class NoDevicesFound(Exception):
     def __init__(self, user: discord.User, *args):
         self.user = user
@@ -45,11 +49,19 @@ class ErrorsCog(commands.Cog, name='Errors'):
         if isinstance(exc, discord.ApplicationCommandInvokeError):
             exc = exc.__cause__
 
-        embed = discord.Embed(title='FDRBot Error', color=discord.Color.red())
-        embed.set_footer(
-            text=self.bot.user.name,
-            icon_url=self.bot.user.avatar.with_static_format('png').url,
-        )
+        if isinstance(exc, CancelledException, color=discord.Color.gold()):
+            embed = discord.Embed(title='Cancelled')
+            embed.set_footer(
+                text=self.bot.user.name,
+                icon_url=self.bot.user.avatar.with_static_format('png').url,
+            )
+
+        else:
+            embed = discord.Embed(title='FDRBot Error', color=discord.Color.red())
+            embed.set_footer(
+                text=self.bot.user.name,
+                icon_url=self.bot.user.avatar.with_static_format('png').url,
+            )
 
         if isinstance(exc, commands.NoPrivateMessage):
             embed.description = 'This command can only be used in a server.'

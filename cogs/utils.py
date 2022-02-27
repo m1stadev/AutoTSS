@@ -379,14 +379,23 @@ class UtilsCog(commands.Cog, name='Utilities'):
             if resp.status == 200:
                 manifest = await resp.read()
             else:
-                try:
-                    with remotezip.RemoteZip(url) as ipsw:
-                        manifest = ipsw.read(
-                            next(f for f in ipsw.namelist() if 'BuildManifest' in f)
-                        )
-                except (remotezip.RemoteIOError, StopIteration):
-                    return False
+                return False
 
+        manifest_path = pathlib.Path(path) / 'manifest.plist'
+        with manifest_path.open('wb') as f:
+            f.write(manifest)
+
+        return aiopath.AsyncPath(manifest_path)
+    
+    def _sync_get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+        try:
+            with remotezip.RemoteZip(url) as ipsw:
+                manifest = ipsw.read(
+                    next(f for f in ipsw.namelist() if 'BuildManifest' in f)
+                )
+        except (remotezip.RemoteIOError, StopIteration):
+            return False
+        
         manifest_path = pathlib.Path(path) / 'manifest.plist'
         with manifest_path.open('wb') as f:
             f.write(manifest)
@@ -569,7 +578,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await (await asyncio.to_thread(self._get_manifest, firm['url'], tmpdir))
+                manifest = await self._get_manifest(firm['url'], tmpdir) or await asyncio.to_thread(_sync_get_manifest, firm['url'], tmpdir)
                 saved_blob = (
                     await self._save_blob(device, firm, str(manifest), manifest.parent)
                     if manifest != False

@@ -194,7 +194,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
         )
 
     def shsh_count(self) -> int:
-        return len([blob for blob in glob.glob(pathlib.Path('Data/Blobs/**/*.shsh*'))])
+        return len(
+            [blob for blob in glob.glob(str(pathlib.Path('Data/Blobs/**/*.shsh*')))]
+        )
 
     async def update_device_count(self) -> None:
         async with self.bot.db.execute(

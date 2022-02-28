@@ -131,6 +131,13 @@ class EventsCog(commands.Cog, name='Events'):
                 pass
 
     @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        await self.bot.wait_until_ready()
+
+        await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild.id,))
+        await self.bot.db.commit()
+
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 

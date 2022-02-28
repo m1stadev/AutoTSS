@@ -1,4 +1,9 @@
-from .errors import NoDevicesFound, TooManyDevices, ViewTimeoutException
+from .errors import (
+    StopCommand,
+    NoDevicesFound,
+    TooManyDevices,
+    ViewTimeoutException,
+)
 from discord.errors import NotFound, Forbidden
 from discord.ext import commands
 from discord import Option
@@ -35,12 +40,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='add', description='Add a device to AutoTSS.')
     async def add_device(self, ctx: discord.ApplicationContext) -> None:
-        cancelled_embed = discord.Embed(title='Add Device', description='Cancelled.')
-        cancelled_embed.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.display_avatar.with_static_format('png').url,
-        )
-
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
         ) as cursor:
@@ -113,8 +112,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
             answer = discord.utils.remove_markdown(answer)
             if answer.lower().startswith('cancel'):
-                await ctx.edit(embed=cancelled_embed)
-                return
+                raise StopCommand()
 
             # Make sure given information is valid
             if x == 0:
@@ -237,9 +235,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 pass
 
             if answer.startswith('cancel'):
-                await ctx.edit(embed=cancelled_embed)
-                return
-
+                raise StopCommand()
             else:
                 device['generator'] = answer
                 if self.utils.check_generator(device['generator']) is False:
@@ -249,8 +245,7 @@ class DeviceCog(commands.Cog, name='Device'):
             device['generator'] = None
 
         elif view.answer == 'Cancel':
-            await ctx.edit(embed=cancelled_embed)
-            return
+            raise StopCommand()
 
         apnonce_description = [
             'Would you like to save SHSH blobs with a custom ApNonce?',
@@ -316,9 +311,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 pass
 
             if answer.startswith('cancel'):
-                await ctx.edit(embed=cancelled_embed)
-                return
-
+                raise StopCommand()
             else:
                 device['apnonce'] = answer
                 if self.utils.check_apnonce(cpid, device['apnonce']) is False:
@@ -328,8 +321,7 @@ class DeviceCog(commands.Cog, name='Device'):
             device['apnonce'] = None
 
         elif view.answer == 'Cancel':
-            await ctx.edit(embed=cancelled_embed)
-            return
+            raise StopCommand()
 
         device['saved_blobs'] = list()
 
@@ -361,12 +353,6 @@ class DeviceCog(commands.Cog, name='Device'):
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
     async def remove_device(self, ctx: discord.ApplicationContext) -> None:
-        cancelled_embed = discord.Embed(title='Remove Device', description='Cancelled.')
-        cancelled_embed.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.display_avatar.with_static_format('png').url,
-        )
-
         await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute(
@@ -421,8 +407,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 raise ViewTimeoutException(dropdown.timeout)
 
             if dropdown.answer == 'Cancel':
-                await ctx.edit(embed=cancelled_embed)
-                return
+                raise StopCommand()
 
             num = next(
                 devices.index(x) for x in devices if x['name'] == dropdown.answer
@@ -500,7 +485,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await self.utils.update_device_count()
 
         elif view.answer == 'Cancel':
-            await ctx.edit(embed=cancelled_embed)
+            raise StopCommand()
 
     @device.command(name='list', description='List your added devices.')
     async def list_devices(
@@ -587,5 +572,5 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(DeviceCog(bot))

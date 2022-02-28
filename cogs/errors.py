@@ -1,33 +1,40 @@
 from discord.ext import commands
 
-import asyncio
 import discord
 
 
-class CancelledException(Exception):
+class AutoTSSError(Exception):
     pass
 
 
-class NoDevicesFound(Exception):
+class StopCommand(AutoTSSError):
+    pass
+
+
+class NoDevicesFound(AutoTSSError):
     def __init__(self, user: discord.User, *args):
         self.user = user
         super().__init__(*args)
 
 
-class NoSHSHFound(Exception):
+class SavingSHSHError(AutoTSSError):
+    pass
+
+
+class NoSHSHFound(AutoTSSError):
     def __init__(self, user: discord.User, *args):
         self.user = user
         super().__init__(*args)
 
 
-class TooManyDevices(Exception):
+class TooManyDevices(AutoTSSError):
     def __init__(self, max_devices: int, *args):
         super().__init__(
             f'You cannot add over {max_devices} devices to AutoTSS.', *args
         )
 
 
-class ViewTimeoutException(asyncio.exceptions.TimeoutError):
+class ViewTimeoutException(AutoTSSError):
     def __init__(self, timeout: int, *args):
         self.timeout = timeout
         super().__init__(
@@ -49,7 +56,7 @@ class ErrorsCog(commands.Cog, name='Errors'):
         if isinstance(exc, discord.ApplicationCommandInvokeError):
             exc = exc.__cause__
 
-        if isinstance(exc, CancelledException, color=discord.Color.gold()):
+        if isinstance(exc, StopCommand, color=discord.Color.gold()):
             embed = discord.Embed(title='Cancelled')
             embed.set_footer(
                 text=self.bot.user.name,
@@ -99,6 +106,12 @@ class ErrorsCog(commands.Cog, name='Errors'):
             embed.description = (
                 f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no SHSH blobs saved.",
             )
+
+        elif isinstance(exc, commands.NotOwner):
+            embed.description = 'You do not have permission to run this command.'
+
+        elif isinstance(exc, SavingSHSHError):
+            embed.description = "I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs."
 
         elif isinstance(
             exc,

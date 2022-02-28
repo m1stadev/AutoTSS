@@ -14,7 +14,7 @@ import time
 async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:
     modules = sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 
-    return [_ for _ in modules if _.startswith(ctx.value.lower())]
+    return [m for m in modules if m.startswith(ctx.value.lower())]
 
 
 class AdminCog(commands.Cog, name='Administrator'):
@@ -325,8 +325,10 @@ class AdminCog(commands.Cog, name='Administrator'):
     async def transfer_devices(
         self,
         ctx: discord.ApplicationContext,
-        old: Option(discord.User, description='User to transfer devices from'),
-        new: Option(discord.User, description='User to transfer devices to'),
+        old: Option(
+            commands.UserConverter, description='User to transfer devices from'
+        ),
+        new: Option(commands.UserConverter, description='User to transfer devices to'),
     ) -> None:
         cancelled_embed = discord.Embed(
             title='Transfer Devices', description='Cancelled.'
@@ -426,5 +428,5 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.edit(embed=embed)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(AdminCog(bot))

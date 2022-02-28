@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 
 
-class AutoTSSError(Exception):
+class AutoTSSError(commands.CommandError):
     pass
 
 
@@ -56,8 +56,8 @@ class ErrorsCog(commands.Cog, name='Errors'):
         if isinstance(exc, discord.ApplicationCommandInvokeError):
             exc = exc.__cause__
 
-        if isinstance(exc, StopCommand, color=discord.Color.gold()):
-            embed = discord.Embed(title='Cancelled')
+        if isinstance(exc, StopCommand):
+            embed = discord.Embed(title='Cancelled', color=discord.Color.gold())
             embed.set_footer(
                 text=self.bot.user.name,
                 icon_url=self.bot.user.avatar.with_static_format('png').url,

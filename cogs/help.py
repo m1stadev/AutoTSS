@@ -98,7 +98,7 @@ class HelpCog(commands.Cog, name='Help'):
 
             elif isinstance(cmd, discord.SlashCommandGroup):
                 cmd_embeds = [
-                    self.utils.cmd_help_embed(ctx, _) for _ in cmd.subcommands
+                    self.utils.cmd_help_embed(ctx, sc) for sc in cmd.subcommands
                 ]
 
                 paginator = PaginatorView(cmd_embeds, ctx, timeout=180)

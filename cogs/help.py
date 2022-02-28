@@ -16,7 +16,7 @@ async def cmd_autocomplete(ctx: discord.AutocompleteContext):
                 ):
                     continue
 
-                if len([_ for _ in cmd.subcommands if _.name == 'help']) == 0:
+                if len([sc for sc in cmd.subcommands if sc.name == 'help']) == 0:
                     continue
 
                 if ctx.value.lower() in cmd.name + ' help':
@@ -83,7 +83,7 @@ class HelpCog(commands.Cog, name='Help'):
                 )
                 try:
                     cmd = next(
-                        _ for _ in group.subcommands if _.name == command.split()[1]
+                        sc for sc in group.subcommands if sc.name == command.split()[1]
                     )
                 except StopIteration:
                     cmd = None
@@ -109,5 +109,5 @@ class HelpCog(commands.Cog, name='Help'):
                 )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(HelpCog(bot))

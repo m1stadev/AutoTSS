@@ -171,5 +171,5 @@ class EventsCog(commands.Cog, name='Events'):
         print('AutoTSS is now online.')
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(EventsCog(bot))

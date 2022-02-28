@@ -1,8 +1,12 @@
+from collections import namedtuple
 from discord.ext import commands
 from discord import Option
 from views.buttons import PaginatorView
 
 import discord
+
+
+WhitelistData = namedtuple('WhitelistData', ['guild', 'channel', 'enabled'])
 
 
 class WhitelistCog(commands.Cog, name='Whitelist'):
@@ -15,7 +19,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     @whitelist.command(name='help', description='View all whitelist commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
         cmd_embeds = [
-            self.utils.cmd_help_embed(ctx, _) for _ in self.whitelist.subcommands
+            self.utils.cmd_help_embed(ctx, sc) for sc in self.whitelist.subcommands
         ]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -34,18 +38,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         ),
     ) -> None:
         if not ctx.author.guild_permissions.administrator:
-            embed = discord.Embed(
-                title='Error',
-                description='You do not have permission to run this command.',
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        if channel.guild != ctx.guild:
-            embed = discord.Embed(
-                title='Error', description=f'{channel.mention} is not a valid channel.'
-            )
-            await ctx.respond(embed=embed)
-            return
+            raise commands.MissingPermissions(['administrator'])
 
         async with self.bot.db.execute(
             'SELECT * FROM whitelist WHERE guild = ?', (ctx.guild.id,)
@@ -73,11 +66,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
     )
     async def toggle_whitelist(self, ctx: discord.ApplicationContext) -> None:
         if not ctx.author.guild_permissions.administrator:
-            embed = discord.Embed(
-                title='Error',
-                description='You do not have permission to run this command.',
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
+            raise commands.MissingPermissions(['administrator'])
 
         await ctx.defer()
 
@@ -86,33 +75,30 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         ) as cursor:
             data = await cursor.fetchone()
 
-        if type(data) == tuple:
-            channel = ctx.guild.get_channel(data[1])
-            if channel is None:
-                embed = discord.Embed(
-                    title='Error',
-                    description=f'Channel `{data[1]}` no longer exists, please set a new whitelist channel.',
-                )
-            else:
-                await self.bot.db.execute(
-                    'UPDATE whitelist SET enabled = ? WHERE guild = ?',
-                    (not data[2], ctx.guild.id),
-                )
-                await self.bot.db.commit()
+        if data is None:
+            raise commands.BadArgument('No whitelist channel is set.')
 
-                embed = discord.Embed(title='Whitelist')
-                embed.description = f"No{'w' if not data[2] == True else ' longer'} restricting commands for AutoTSS to {channel.mention}."
-                embed.set_footer(
-                    text=ctx.author.display_name,
-                    icon_url=ctx.author.display_avatar.with_static_format('png').url,
-                )
+        whitelist = WhitelistData(*data)
+        channel = ctx.guild.get_channel(whitelist.channel)
+
+        if channel is None:
+            raise commands.ChannelNotFound(whitelist.channel)
         else:
-            embed = discord.Embed(
-                title='Error', description='No whitelist channel is set.'
+            await self.bot.db.execute(
+                'UPDATE whitelist SET enabled = ? WHERE guild = ?',
+                (not whitelist.enabled, ctx.guild.id),
+            )
+            await self.bot.db.commit()
+
+            embed = discord.Embed(title='Whitelist')
+            embed.description = f"No{'w' if whitelist.enabled == False else ' longer'} restricting commands for AutoTSS to {channel.mention}."
+            embed.set_footer(
+                text=ctx.author.display_name,
+                icon_url=ctx.author.display_avatar.with_static_format('png').url,
             )
 
         await ctx.respond(embed=embed)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(WhitelistCog(bot))

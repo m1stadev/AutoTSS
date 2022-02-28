@@ -147,11 +147,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                _
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                b
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-h',
         )
@@ -194,9 +194,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         )
 
     def shsh_count(self) -> int:
-        return len(
-            [blob for blob in glob.glob(pathlib.Path('Data/Blobs/**/*.shsh*'))]
-        )
+        return len([blob for blob in glob.glob(pathlib.Path('Data/Blobs/**/*.shsh*'))])
 
     async def update_device_count(self) -> None:
         async with self.bot.db.execute(
@@ -398,11 +396,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                str(_)
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                str(b)
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-d',
             device['identifier'],
@@ -431,7 +429,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         save_path = aiopath.AsyncPath('/'.join(save_path))
         if len(generators) == 0:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == 1:
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == 1:
                 return True
 
             cmd = await asyncio.create_subprocess_exec(
@@ -443,10 +441,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return False
 
         else:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == len(generators):
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == len(
+                generators
+            ):
                 return True
 
-            elif len([_ async for _ in save_path.glob('*.shsh*')]) > 0:
+            elif len([blob async for blob in save_path.glob('*.shsh*')]) > 0:
                 async for blob in save_path.glob('*.shsh*'):
                     await blob.unlink()
 
@@ -497,7 +497,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 except FileNotFoundError:
                     pass
 
-        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
+        if len([blob async for blob in tmpdir.glob('*/') if await blob.is_dir()]) == 0:
             return
 
         await asyncio.to_thread(
@@ -611,5 +611,5 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return await func(*args)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(UtilsCog(bot))

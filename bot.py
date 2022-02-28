@@ -70,14 +70,11 @@ async def startup():
     (intents := discord.Intents.default()).members = False
 
     bot = commands.AutoShardedBot(
-        help_command=None,
-        intents=intents,
-        allowed_mentions=mentions,
-        owner_id=owner,
+        help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner
     )
 
     if debug_guild is not None:
-        bot.debug_guilds = [debug_guild]
+        bot.debug_guilds = debug_guild
 
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')

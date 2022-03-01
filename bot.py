@@ -67,7 +67,7 @@ async def startup():
         )
 
     mentions = discord.AllowedMentions(everyone=False, roles=False)
-    (intents := discord.Intents.default()).members = False
+    (intents := discord.Intents.default()).members = True
 
     bot = commands.AutoShardedBot(
         help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner

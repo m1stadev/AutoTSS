@@ -58,8 +58,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
 
     @slash_command(description='General info on AutoTSS.')
     async def info(self, ctx: discord.ApplicationContext) -> None:
-        if await self.utils.whitelist_check(ctx) != True:
-            return
+        await self.utils.whitelist_check(ctx)
 
         embed = self.utils.info_embed(ctx.author)
         await ctx.respond(embed=embed)

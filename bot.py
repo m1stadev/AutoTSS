@@ -112,14 +112,6 @@ async def startup():
         )
         await db.commit()
 
-        await db.execute(
-            '''
-            CREATE TABLE IF NOT EXISTS uptime(
-            start_time REAL
-            )'''
-        )
-        await db.commit()
-
         async with db.execute('SELECT start_time FROM uptime') as cursor:
             if await cursor.fetchone() is None:
                 sql = 'INSERT INTO uptime(start_time) VALUES(?)'
@@ -146,6 +138,7 @@ async def startup():
         # Setup bot attributes
         bot.db = db
         bot.session = session
+        bot.start_time = await asyncio.to_thread(time.time)
 
         try:
             await bot.start(os.environ['AUTOTSS_TOKEN'])

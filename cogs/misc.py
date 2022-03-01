@@ -67,15 +67,12 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
     async def stats(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
 
-        async with self.bot.db.execute('SELECT start_time from uptime') as cursor:
-            start_time = (await cursor.fetchone())[0]
-
         embed = {
             'title': 'AutoTSS Statistics',
             'fields': [
                 {
                     'name': 'Bot Started',
-                    'value': await self.utils.get_uptime(start_time),
+                    'value': await self.utils.get_uptime(self.bot.start_time),
                     'inline': True,
                 },
                 {

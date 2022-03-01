@@ -43,6 +43,12 @@ class ViewTimeoutException(AutoTSSError):
         )
 
 
+class NotWhitelisted(AutoTSSError):
+    def __init__(self, channel: discord.TextChannel, *args):
+        self.channel = channel
+        super().__init__(*args)
+
+
 class ErrorsCog(commands.Cog, name='Errors'):
     def __init__(self, bot):
         self.bot = bot
@@ -112,6 +118,9 @@ class ErrorsCog(commands.Cog, name='Errors'):
 
         elif isinstance(exc, SavingSHSHError):
             embed.description = "I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs."
+
+        elif isinstance(exc, NotWhitelisted):
+            embed.description = f'AutoTSS can only be used in {exc.channel.mention}.'
 
         elif isinstance(
             exc,

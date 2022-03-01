@@ -16,7 +16,7 @@ import time
 
 
 async def startup():
-    if sys.version_info.major < 3 and sys.version_info.minor < 9:
+    if sys.version_info[:2] < (3, 9):
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
 
     if sys.platform != 'win32':

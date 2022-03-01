@@ -1,3 +1,4 @@
+from .errors import NotWhitelisted
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
@@ -195,7 +196,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     def shsh_count(self) -> int:
         return len(
-            [blob for blob in glob.glob(str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True)]
+            [
+                blob
+                for blob in glob.glob(
+                    str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
+                )
+            ]
         )
 
     async def update_device_count(self) -> None:
@@ -212,27 +218,18 @@ class UtilsCog(commands.Cog, name='Utilities'):
             )
         )
 
-    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> None:
         if (await ctx.bot.is_owner(ctx.author)) or (
             ctx.author.guild_permissions.manage_messages
         ):
-            return True
+            return
 
         whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(
-                title='Hey!',
-                description=f'AutoTSS can only be used in {whitelist.mention}.',
-            )
-            embed.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
+        if whitelist is None:
+            return
 
-            return False
-
-        return True
+        if whitelist.id != ctx.channel.id:
+            raise NotWhitelisted()
 
     # Help embed functions
     def cmd_help_embed(

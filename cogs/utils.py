@@ -1,4 +1,4 @@
-from aiocache import cached
+from .errors import NotWhitelisted
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
@@ -8,6 +8,7 @@ import aiofiles
 import aiopath
 import asyncio
 import discord
+import glob
 import ujson
 import pathlib
 import remotezip
@@ -147,11 +148,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                _
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                b
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-h',
         )
@@ -193,10 +194,14 @@ class UtilsCog(commands.Cog, name='Utilities'):
             scopes=('bot', 'applications.commands'),
         )
 
-    @cached(ttl=3600)
-    async def shsh_count(self) -> int:
+    def shsh_count(self) -> int:
         return len(
-            [_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')]
+            [
+                blob
+                for blob in glob.glob(
+                    str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
+                )
+            ]
         )
 
     async def update_device_count(self) -> None:
@@ -213,30 +218,21 @@ class UtilsCog(commands.Cog, name='Utilities'):
             )
         )
 
-    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> None:
         if (await ctx.bot.is_owner(ctx.author)) or (
             ctx.author.guild_permissions.manage_messages
         ):
-            return True
+            return
 
         whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(
-                title='Hey!',
-                description=f'AutoTSS can only be used in {whitelist.mention}.',
-            )
-            embed.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
+        if whitelist is None:
+            return
 
-            return False
-
-        return True
+        if whitelist.id != ctx.channel.id:
+            raise NotWhitelisted()
 
     # Help embed functions
-    async def cmd_help_embed(
+    def cmd_help_embed(
         self, ctx: discord.ApplicationContext, cmd: discord.SlashCommand
     ):
         embed = {
@@ -263,7 +259,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def cog_help_embed(
+    def cog_help_embed(
         self, ctx: discord.ApplicationContext, cog: str
     ) -> list[discord.Embed]:
         embed = {
@@ -297,7 +293,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
         return discord.Embed.from_dict(embed)
 
-    async def group_help_embed(
+    def group_help_embed(
         self, ctx: discord.ApplicationContext, group: discord.SlashCommandGroup
     ) -> list[discord.Embed]:
         embed = {
@@ -399,11 +395,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                str(_)
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                str(b)
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-d',
             device['identifier'],
@@ -432,7 +428,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         save_path = aiopath.AsyncPath('/'.join(save_path))
         if len(generators) == 0:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == 1:
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == 1:
                 return True
 
             cmd = await asyncio.create_subprocess_exec(
@@ -444,10 +440,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return False
 
         else:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == len(generators):
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == len(
+                generators
+            ):
                 return True
 
-            elif len([_ async for _ in save_path.glob('*.shsh*')]) > 0:
+            elif len([blob async for blob in save_path.glob('*.shsh*')]) > 0:
                 async for blob in save_path.glob('*.shsh*'):
                     await blob.unlink()
 
@@ -498,7 +496,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 except FileNotFoundError:
                     pass
 
-        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
+        if len([blob async for blob in tmpdir.glob('*/') if await blob.is_dir()]) == 0:
             return
 
         await asyncio.to_thread(
@@ -612,5 +610,5 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return await func(*args)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(UtilsCog(bot))

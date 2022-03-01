@@ -25,11 +25,11 @@ async def startup():
         tsschecker = (
             len(
                 [
-                    _
-                    async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                    b
+                    async for b in aiopath.AsyncPath(__file__).parent.glob(
                         'tsschecker*.exe'
                     )
-                    if await _.is_file()
+                    if await b.is_file()
                 ]
             )
             > 0
@@ -44,12 +44,37 @@ async def startup():
             "[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting."
         )
 
+    if 'AUTOTSS_TEST_GUILD' in os.environ.keys():
+        try:
+            debug_guild = [int(os.environ['AUTOTSS_TEST_GUILD'])]
+        except TypeError:
+            sys.exit(
+                "[ERROR] Invalid test guild ID set in 'AUTOTSS_TEST_GUILD' environment variable. Exiting."
+            )
+    else:
+        debug_guild = None
+
+    if 'AUTOTSS_OWNER' not in os.environ.keys():
+        sys.exit(
+            "[ERROR] Owner ID(s) not set in 'AUTOTSS_OWNER' environment variable. Exiting."
+        )
+
+    try:
+        owner = int(os.environ['AUTOTSS_OWNER'])
+    except TypeError:
+        sys.exit(
+            "[ERROR] Invalid owner ID set in 'AUTOTSS_OWNER' environment variable. Exiting."
+        )
+
     mentions = discord.AllowedMentions(everyone=False, roles=False)
     (intents := discord.Intents.default()).members = False
 
     bot = commands.AutoShardedBot(
-        help_command=None, intents=intents, allowed_mentions=mentions
+        help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner
     )
+
+    if debug_guild is not None:
+        bot.debug_guilds = debug_guild
 
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')

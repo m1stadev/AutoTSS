@@ -497,6 +497,8 @@ class DeviceCog(commands.Cog, name='Device'):
             required=False,
         ),
     ) -> None:
+        await ctx.defer(ephemeral=True)
+
         if user is None:
             user = ctx.author
 

@@ -131,6 +131,13 @@ class EventsCog(commands.Cog, name='Events'):
                 pass
 
     @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        await self.bot.wait_until_ready()
+
+        await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild.id,))
+        await self.bot.db.commit()
+
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
@@ -170,17 +177,6 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_ready(self) -> None:
         print('AutoTSS is now online.')
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:
-        await self.bot.wait_until_ready()
-        if (isinstance(error, commands.errors.NotOwner)) or (
-            isinstance(error, commands.MissingPermissions)
-        ):
-            pass
 
-        else:
-            raise error
-
-
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(EventsCog(bot))

@@ -1,4 +1,3 @@
-aiocache
 aiofiles
 aiopath
 aiosqlite

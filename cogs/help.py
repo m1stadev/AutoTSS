@@ -16,7 +16,7 @@ async def cmd_autocomplete(ctx: discord.AutocompleteContext):
                 ):
                     continue
 
-                if len([_ for _ in cmd.subcommands if _.name == 'help']) == 0:
+                if len([sc for sc in cmd.subcommands if sc.name == 'help']) == 0:
                     continue
 
                 if ctx.value.lower() in cmd.name + ' help':
@@ -52,13 +52,13 @@ class HelpCog(commands.Cog, name='Help'):
                         ):
                             continue
 
-                        cmd_embeds[cog] = await self.utils.group_help_embed(ctx, cmd)
+                        cmd_embeds[cog] = self.utils.group_help_embed(ctx, cmd)
 
                     elif isinstance(cmd, discord.SlashCommand):
                         if cog in cmd_embeds.keys():
                             continue
 
-                        cmd_embeds[cog] = await self.utils.cog_help_embed(ctx, cog)
+                        cmd_embeds[cog] = self.utils.cog_help_embed(ctx, cog)
 
             cmd_embeds = sorted(cmd_embeds.values(), key=lambda _: _.title)
             paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -83,7 +83,7 @@ class HelpCog(commands.Cog, name='Help'):
                 )
                 try:
                     cmd = next(
-                        _ for _ in group.subcommands if _.name == command.split()[1]
+                        sc for sc in group.subcommands if sc.name == command.split()[1]
                     )
                 except StopIteration:
                     cmd = None
@@ -93,12 +93,12 @@ class HelpCog(commands.Cog, name='Help'):
                 await ctx.respond(embed=embed, ephemeral=True)
 
             elif isinstance(cmd, discord.SlashCommand):
-                embed = await self.utils.cmd_help_embed(ctx, cmd)
+                embed = self.utils.cmd_help_embed(ctx, cmd)
                 await ctx.respond(embed=embed, ephemeral=True)
 
             elif isinstance(cmd, discord.SlashCommandGroup):
                 cmd_embeds = [
-                    await self.utils.cmd_help_embed(ctx, _) for _ in cmd.subcommands
+                    self.utils.cmd_help_embed(ctx, sc) for sc in cmd.subcommands
                 ]
 
                 paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -109,5 +109,5 @@ class HelpCog(commands.Cog, name='Help'):
                 )
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(HelpCog(bot))

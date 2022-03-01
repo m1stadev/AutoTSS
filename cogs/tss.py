@@ -1,3 +1,10 @@
+from .errors import (
+    StopCommand,
+    NoDevicesFound,
+    NoSHSHFound,
+    SavingSHSHError,
+    ViewTimeoutException,
+)
 from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView
@@ -20,7 +27,7 @@ class TSSCog(commands.Cog, name='TSS'):
 
     @tss.command(name='help', description='View all TSS commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
-        cmd_embeds = [self.utils.cmd_help_embed(ctx, _) for _ in self.tss.subcommands]
+        cmd_embeds = [self.utils.cmd_help_embed(ctx, sc) for sc in self.tss.subcommands]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
         await ctx.respond(
@@ -32,13 +39,15 @@ class TSSCog(commands.Cog, name='TSS'):
         self,
         ctx: discord.ApplicationContext,
         user: Option(
-            discord.User, description='User to download SHSH blobs for', required=False
+            commands.UserConverter,
+            description='User to download SHSH blobs for',
+            required=False,
         ),
     ) -> None:
         if user is None:
             user = ctx.author
         elif (user != ctx.author) and (await ctx.bot.is_owner(ctx.author) == False):
-            return
+            raise commands.NotOwner()
 
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (user.id,)
@@ -49,21 +58,11 @@ class TSSCog(commands.Cog, name='TSS'):
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(
-                title='Error',
-                description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.",
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise NoDevicesFound(user)
 
         total_blobs = sum([len(device['saved_blobs']) for device in devices])
         if total_blobs == 0:
-            embed = discord.Embed(
-                title='Error',
-                description=f"Currently, {'you do' if user.id == ctx.author.id else f'{user.mention} does'} not have any saved SHSH blobs in AutoTSS. Please save SHSH blobs with AutoTSS before attempting to download them.",
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise NoSHSHFound(user)
 
         upload_embed = discord.Embed(
             title='Download Blobs', description='Uploading SHSH blobs...'
@@ -107,16 +106,10 @@ class TSSCog(commands.Cog, name='TSS'):
 
             await dropdown.wait()
             if dropdown.answer is None:
-                embed.description = 'No response given in 1 minute, cancelling.'
-                await ctx.edit(embed=embed)
-                return
-
-            if dropdown.answer == 'Cancel':
-                embed.description = 'Cancelled.'
-                await ctx.edit(embed=embed)
-                return
-
-            if dropdown.answer == 'All':
+                raise ViewTimeoutException(dropdown.timeout)
+            elif dropdown.answer == 'Cancel':
+                raise StopCommand()
+            elif dropdown.answer == 'All':
                 ecids = [device['ecid'] for device in devices]
             else:
                 device = next(d for d in devices if d['name'] == dropdown.answer)
@@ -144,7 +137,9 @@ class TSSCog(commands.Cog, name='TSS'):
         self,
         ctx: discord.ApplicationContext,
         user: Option(
-            discord.User, description='User to list SHSH blobs for', required=False
+            commands.UserConverter,
+            description='User to list SHSH blobs for',
+            required=False,
         ),
     ) -> None:
         if user is None:
@@ -159,12 +154,7 @@ class TSSCog(commands.Cog, name='TSS'):
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(
-                title='Error',
-                description=f"{'You have' if user == ctx.author else f'{user.mention} has'} no devices added to AutoTSS.",
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise NoDevicesFound(user)
 
         device_embeds = list()
         for device in devices:
@@ -202,12 +192,11 @@ class TSSCog(commands.Cog, name='TSS'):
 
         if len(device_embeds) == 1:
             await ctx.respond(embed=device_embeds[0], ephemeral=True)
-            return
-
-        paginator = PaginatorView(device_embeds, ctx)
-        await ctx.respond(
-            embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True
-        )
+        else:
+            paginator = PaginatorView(device_embeds, ctx)
+            await ctx.respond(
+                embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True
+            )
 
     @tss.command(name='save', description='Manually save SHSH blobs for your devices.')
     async def save_blobs(self, ctx: discord.ApplicationContext) -> None:
@@ -222,19 +211,10 @@ class TSSCog(commands.Cog, name='TSS'):
                 devices = list()
 
         if len(devices) == 0:
-            embed = discord.Embed(
-                title='Error', description='You have no devices added to AutoTSS.'
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise NoDevicesFound(ctx.author)
 
         if self.utils.saving_blobs:
-            embed = discord.Embed(
-                title='Hey!',
-                description="I'm automatically saving SHSH blobs right now, please wait until I'm finished to manually save SHSH blobs.",
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
+            raise SavingSHSHError()
 
         start_time = await asyncio.to_thread(time.time)
         user = await self.utils.save_user_blobs(ctx.author.id, devices)
@@ -258,5 +238,5 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.respond(embed=embed)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(TSSCog(bot))

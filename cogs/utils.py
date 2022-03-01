@@ -195,7 +195,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     def shsh_count(self) -> int:
         return len(
-            [blob for blob in glob.glob(str(pathlib.Path('Data/Blobs/**/*.shsh*')))]
+            [blob for blob in glob.glob(str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True)]
         )
 
     async def update_device_count(self) -> None:

@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord import Option
@@ -20,7 +21,7 @@ async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:
 class AdminCog(commands.Cog, name='Administrator'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.utils = bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     admin = discord.SlashCommandGroup(
         'admin',

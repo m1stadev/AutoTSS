@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.ext import commands
 from discord import Option
 from utils.errors import *
@@ -15,7 +16,7 @@ import time
 class TSSCog(commands.Cog, name='TSS'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     tss = discord.SlashCommandGroup('tss', 'TSS commands')
 

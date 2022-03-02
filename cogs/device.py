@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.ext import commands
 from discord.ui import InputText
 from discord import Option
@@ -19,7 +20,7 @@ MAX_DEVICES = 10  # TODO: Export this option to a separate config file
 class DeviceCog(commands.Cog, name='Device'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     device = discord.SlashCommandGroup('devices', 'Device commands')
 

@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.ext import commands, tasks
 
 import asyncio
@@ -10,7 +11,7 @@ class EventsCog(commands.Cog, name='Events'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
         self.blob_saver.start()
 
     @tasks.loop()

@@ -1,5 +1,5 @@
-from utils.errors import *
 from discord.ext import commands
+from utils.errors import *
 
 import discord
 

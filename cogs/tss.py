@@ -1,6 +1,6 @@
-from utils.errors import *
 from discord.ext import commands
 from discord import Option
+from utils.errors import *
 from views.buttons import SelectView, PaginatorView
 from views.selects import DropdownView
 

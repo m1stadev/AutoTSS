@@ -395,7 +395,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 )
         except (remotezip.RemoteIOError, StopIteration):
             return False
-        
+
         manifest_path = pathlib.Path(path) / 'manifest.plist'
         with manifest_path.open('wb') as f:
             f.write(manifest)

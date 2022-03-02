@@ -1,10 +1,4 @@
-from .errors import (
-    StopCommand,
-    NoDevicesFound,
-    NoSHSHFound,
-    SavingSHSHError,
-    ViewTimeoutException,
-)
+from utils.errors import *
 from discord.ext import commands
 from discord import Option
 from views.buttons import SelectView, PaginatorView
@@ -108,7 +102,7 @@ class TSSCog(commands.Cog, name='TSS'):
             if dropdown.answer is None:
                 raise ViewTimeoutException(dropdown.timeout)
             elif dropdown.answer == 'Cancel':
-                raise StopCommand()
+                raise StopCommand
             elif dropdown.answer == 'All':
                 ecids = [device['ecid'] for device in devices]
             else:
@@ -214,7 +208,7 @@ class TSSCog(commands.Cog, name='TSS'):
             raise NoDevicesFound(ctx.author)
 
         if self.utils.saving_blobs:
-            raise SavingSHSHError()
+            raise SavingSHSHError
 
         start_time = await asyncio.to_thread(time.time)
         user = await self.utils.save_user_blobs(ctx.author.id, devices)

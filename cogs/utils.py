@@ -1,7 +1,8 @@
-from .errors import NotWhitelisted
+from utils.errors import *
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
+from hashlib import sha1, sha384
 from typing import Optional, Union
 
 import aiofiles
@@ -62,6 +63,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return True
 
     async def check_ecid(self, ecid: str) -> Union[int, bool]:
+        if (
+            ecid == 'abcdef0123456789'
+        ):  # This ECID is provided as an example in the modal
+            return 0
+
         if not 7 <= len(ecid) <= 20:  # All ECIDs are between 7-20 characters
             return 0
 
@@ -130,6 +136,15 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return -1
 
         return True
+
+    def check_apnonce_pair(self, generator: str, apnonce: str) -> bool:
+        gen = bytes.fromhex(generator.removeprefix('0x'))
+        if len(apnonce) == 64:
+            gen_hash = sha384(gen).hexdigest()[:-32]
+        elif len(apnonce) == 40:
+            gen_hash = sha1(gen).hexdigest()
+
+        return gen_hash == apnonce
 
     # Miscellaneous data functions
     def censor_ecid(self, ecid: str) -> str:
@@ -229,7 +244,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return
 
         if whitelist.id != ctx.channel.id:
-            raise NotWhitelisted()
+            raise NotWhitelisted
 
     # Help embed functions
     def cmd_help_embed(

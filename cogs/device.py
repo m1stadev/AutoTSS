@@ -54,19 +54,6 @@ class DeviceCog(commands.Cog, name='Device'):
         ):  # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
             raise TooManyDevices(MAX_DEVICES)
 
-        device = dict()
-        name_check = await self.utils.check_name(name, ctx.author.id)
-        if name_check != True:
-            if name_check == 0:
-                raise commands.BadArgument(
-                    "A device's name cannot be over 20 characters long."
-                )
-            elif name_check == -1:
-                raise commands.BadArgument(
-                    "You cannot use the same name for multiple devices."
-                )
-        device['name'] = name
-
         embed = discord.Embed(
             title='Add Device', description='Verifying device information...'
         )
@@ -104,6 +91,19 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.interaction.response.send_modal(modal)
         await modal.wait()
 
+        device = dict()
+
+        name_check = await self.utils.check_name(name, ctx.author.id)
+        if name_check == -1:
+            raise commands.BadArgument(
+                "A device's name cannot be over 20 characters long."
+            )
+        elif name_check == -2:
+            raise commands.BadArgument(
+                "You cannot use the same name for multiple devices."
+            )
+        device['name'] = name
+
         identifier = (
             modal.answers[0].replace(' ', '').lower().replace('devicestring:', '')
         )
@@ -118,9 +118,9 @@ class DeviceCog(commands.Cog, name='Device'):
 
         ecid = modal.answers[1].lower().removeprefix('0x')
         ecid_check = await self.utils.check_ecid(ecid)
-        if ecid_check != True:
+        if ecid_check < 0:
             error = 'Invalid device ECID provided.'
-            if ecid_check == -1:
+            if ecid_check == -2:
                 error += ' This ECID has already been added to AutoTSS.'
 
             raise commands.BadArgument(error)

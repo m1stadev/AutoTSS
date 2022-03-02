@@ -19,17 +19,13 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
 
         if isinstance(exc, StopCommand):
             embed = discord.Embed(title='Cancelled', color=discord.Color.gold())
-            embed.set_footer(
-                text=self.bot.user.name,
-                icon_url=self.bot.user.avatar.with_static_format('png').url,
-            )
-
         else:
             embed = discord.Embed(title='Error', color=discord.Color.red())
-            embed.set_footer(
-                text=self.bot.user.name,
-                icon_url=self.bot.user.avatar.with_static_format('png').url,
-            )
+
+        embed.set_footer(
+            text=self.bot.user.name,
+            icon_url=self.bot.user.avatar.with_static_format('png').url,
+        )
 
         if isinstance(exc, commands.NoPrivateMessage):
             embed.description = 'This command can only be used in a server.'

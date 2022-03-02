@@ -370,13 +370,26 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return discord.Embed.from_dict(embed)
 
     # SHSH Blob functions
-    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+    async def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+        async with self.bot.session.get(f"{'/'.join(url.split('/')[:-1])}/BuildManifest.plist") as resp:
+            if resp.status == 200:
+                manifest = await resp.read()
+            else:
+                return False
+
+        manifest_path = pathlib.Path(path) / 'manifest.plist'
+        with manifest_path.open('wb') as f:
+            f.write(manifest)
+
+        return aiopath.AsyncPath(manifest_path)
+    
+    def _sync_get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
         try:
             with remotezip.RemoteZip(url) as ipsw:
                 manifest = ipsw.read(
                     next(f for f in ipsw.namelist() if 'BuildManifest' in f)
                 )
-        except remotezip.RemoteIOError:
+        except (remotezip.RemoteIOError, StopIteration):
             return False
 
         manifest_path = pathlib.Path(path) / 'manifest.plist'
@@ -563,9 +576,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await asyncio.to_thread(
-                    self._get_manifest, firm['url'], tmpdir
-                )
+                manifest = await self._get_manifest(firm['url'], tmpdir) or await asyncio.to_thread(_sync_get_manifest, firm['url'], tmpdir)
                 saved_blob = (
                     await self._save_blob(device, firm, str(manifest), manifest.parent)
                     if manifest != False

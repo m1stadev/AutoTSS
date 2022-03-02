@@ -364,7 +364,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 devices = list()
 
         if len(devices) == 0:
-            raise NoDevicesFound()
+            raise NoDevicesFound(ctx.author)
 
         confirm_embed = discord.Embed(title='Remove Device')
         confirm_embed.set_footer(
@@ -407,7 +407,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 raise ViewTimeoutException(dropdown.timeout)
 
             if dropdown.answer == 'Cancel':
-                raise StopCommand()
+                raise StopCommand
 
             num = next(
                 devices.index(x) for x in devices if x['name'] == dropdown.answer
@@ -485,7 +485,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await self.utils.update_device_count()
 
         elif view.answer == 'Cancel':
-            raise StopCommand()
+            raise StopCommand
 
     @device.command(name='list', description='List your added devices.')
     async def list_devices(

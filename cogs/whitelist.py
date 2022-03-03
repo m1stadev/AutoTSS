@@ -63,7 +63,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         await ctx.respond(embed=embed)
 
         self.bot.logger.info(
-            f'User: {ctx.author.mention} has set the whitelist channel to channel: `#{channel.name}` in guild: `{ctx.guild.name}`.'
+            f'User: `@{ctx.author}` has set the whitelist channel to channel: `#{channel.name}` in guild: `{ctx.guild.name}`.'
         )
 
     @whitelist.command(
@@ -105,7 +105,7 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         await ctx.respond(embed=embed)
 
         self.bot.logger.info(
-            f"User: {ctx.author.mention} has {'enabled' if whitelist.enabled == False else 'disabled'} the whitelist for channel: `#{channel.name}` in guild: `{ctx.guild.name}`."
+            f"User: `@{ctx.author}` has {'enabled' if whitelist.enabled == False else 'disabled'} the whitelist for channel: `#{channel.name}` in guild: `{ctx.guild.name}`."
         )
 
 

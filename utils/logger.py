@@ -1,13 +1,9 @@
 from datetime import datetime
-from discord.ext import commands
-from dotenv.main import load_dotenv
 
 import asyncio
 import discord
 import logging
 import sys
-
-load_dotenv()
 
 
 class WebhookLogger(logging.Handler):
@@ -24,6 +20,7 @@ class WebhookLogger(logging.Handler):
         embed = discord.Embed(
             title=record.levelname.capitalize(),
             description=record.message,
+            timestamp=datetime.fromtimestamp(record.created),
         )
 
         if record.name == 'discord':
@@ -32,11 +29,6 @@ class WebhookLogger(logging.Handler):
             module = record.module
 
         embed.add_field(name='Module', value=f'`{module}`')
-        embed.add_field(
-            name='Time',
-            value=discord.utils.format_dt(datetime.fromtimestamp(record.created)),
-        )
-
         embed.set_author(name=record.funcName)
 
         message = {'embed': embed}

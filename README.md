@@ -21,7 +21,7 @@ Automatically save [SHSH blobs](https://www.theiphonewiki.com/wiki/SHSH) for all
 | Automatically grabs generator-apnonce combo | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | Detects "signing parties" | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-<sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://www.reddit.com/r/jailbreak/comments/m3744k/tutorial_shsh_generatorbootnonce_apnonce_nonce/).</sup><br>
+<sup>* Requires users to already have a generator-apnonce combination for their device, more information on that can be found [here](https://gist.github.com/5464ea557c2b999cb9324639c777cd09#whats-nonce-entanglement).</sup><br>
 <sup>** Requires users to leave blobsaver always running.</sup><br>
 <sup>*** Requires users to manually specify a BuildManifest from a beta IPSW.</sup>
 

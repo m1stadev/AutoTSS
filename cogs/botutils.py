@@ -238,7 +238,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return
 
         if whitelist.id != ctx.channel.id:
-            raise NotWhitelisted
+            raise NotWhitelisted(whitelist)
 
     # Help embed functions
     def cmd_help_embed(

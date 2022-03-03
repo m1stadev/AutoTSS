@@ -14,8 +14,6 @@ import discord
 import ujson
 import shutil
 
-MAX_DEVICES = 10  # TODO: Export this option to a separate config file
-
 
 class DeviceCog(commands.Cog, name='Device'):
     def __init__(self, bot: commands.Bot):
@@ -49,10 +47,10 @@ class DeviceCog(commands.Cog, name='Device'):
             except TypeError:
                 devices = list()
 
-        if (len(devices) >= MAX_DEVICES) and (
+        if (len(devices) >= self.bot.max_devices) and (
             await self.bot.is_owner(ctx.author) == False
-        ):  # Error out if you attempt to add over 'max_devices' devices, and if you're not the owner of the bot
-            raise TooManyDevices(MAX_DEVICES)
+        ):  # Error out if you attempt to add more devices than allowed and if you're not the owner of the bot
+            raise TooManyDevices(self.bot.max_devices)
 
         embed = discord.Embed(
             title='Add Device', description='Verifying device information...'

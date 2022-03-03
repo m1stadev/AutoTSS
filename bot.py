@@ -38,6 +38,23 @@ async def startup():
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
     load_dotenv()
+    if 'AUTOTSS_MAX_DEVICES' not in os.environ.keys():
+        sys.exit(
+            "[ERROR] Maximum device count not set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
+        )
+    else:
+        try:
+            max_devices = int(os.environ['AUTOTSS_MAX_DEVICES'])
+        except TypeError:
+            sys.exit(
+                "[ERROR] Invalid maximum device count set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
+            )
+
+        if max_devices <= 0:
+            sys.exit(
+                "[ERROR] Invalid maximum device count set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
+            )
+
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
         sys.exit(
             "[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting."
@@ -136,6 +153,7 @@ async def startup():
 
         # Setup bot attributes
         bot.db = db
+        bot.max_devices = max_devices
         bot.session = session
         bot.start_time = await asyncio.to_thread(time.time)
 

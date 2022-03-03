@@ -38,6 +38,7 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
         pip3 install -Ur requirements.txt
 
 3.  Create a `.env` file and set the following environment variables:
+  - `AUTOTSS_MAX_DEVICES` - Number of devices to allow users to add
   - `AUTOTSS_TOKEN` - AutoTSS token
   - `AUTOTSS_OWNER` - ID of the user that owns the bot
   - `AUTOTSS_TEST_GUILD` - (Optional) ID of guild to create commands in for testing

@@ -1,7 +1,7 @@
 from .botutils import UtilsCog
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
-from discord import Option
+from discord.commands import permissions, Option
 from views.buttons import PaginatorView, SelectView
 
 import aiofiles
@@ -23,17 +23,14 @@ class AdminCog(commands.Cog, name='Administrator'):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
-    admin = discord.SlashCommandGroup(
-        'admin',
-        'Administrator commands',
-        permissions=[discord.CommandPermission('owner', 2, True)],
-    )
+    admin = discord.SlashCommandGroup('admin', 'Administrator commands')
 
     async def get_modules(self):
         return sorted(
             [cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')]
         )
 
+    @permissions.is_owner()
     @admin.command(name='help', description='View all administrator commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
         cmd_embeds = [
@@ -45,6 +42,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True
         )
 
+    @permissions.is_owner()
     @admin.command(name='modlist', description='List all modules.')
     async def list_modules(self, ctx: discord.ApplicationContext) -> None:
         embed = discord.Embed(
@@ -58,6 +56,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed, ephemeral=True)
 
+    @permissions.is_owner()
     @admin.command(name='modload', description='Load a module.')
     async def load_module(
         self,
@@ -106,6 +105,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed)
 
+    @permissions.is_owner()
     @admin.command(name='modunload', description='Unload a module.')
     async def unload_module(
         self,
@@ -150,6 +150,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed)
 
+    @permissions.is_owner()
     @admin.command(name='modreload', description='Reload a module.')
     async def reload_module(
         self,
@@ -205,6 +206,7 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed)
 
+    @permissions.is_owner()
     @admin.command(
         name='downloadall',
         description='Download SHSH blobs for all devices in AutoTSS.',
@@ -249,6 +251,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             )
             await ctx.respond(embed=embed, view=view)
 
+    @permissions.is_owner()
     @admin.command(
         name='saveall',
         description='Manually save SHSH blobs for all devices in AutoTSS.',
@@ -322,6 +325,7 @@ class AdminCog(commands.Cog, name='Administrator'):
         await self.utils.update_device_count()
         await ctx.edit(embed=embed)
 
+    @permissions.is_owner()
     @admin.command(
         name='dtransfer', description="Transfer a user's devices to another user."
     )
@@ -427,6 +431,10 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         embed.description = f"Successfully transferred {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}."
         await ctx.edit(embed=embed)
+
+        self.bot.logger.info(
+            f"{old.mention}'s devices have been transferred to {new.mention}."
+        )
 
 
 def setup(bot: discord.Bot):

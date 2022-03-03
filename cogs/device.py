@@ -66,7 +66,7 @@ class DeviceCog(commands.Cog, name='Device'):
             embed,
             InputText(label="Device Identifier", placeholder='ex. iPhone10,6'),
             InputText(
-                label="Device ECID (hex).",
+                label="Device ECID (hex)",
                 placeholder='ex. abcdef0123456789',
             ),
             InputText(label="Device Board Config", placeholder='ex. d221ap'),

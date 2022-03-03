@@ -216,8 +216,9 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed)
 
         self.bot.logger.info(
-            f"User: `{ctx.author}` has added device: `{device['name']}`"
+            f"User: {ctx.author.mention} has added device: `{device['name']}`"
         )
+
         await self.utils.update_device_count()
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
@@ -336,7 +337,7 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.edit(embed=embed)
 
         self.bot.logger.info(
-            f"User: `{ctx.author}` has removed device: `{devices[num]['name']}`"
+            f"User: {ctx.author.mention} has removed device: `{devices[num]['name']}`"
         )
 
         devices.pop(num)

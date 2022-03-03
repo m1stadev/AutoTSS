@@ -62,6 +62,10 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         )
         await ctx.respond(embed=embed)
 
+        self.bot.logger.info(
+            f'User: {ctx.author.mention} has set the whitelist channel to channel: `#{channel.name}` in guild: `{ctx.guild.name}`.'
+        )
+
     @whitelist.command(
         name='toggle', description='Toggle the whitelist for AutoTSS commands on/off.'
     )
@@ -99,6 +103,10 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
             )
 
         await ctx.respond(embed=embed)
+
+        self.bot.logger.info(
+            f"User: {ctx.author.mention} has {'enabled' if whitelist.enabled == False else 'disabled'} the whitelist for channel: `#{channel.name}` in guild: `{ctx.guild.name}`."
+        )
 
 
 def setup(bot: discord.Bot):

@@ -64,24 +64,20 @@ class DeviceCog(commands.Cog, name='Device'):
             ctx,
             'Add Device',
             embed,
+            InputText(label="Device Identifier", placeholder='ex. iPhone10,6'),
             InputText(
-                label="Enter your device's identifier.", placeholder='ex. iPhone10,6'
-            ),
-            InputText(
-                label="Enter your device's ECID (hex).",
+                label="Device ECID (hex).",
                 placeholder='ex. abcdef0123456789',
             ),
+            InputText(label="Device Board Config", placeholder='ex. d221ap'),
             InputText(
-                label="Enter your device's Board Config.", placeholder='ex. d221ap'
-            ),
-            InputText(
-                label="Enter a generator to save SHSH blobs with.",
-                placeholder='(Optional) ex. 0x1111111111111111',
+                label="Nonce Generator (Optional)",
+                placeholder='ex. 0x1111111111111111',
                 required=False,
             ),
             InputText(
-                label="Enter an ApNonce to save SHSH blobs with.",
-                placeholder='(Optional) ex. abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+                label="ApNonce (Optional, required on A12+)",
+                placeholder='ex. abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
                 required=False,
             ),
         )

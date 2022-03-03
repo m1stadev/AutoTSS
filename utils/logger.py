@@ -12,7 +12,7 @@ load_dotenv()
 
 
 class WebhookLogger(logging.Handler):
-    def __init__(self, bot: commands.Bot, url: str):
+    def __init__(self, bot: discord.Bot, url: str):
         super().__init__()
 
         self.bot = bot
@@ -55,7 +55,7 @@ class WebhookLogger(logging.Handler):
 
 
 class Logger:
-    def __init__(self, bot: commands.Bot = None, url: str = None):
+    def __init__(self, bot: discord.Bot = None, url: str = None):
         stdout_log = logging.StreamHandler(sys.stdout)
         stdout_log.setFormatter(
             logging.Formatter(

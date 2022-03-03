@@ -96,5 +96,5 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
             await ctx.respond(embed=embed, ephemeral=True)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(ErrorHandlerCog(bot))

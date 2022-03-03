@@ -16,7 +16,7 @@ import shutil
 
 
 class DeviceCog(commands.Cog, name='Device'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -215,6 +215,7 @@ class DeviceCog(commands.Cog, name='Device'):
         )
         await ctx.edit(embed=embed)
 
+        self.bot.logger.info()
         await self.utils.update_device_count()
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
@@ -440,5 +441,5 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(DeviceCog(bot))

@@ -32,7 +32,7 @@ async def cmd_autocomplete(ctx: discord.AutocompleteContext):
 
 
 class HelpCog(commands.Cog, name='Help'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
@@ -110,5 +110,5 @@ class HelpCog(commands.Cog, name='Help'):
                 )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(HelpCog(bot))

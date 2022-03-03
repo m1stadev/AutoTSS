@@ -14,7 +14,7 @@ import time
 
 
 class TSSCog(commands.Cog, name='TSS'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -233,5 +233,5 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.respond(embed=embed)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(TSSCog(bot))

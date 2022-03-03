@@ -11,7 +11,7 @@ WhitelistData = namedtuple('WhitelistData', ['guild', 'channel', 'enabled'])
 
 
 class WhitelistCog(commands.Cog, name='Whitelist'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -101,5 +101,5 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         await ctx.respond(embed=embed)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(WhitelistCog(bot))

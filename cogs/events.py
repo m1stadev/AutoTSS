@@ -8,7 +8,7 @@ import time
 
 
 class EventsCog(commands.Cog, name='Events'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
@@ -200,5 +200,5 @@ class EventsCog(commands.Cog, name='Events'):
         self.bot.logger.info('AutoTSS is now online.')
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(EventsCog(bot))

@@ -22,7 +22,7 @@ BETA_API_URL = 'https://api.m1sta.xyz/betas'
 
 
 class UtilsCog(commands.Cog, name='Utilities'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.saving_blobs = False
 
@@ -640,5 +640,5 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return await func(*args)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(UtilsCog(bot))

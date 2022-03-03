@@ -19,7 +19,7 @@ async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:
 
 
 class AdminCog(commands.Cog, name='Administrator'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -429,5 +429,5 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.edit(embed=embed)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(AdminCog(bot))

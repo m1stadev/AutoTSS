@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from discord.ext import commands
 from discord.ui import InputText
 from discord import Option
@@ -16,7 +16,7 @@ import shutil
 
 
 class DeviceCog(commands.Cog, name='Device'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -215,6 +215,10 @@ class DeviceCog(commands.Cog, name='Device'):
         )
         await ctx.edit(embed=embed)
 
+        self.bot.logger.info(
+            f"User: `@{ctx.author}` has added device: `{device['name']}`"
+        )
+
         await self.utils.update_device_count()
 
     @device.command(name='remove', description='Remove a device from AutoTSS.')
@@ -289,10 +293,42 @@ class DeviceCog(commands.Cog, name='Device'):
         await view.wait()
         if view.answer is None:
             raise ViewTimeoutException(view.timeout)
+        elif view.answer == 'Cancel':
+            raise StopCommand
 
-        if view.answer == 'Confirm':
+        embed = discord.Embed(title='Remove Device', description='Removing device...')
+        embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
+        await ctx.edit(embed=embed)
+
+        async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
+            url = await self.utils.backup_blobs(
+                aiopath.AsyncPath(tmpdir), devices[num]['ecid']
+            )
+
+        if url is not None:
+            await asyncio.to_thread(
+                shutil.rmtree,
+                aiopath.AsyncPath(f"Data/Blobs/{devices[num]['ecid']}"),
+            )
+
+            buttons = [
+                {'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}
+            ]
+
+            view = SelectView(buttons, ctx, timeout=None)
             embed = discord.Embed(
-                title='Remove Device', description='Removing device...'
+                title='Remove Device',
+                description=f"Device `{devices[num]['name']}` removed.\nSHSH Blobs:",
+            )
+            await ctx.edit(embed=embed, view=view)
+
+        else:
+            embed = discord.Embed(
+                title='Remove Device',
+                description=f"Device `{devices[num]['name']}` removed.",
             )
             embed.set_footer(
                 text=ctx.author.display_name,
@@ -300,58 +336,25 @@ class DeviceCog(commands.Cog, name='Device'):
             )
             await ctx.edit(embed=embed)
 
-            async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                url = await self.utils.backup_blobs(
-                    aiopath.AsyncPath(tmpdir), devices[num]['ecid']
-                )
+        self.bot.logger.info(
+            f"User: `@{ctx.author}` has removed device: `{devices[num]['name']}`"
+        )
 
-            if url is not None:
-                await asyncio.to_thread(
-                    shutil.rmtree,
-                    aiopath.AsyncPath(f"Data/Blobs/{devices[num]['ecid']}"),
-                )
+        devices.pop(num)
 
-                buttons = [
-                    {'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}
-                ]
+        if len(devices) == 0:
+            await self.bot.db.execute(
+                'DELETE FROM autotss WHERE user = ?', (ctx.author.id,)
+            )
+        else:
+            await self.bot.db.execute(
+                'UPDATE autotss SET devices = ? WHERE user = ?',
+                (ujson.dumps(devices), ctx.author.id),
+            )
 
-                view = SelectView(buttons, ctx, timeout=None)
-                embed = discord.Embed(
-                    title='Remove Device',
-                    description=f"Device `{devices[num]['name']}` removed.\nSHSH Blobs:",
-                )
-                await ctx.edit(embed=embed, view=view)
+        await self.bot.db.commit()
 
-            else:
-                embed = discord.Embed(
-                    title='Remove Device',
-                    description=f"Device `{devices[num]['name']}` removed.",
-                )
-                embed.set_footer(
-                    text=ctx.author.display_name,
-                    icon_url=ctx.author.display_avatar.with_static_format('png').url,
-                )
-                await ctx.edit(embed=embed)
-
-            devices.pop(num)
-
-            if len(devices) == 0:
-                await self.bot.db.execute(
-                    'DELETE FROM autotss WHERE user = ?', (ctx.author.id,)
-                )
-            else:
-                await self.bot.db.execute(
-                    'UPDATE autotss SET devices = ? WHERE user = ?',
-                    (ujson.dumps(devices), ctx.author.id),
-                )
-
-            await self.bot.db.commit()
-
-            await ctx.edit(embed=embed)
-            await self.utils.update_device_count()
-
-        elif view.answer == 'Cancel':
-            raise StopCommand
+        await self.utils.update_device_count()
 
     @device.command(name='list', description='List your added devices.')
     async def list_devices(
@@ -440,5 +443,5 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(DeviceCog(bot))

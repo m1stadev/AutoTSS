@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from collections import namedtuple
 from discord.ext import commands
 from discord import Option
@@ -11,7 +11,7 @@ WhitelistData = namedtuple('WhitelistData', ['guild', 'channel', 'enabled'])
 
 
 class WhitelistCog(commands.Cog, name='Whitelist'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -62,6 +62,10 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
         )
         await ctx.respond(embed=embed)
 
+        self.bot.logger.info(
+            f'User: `@{ctx.author}` has set the whitelist channel to channel: `#{channel.name}` in guild: `{ctx.guild.name}`.'
+        )
+
     @whitelist.command(
         name='toggle', description='Toggle the whitelist for AutoTSS commands on/off.'
     )
@@ -100,6 +104,10 @@ class WhitelistCog(commands.Cog, name='Whitelist'):
 
         await ctx.respond(embed=embed)
 
+        self.bot.logger.info(
+            f"User: `@{ctx.author}` has {'enabled' if whitelist.enabled == False else 'disabled'} the whitelist for channel: `#{channel.name}` in guild: `{ctx.guild.name}`."
+        )
 
-def setup(bot: commands.Bot):
+
+def setup(bot: discord.Bot):
     bot.add_cog(WhitelistCog(bot))

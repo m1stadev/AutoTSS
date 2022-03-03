@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from discord.ext import commands
 from discord import Option
 from utils.errors import *
@@ -14,7 +14,7 @@ import time
 
 
 class TSSCog(commands.Cog, name='TSS'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
@@ -126,6 +126,7 @@ class TSSCog(commands.Cog, name='TSS'):
             title='Download Blobs', description='Download your SHSH Blobs:'
         )
         await ctx.edit(embed=embed, view=view)
+        self.bot.logger.info(f"User: `@{ctx.author}` has downloaded SHSH blobs.")
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
     async def list_blobs(
@@ -227,11 +228,14 @@ class TSSCog(commands.Cog, name='TSS'):
                     f"in **{finish_time} second{'s' if finish_time != 1 else ''}**.",
                 )
             )
+            self.bot.logger.info(
+                f"User: `@{ctx.author}` has saved {user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''} SHSH blobs."
+            )
         else:
             embed.description = 'All SHSH blobs have already been saved for your devices.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'
 
         await ctx.respond(embed=embed)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(TSSCog(bot))

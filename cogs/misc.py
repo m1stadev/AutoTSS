@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from datetime import datetime
 from discord.commands import slash_command
 from discord.ext import commands
@@ -11,7 +11,7 @@ import textwrap
 
 
 class MiscCog(commands.Cog, name='Miscellaneous'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
         self.utils: UtilsCog = self.bot.get_cog('Utilities')
@@ -110,5 +110,5 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         await ctx.respond(embed=discord.Embed.from_dict(embed), ephemeral=True)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(MiscCog(bot))

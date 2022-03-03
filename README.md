@@ -42,6 +42,13 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
   - `AUTOTSS_TOKEN` - AutoTSS token
   - `AUTOTSS_OWNER` - ID of the user that owns the bot
   - `AUTOTSS_TEST_GUILD` - (Optional) ID of guild to create commands in for testing
+  - `AUTOTSS_WEBHOOK` - (Optional) URL to a Discord webhook for logging
+  - Example `.env` file:
+
+        AUTOTSS_MAX_DEVICES=10
+        AUTOTSS_TOKEN=<TOKEN>
+        AUTOTSS_OWNER=<OWNER ID>
+
 
 4. Start AutoTSS
 

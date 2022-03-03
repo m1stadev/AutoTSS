@@ -1,12 +1,25 @@
 from discord.ext import commands
 from utils.errors import *
+from utils.logger import WebhookLogger
+from typing import Optional
 
 import discord
 
 
 class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.webhook: Optional[WebhookLogger] = next(
+            iter(
+                h.webhook
+                for h in self.bot.logger.handlers
+                if isinstance(h, WebhookLogger)
+            ),
+            None,
+        )
 
     @commands.Cog.listener()
     async def on_application_command_error(
@@ -54,7 +67,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
         elif isinstance(exc, commands.UserNotFound):
             embed.description = 'I could not find that user.'
 
-        elif isinstance(exc, NoDevicesFound):
+            # elif isinstance(exc, NoDevicesFound):
             embed.description = f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no devices added."
 
         elif isinstance(exc, NoSHSHFound):
@@ -87,8 +100,14 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
             )
             embed.add_field(
                 name='Error Info',
-                value=f'Command: `/{ctx.command.qualified_name}`\nError message: `{str(exc)}`',
+                value=f'Command: `/{ctx.command.qualified_name}`\nError message: `{str(exc) or None}`',
             )
+
+            if self.webhook is not None:
+                try:
+                    await self.webhook.send(embed=embed)
+                except:
+                    pass
 
         if ctx.interaction.response.is_done():
             await ctx.edit(embed=embed)
@@ -96,5 +115,5 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
             await ctx.respond(embed=embed, ephemeral=True)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: discord.Bot):
     bot.add_cog(ErrorHandlerCog(bot))

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 from dotenv.main import load_dotenv
+from utils.logger import Logger
 
 import aiohttp
 import aiopath
@@ -92,10 +94,10 @@ async def startup():
     if debug_guild is not None:
         bot.debug_guilds = [debug_guild]
 
-    bot.load_extension('cogs.utils')  # Load utils cog first
+    bot.load_extension('cogs.botutils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')
     async for cog in cogs.glob('*.py'):
-        if cog.stem == 'utils':
+        if cog.stem == 'botutils':
             continue
 
         bot.load_extension(f'cogs.{cog.stem}')
@@ -155,7 +157,12 @@ async def startup():
         bot.db = db
         bot.max_devices = max_devices
         bot.session = session
-        bot.start_time = await asyncio.to_thread(time.time)
+        bot.start_time = await asyncio.to_thread(datetime.now)
+
+        if 'AUTOTSS_WEBHOOK' in os.environ.keys():
+            bot.logger = Logger(bot, os.environ['AUTOTSS_WEBHOOK']).logger
+        else:
+            bot.logger = Logger().logger
 
         try:
             await bot.start(os.environ['AUTOTSS_TOKEN'])

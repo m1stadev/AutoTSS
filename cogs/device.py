@@ -163,7 +163,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 {'label': 'No', 'style': discord.ButtonStyle.secondary},
                 {'label': 'Cancel', 'style': discord.ButtonStyle.danger},
             ]
-            embed.description = f"Generator: `{device['generator']}`\nApNonce: `{device['apnonce']}`\n\nAre you **absolutely sure** this is a valid generator-ApNonce pair for your device?"
+            embed.description = f"Nonce generator: `{device['generator']}`\nApNonce: `{device['apnonce']}`\n\nAre you **absolutely sure** this is a valid generator-ApNonce pair for your device?"
 
             view = SelectView(buttons, ctx)
             await ctx.edit(embed=embed, view=view)
@@ -425,7 +425,7 @@ class DeviceCog(commands.Cog, name='Device'):
             if device['generator'] is not None:
                 device_embed['fields'].append(
                     {
-                        'name': 'Custom Generator',
+                        'name': 'Nonce Generator',
                         'value': f"`{device['generator']}`",
                         'inline': False,
                     }
@@ -434,7 +434,7 @@ class DeviceCog(commands.Cog, name='Device'):
             if device['apnonce'] is not None:
                 device_embed['fields'].append(
                     {
-                        'name': 'Custom ApNonce',
+                        'name': 'ApNonce',
                         'value': f"`{device['apnonce']}`",
                         'inline': False,
                     }

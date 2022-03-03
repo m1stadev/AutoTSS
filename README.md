@@ -1,4 +1,10 @@
-# AutoTSS
+<p align="center">
+<img src="assets/autotss.png" alt="https://github.com/m1stadev/AutoTSS" width=256px> 
+</p>
+
+<h1 align="center">
+AutoTSS
+</h1>
 
 [![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/blob/master/LICENSE)
 [![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/stargazers)

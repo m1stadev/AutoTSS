@@ -1,8 +1,10 @@
+from datetime import datetime
 from discord.ext import commands
 from utils.errors import *
 from utils.logger import WebhookLogger
 from typing import Optional
 
+import asyncio
 import discord
 
 
@@ -35,6 +37,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
         else:
             embed = discord.Embed(title='Error', color=discord.Color.red())
 
+        embed.timestamp = await asyncio.to_thread(datetime.now)
         embed.set_footer(
             text=self.bot.user.name,
             icon_url=self.bot.user.avatar.with_static_format('png').url,

@@ -3,7 +3,6 @@ from datetime import datetime
 import asyncio
 import discord
 import logging
-import sys
 
 
 class WebhookLogger(logging.Handler):
@@ -47,24 +46,13 @@ class WebhookLogger(logging.Handler):
 
 class Logger:
     def __init__(self, bot: discord.Bot = None, url: str = None):
-        stdout_log = logging.StreamHandler(sys.stdout)
-        stdout_log.setFormatter(
-            logging.Formatter(
-                fmt='[{asctime}] [{levelname}] {message}',
-                datefmt='%m/%d/%y %H:%m:%S',
-                style='{',
-            )
-        )
 
         discord_log = logging.getLogger('discord')
         discord_log.setLevel(logging.WARN)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        for logger in (self.logger, discord_log):
-            logger.addHandler(stdout_log)
-
         if bot and url:
             webhook_log = WebhookLogger(bot, url)
-            logger.addHandler(webhook_log)
-            self.logger.addHandler(webhook_log)
+            for logger in (self.logger, discord_log):
+                logger.addHandler(webhook_log)

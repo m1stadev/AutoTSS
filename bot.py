@@ -93,7 +93,7 @@ async def startup():
     if debug_guild is not None:
         bot.debug_guilds = [debug_guild]
 
-    bot.load_extension('cogs.utils')  # Load utils cog first
+    bot.load_extension('cogs.botutils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')
     async for cog in cogs.glob('*.py'):
         if cog.stem == 'botutils':

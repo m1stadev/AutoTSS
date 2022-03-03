@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 from dotenv.main import load_dotenv
 from utils.logger import Logger
 
@@ -156,7 +157,7 @@ async def startup():
         bot.db = db
         bot.max_devices = max_devices
         bot.session = session
-        bot.start_time = await asyncio.to_thread(time.time)
+        bot.start_time = await asyncio.to_thread(datetime.now)
 
         if 'AUTOTSS_WEBHOOK' in os.environ.keys():
             bot.logger = Logger(bot, os.environ['AUTOTSS_WEBHOOK']).logger

@@ -175,10 +175,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return stdout.decode().splitlines()[0].split(': ')[-1]
 
-    async def get_uptime(self, time: int) -> str:
-        start_time = datetime.fromtimestamp(time)
-
-        return discord.utils.format_dt(start_time, style='R')
+    async def get_uptime(self, time: datetime) -> str:
+        return discord.utils.format_dt(time, style='R')
 
     async def get_whitelist(
         self, guild: int

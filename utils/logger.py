@@ -5,7 +5,6 @@ from dotenv.main import load_dotenv
 import asyncio
 import discord
 import logging
-import os
 import sys
 
 load_dotenv()
@@ -50,7 +49,7 @@ class WebhookLogger(logging.Handler):
     async def post_content(self, **message):
         try:
             await self.webhook.send(**message)
-        except Exception:
+        except:
             pass
 
 

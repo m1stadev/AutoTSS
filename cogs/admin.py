@@ -105,6 +105,8 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed)
 
+        self.bot.logger.info(f'Loaded `{module}` module.')
+
     @permissions.is_owner()
     @admin.command(name='modunload', description='Unload a module.')
     async def unload_module(
@@ -149,6 +151,8 @@ class AdminCog(commands.Cog, name='Administrator'):
             )
 
         await ctx.respond(embed=embed)
+
+        self.bot.logger.info(f'Unloaded `{module}` module.')
 
     @permissions.is_owner()
     @admin.command(name='modreload', description='Reload a module.')
@@ -205,6 +209,7 @@ class AdminCog(commands.Cog, name='Administrator'):
             )
 
         await ctx.respond(embed=embed)
+        self.bot.logger.info(f'Reloaded `{module}` module.')
 
     @permissions.is_owner()
     @admin.command(
@@ -250,6 +255,8 @@ class AdminCog(commands.Cog, name='Administrator'):
                 title='Download Blobs', description='Download all SHSH Blobs:'
             )
             await ctx.respond(embed=embed, view=view)
+
+        self.bot.logger.info(f"Owner: `@{ctx.author}` has downloaded all SHSH blobs.")
 
     @permissions.is_owner()
     @admin.command(
@@ -317,6 +324,10 @@ class AdminCog(commands.Cog, name='Administrator'):
                     f"for **{devices_saved} device{'s' if devices_saved > 1 else ''}**",
                     f"in **{finish_time} second{'s' if finish_time != 1 else ''}**.",
                 )
+            )
+
+            self.bot.logger.info(
+                f"Owner: `@{ctx.author}` has saved {blobs_saved} SHSH blob{'s' if blobs_saved > 1 else ''} for all devices."
             )
 
         else:

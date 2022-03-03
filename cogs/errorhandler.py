@@ -70,7 +70,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
         elif isinstance(exc, commands.UserNotFound):
             embed.description = 'I could not find that user.'
 
-            # elif isinstance(exc, NoDevicesFound):
+        elif isinstance(exc, NoDevicesFound):
             embed.description = f"{'You have' if exc.user.id == ctx.author.id else f'{exc.user.mention} has'} no devices added."
 
         elif isinstance(exc, NoSHSHFound):

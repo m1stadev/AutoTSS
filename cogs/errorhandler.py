@@ -12,7 +12,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.webhook: Optional[WebhookLogger] = next(
+        self.webhook: Optional[discord.Webhook] = next(
             iter(
                 h.webhook
                 for h in self.bot.logger.handlers

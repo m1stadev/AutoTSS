@@ -158,8 +158,8 @@ async def startup():
         bot.session = session
         bot.start_time = await asyncio.to_thread(time.time)
 
-        if 'DISCORD_WEBHOOK' in os.environ.keys():
-            bot.logger = Logger(bot, os.environ['DISCORD_WEBHOOK']).logger
+        if 'AUTOTSS_WEBHOOK' in os.environ.keys():
+            bot.logger = Logger(bot, os.environ['AUTOTSS_WEBHOOK']).logger
         else:
             bot.logger = Logger().logger
 

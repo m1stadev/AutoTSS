@@ -1,12 +1,25 @@
 from discord.ext import commands
 from utils.errors import *
+from utils.logger import WebhookLogger
+from typing import Optional
 
 import discord
 
 
 class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.webhook: Optional[WebhookLogger] = next(
+            iter(
+                h.webhook
+                for h in self.bot.logger.handlers
+                if isinstance(h, WebhookLogger)
+            ),
+            None,
+        )
 
     @commands.Cog.listener()
     async def on_application_command_error(
@@ -89,6 +102,12 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
                 name='Error Info',
                 value=f'Command: `/{ctx.command.qualified_name}`\nError message: `{str(exc)}`',
             )
+
+            if self.webhook is not None:
+                try:
+                    await self.webhook.send(embed=embed)
+                except:
+                    pass
 
         if ctx.interaction.response.is_done():
             await ctx.edit(embed=embed)

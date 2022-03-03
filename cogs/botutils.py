@@ -557,7 +557,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
                     'version': firm['version'],
                     'buildid': firm['buildid'],
                     'url': firm['url'],
-                    'type': 'Release',
                     'signed': firm['signed'],
                 }
             )
@@ -580,7 +579,6 @@ class UtilsCog(commands.Cog, name='Utilities'):
                     'version': firm['version'],
                     'buildid': firm['buildid'],
                     'url': firm['url'],
-                    'type': 'Beta',
                     'signed': firm['signed'],
                 }
             )

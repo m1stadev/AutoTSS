@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from discord.ext import commands
 from dotenv.main import load_dotenv
 
 import aiohttp
@@ -46,7 +45,7 @@ async def startup():
 
     if 'AUTOTSS_TEST_GUILD' in os.environ.keys():
         try:
-            debug_guild = [int(os.environ['AUTOTSS_TEST_GUILD'])]
+            debug_guild = int(os.environ['AUTOTSS_TEST_GUILD'])
         except TypeError:
             sys.exit(
                 "[ERROR] Invalid test guild ID set in 'AUTOTSS_TEST_GUILD' environment variable. Exiting."
@@ -69,12 +68,12 @@ async def startup():
     mentions = discord.AllowedMentions(everyone=False, roles=False)
     (intents := discord.Intents.default()).members = True
 
-    bot = commands.AutoShardedBot(
+    bot = discord.AutoShardedBot(
         help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner
     )
 
     if debug_guild is not None:
-        bot.debug_guilds = debug_guild
+        bot.debug_guilds = [debug_guild]
 
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')

@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.commands import slash_command
 from discord.ext import commands
 from discord import Option
@@ -34,7 +35,7 @@ class HelpCog(commands.Cog, name='Help'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     @slash_command(name='help', description='See usage and descriptions for commands.')
     async def _help(

@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from datetime import datetime
 from discord.commands import slash_command
 from discord.ext import commands
@@ -13,7 +14,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     @slash_command(description='Get the invite for AutoTSS.')
     async def invite(self, ctx: discord.ApplicationContext) -> None:

@@ -1,7 +1,8 @@
-from .errors import NotWhitelisted
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
+from hashlib import sha1, sha384
+from utils.errors import *
 from typing import Optional, Union
 
 import aiofiles
@@ -61,29 +62,34 @@ class UtilsCog(commands.Cog, name='Utilities'):
         else:
             return True
 
-    async def check_ecid(self, ecid: str) -> Union[int, bool]:
+    async def check_ecid(self, ecid: str) -> int:
+        if (
+            ecid == 'abcdef0123456789'
+        ):  # This ECID is provided as an example in the modal
+            return -1
+
         if not 7 <= len(ecid) <= 20:  # All ECIDs are between 7-20 characters
-            return 0
+            return -1
 
         try:
             int(ecid, 16)  # Make sure the ECID provided is hexadecimal, not decimal
-        except ValueError or TypeError:
-            return 0
+        except (ValueError, TypeError):
+            return -1
 
         async with self.bot.db.execute(
             'SELECT devices from autotss'
         ) as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
             try:
                 devices = [device[0] for device in (await cursor.fetchall())]
-            except TypeError:
+            except TypeError:  # No devices in database
                 return 0
 
         if any(
             ecid in device_info for device_info in devices
         ):  # There's no need to convert the json string to a dict here
-            return -1
+            return -2
 
-        return True
+        return 0
 
     def check_generator(self, generator: str) -> bool:
         if not generator.startswith('0x'):  # Generator must start wth '0x'
@@ -110,13 +116,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_name(
-        self, name: str, user: int
-    ) -> Union[
-        bool, int
-    ]:  # This function will return different values based on where it errors out at
+    async def check_name(self, name: str, user: int) -> int:
         if not len(name) <= 20:  # Length check
-            return 0
+            return -1
 
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (user,)
@@ -124,12 +126,21 @@ class UtilsCog(commands.Cog, name='Utilities'):
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
             except:
-                return True
+                return 0
 
         if any(x['name'] == name.lower() for x in devices):
-            return -1
+            return -2
 
-        return True
+        return 0
+
+    def check_apnonce_pair(self, generator: str, apnonce: str) -> bool:
+        gen = bytes.fromhex(generator.removeprefix('0x'))
+        if len(apnonce) == 64:
+            gen_hash = sha384(gen).hexdigest()[:-32]
+        elif len(apnonce) == 40:
+            gen_hash = sha1(gen).hexdigest()
+
+        return gen_hash == apnonce
 
     # Miscellaneous data functions
     def censor_ecid(self, ecid: str) -> str:
@@ -229,7 +240,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return
 
         if whitelist.id != ctx.channel.id:
-            raise NotWhitelisted()
+            raise NotWhitelisted
 
     # Help embed functions
     def cmd_help_embed(

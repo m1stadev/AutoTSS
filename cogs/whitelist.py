@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from collections import namedtuple
 from discord.ext import commands
 from discord import Option
@@ -12,7 +13,7 @@ WhitelistData = namedtuple('WhitelistData', ['guild', 'channel', 'enabled'])
 class WhitelistCog(commands.Cog, name='Whitelist'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     whitelist = discord.SlashCommandGroup('whitelist', 'Whitelist commands')
 

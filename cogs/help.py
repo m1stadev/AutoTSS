@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from discord.commands import slash_command
 from discord.ext import commands
 from discord import Option

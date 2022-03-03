@@ -96,7 +96,7 @@ async def startup():
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')
     async for cog in cogs.glob('*.py'):
-        if cog.stem == 'utils':
+        if cog.stem == 'botutils':
             continue
 
         bot.load_extension(f'cogs.{cog.stem}')

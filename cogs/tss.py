@@ -1,4 +1,4 @@
-from .utils import UtilsCog
+from .botutils import UtilsCog
 from discord.ext import commands
 from discord import Option
 from utils.errors import *

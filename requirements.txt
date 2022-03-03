@@ -1,8 +1,7 @@
-aiocache
 aiofiles
 aiopath
 aiosqlite
-py-cord==2.0.0b1
+git+git://github.com/Pycord-Development/pycord@master
 python-dotenv
 remotezip
 ujson

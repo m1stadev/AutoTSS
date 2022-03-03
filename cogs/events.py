@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.ext import commands, tasks
 
 import asyncio
@@ -10,7 +11,7 @@ class EventsCog(commands.Cog, name='Events'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-        self.utils = self.bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
         self.blob_saver.start()
 
     @tasks.loop()
@@ -146,6 +147,13 @@ class EventsCog(commands.Cog, name='Events'):
                 pass
 
     @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        await self.bot.wait_until_ready()
+
+        await self.bot.db.execute('DELETE FROM whitelist WHERE guild = ?', (guild.id,))
+        await self.bot.db.commit()
+
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         await self.bot.wait_until_ready()
 
@@ -191,17 +199,6 @@ class EventsCog(commands.Cog, name='Events'):
     async def on_ready(self) -> None:
         self.bot.logger.info('AutoTSS is now online.')
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: discord.ApplicationContext, error) -> None:
-        await self.bot.wait_until_ready()
-        if (isinstance(error, commands.errors.NotOwner)) or (
-            isinstance(error, commands.MissingPermissions)
-        ):
-            pass
 
-        else:
-            raise error
-
-
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(EventsCog(bot))

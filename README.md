@@ -30,25 +30,25 @@ To locally host your own instance, [create a Discord bot](https://discord.com/de
 
 1. Build and install [`tsschecker`](https://github.com/1Conan/tsschecker) and its dependencies
 
-    If running on Windows, download the latest `tsschecker` release from [here](https://github.com/1Conan/tsschecker/releases) and place it in the AutoTSS directory.
+    If running on Windows, you can download the latest `tsschecker` release from [here](https://github.com/1Conan/tsschecker/releases) and place it in the AutoTSS directory.
 
 2. Create a virtual env and install dependencies
 
         python3 -m venv --upgrade-deps env && source env/bin/activate
         pip3 install -Ur requirements.txt
 
-3.  Create a `.env` file and set the following variables:
-    - `AUTOTSS_TOKEN`: Your bot token.
-    - `OWNER_IDS`: Your Discord account's user ID
-        - (Optional) Add multiple user IDs by separating each one with a comma and space (e.g. `<ID 1>, <ID 2>, etc.`).
-    - (Optional) `DISCORD_WEBHOOK`: URL to a Discord webhook for logging.
-    - Example `.env` file:
+3.  Create a `.env` file and set the following environment variables:
+  - `AUTOTSS_TOKEN` - AutoTSS token
+  - `AUTOTSS_OWNER` - ID of the user that owns the bot
+  - `AUTOTSS_TEST_GUILD` - (Optional) ID of guild to create commands in for testing
+  - `AUTOTSS_WEBHOOK` - (Optional) URL to a Discord webhook for logging
+  - Example `.env` file:
 
-          AUTOTSS_TOKEN=<TOKEN>
-          OWNER_IDS=123456789012345678
+        AUTOTSS_TOKEN=<TOKEN>
+        AUTOTSS_OWNER=123456789012345678
 
 
-4. Start the bot
+4. Start AutoTSS
 
         python3 bot.py
 

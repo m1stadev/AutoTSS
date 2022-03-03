@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from discord.ext import commands
 from dotenv.main import load_dotenv
 from utils.logger import Logger
 
@@ -17,7 +16,7 @@ import time
 
 
 async def startup():
-    if sys.version_info.major < 3 and sys.version_info.minor < 9:
+    if sys.version_info[:2] < (3, 9):
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
 
     if sys.platform != 'win32':
@@ -26,11 +25,11 @@ async def startup():
         tsschecker = (
             len(
                 [
-                    _
-                    async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                    b
+                    async for b in aiopath.AsyncPath(__file__).parent.glob(
                         'tsschecker*.exe'
                     )
-                    if await _.is_file()
+                    if await b.is_file()
                 ]
             )
             > 0
@@ -46,33 +45,37 @@ async def startup():
             "[ERROR] Bot token not set in 'AUTOTSS_TOKEN' environment variable. Exiting."
         )
 
-    try:
-        owner_ids = [int(_) for _ in os.environ['OWNER_IDS'].split(', ')]
-    except KeyError:
+    if 'AUTOTSS_TEST_GUILD' in os.environ.keys():
+        try:
+            debug_guild = int(os.environ['AUTOTSS_TEST_GUILD'])
+        except TypeError:
+            sys.exit(
+                "[ERROR] Invalid test guild ID set in 'AUTOTSS_TEST_GUILD' environment variable. Exiting."
+            )
+    else:
+        debug_guild = None
+
+    if 'AUTOTSS_OWNER' not in os.environ.keys():
         sys.exit(
-            "[ERROR] Owner IDs not set in 'OWNER_IDS' environment variable. Exiting."
+            "[ERROR] Owner ID(s) not set in 'AUTOTSS_OWNER' environment variable. Exiting."
         )
-    except ValueError:
+
+    try:
+        owner = int(os.environ['AUTOTSS_OWNER'])
+    except TypeError:
         sys.exit(
-            "[ERROR] Owner IDs specified in 'OWNER_IDS' environment variable are invalid. Exiting."
+            "[ERROR] Invalid owner ID set in 'AUTOTSS_OWNER' environment variable. Exiting."
         )
 
     mentions = discord.AllowedMentions(everyone=False, roles=False)
-    (intents := discord.Intents.default()).members = False
-    if len(owner_ids) == 1:
-        bot = commands.AutoShardedBot(
-            help_command=None,
-            intents=intents,
-            allowed_mentions=mentions,
-            owner_id=owner_ids[0],
-        )
-    else:
-        bot = commands.AutoShardedBot(
-            help_command=None,
-            intents=intents,
-            allowed_mentions=mentions,
-            owner_ids=owner_ids,
-        )
+    (intents := discord.Intents.default()).members = True
+
+    bot = discord.AutoShardedBot(
+        help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner
+    )
+
+    if debug_guild is not None:
+        bot.debug_guilds = [debug_guild]
 
     bot.load_extension('cogs.utils')  # Load utils cog first
     cogs = aiopath.AsyncPath('cogs')
@@ -110,14 +113,6 @@ async def startup():
         )
         await db.commit()
 
-        await db.execute(
-            '''
-            CREATE TABLE IF NOT EXISTS uptime(
-            start_time REAL
-            )'''
-        )
-        await db.commit()
-
         async with db.execute('SELECT start_time FROM uptime') as cursor:
             if await cursor.fetchone() is None:
                 sql = 'INSERT INTO uptime(start_time) VALUES(?)'
@@ -144,6 +139,7 @@ async def startup():
         # Setup bot attributes
         bot.db = db
         bot.session = session
+        bot.start_time = await asyncio.to_thread(time.time)
 
         if 'DISCORD_WEBHOOK' in os.environ.keys():
             bot.logger = Logger(bot, os.environ['DISCORD_WEBHOOK']).logger

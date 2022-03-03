@@ -1,13 +1,15 @@
-from aiocache import cached
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
+from hashlib import sha1, sha384
+from utils.errors import *
 from typing import Optional, Union
 
 import aiofiles
 import aiopath
 import asyncio
 import discord
+import glob
 import ujson
 import pathlib
 import remotezip
@@ -60,29 +62,34 @@ class UtilsCog(commands.Cog, name='Utilities'):
         else:
             return True
 
-    async def check_ecid(self, ecid: str) -> Union[int, bool]:
+    async def check_ecid(self, ecid: str) -> int:
+        if (
+            ecid == 'abcdef0123456789'
+        ):  # This ECID is provided as an example in the modal
+            return -1
+
         if not 7 <= len(ecid) <= 20:  # All ECIDs are between 7-20 characters
-            return 0
+            return -1
 
         try:
             int(ecid, 16)  # Make sure the ECID provided is hexadecimal, not decimal
-        except ValueError or TypeError:
-            return 0
+        except (ValueError, TypeError):
+            return -1
 
         async with self.bot.db.execute(
             'SELECT devices from autotss'
         ) as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
             try:
                 devices = [device[0] for device in (await cursor.fetchall())]
-            except TypeError:
+            except TypeError:  # No devices in database
                 return 0
 
         if any(
             ecid in device_info for device_info in devices
         ):  # There's no need to convert the json string to a dict here
-            return -1
+            return -2
 
-        return True
+        return 0
 
     def check_generator(self, generator: str) -> bool:
         if not generator.startswith('0x'):  # Generator must start wth '0x'
@@ -109,13 +116,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def check_name(
-        self, name: str, user: int
-    ) -> Union[
-        bool, int
-    ]:  # This function will return different values based on where it errors out at
+    async def check_name(self, name: str, user: int) -> int:
         if not len(name) <= 20:  # Length check
-            return 0
+            return -1
 
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (user,)
@@ -123,12 +126,21 @@ class UtilsCog(commands.Cog, name='Utilities'):
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
             except:
-                return True
+                return 0
 
         if any(x['name'] == name.lower() for x in devices):
-            return -1
+            return -2
 
-        return True
+        return 0
+
+    def check_apnonce_pair(self, generator: str, apnonce: str) -> bool:
+        gen = bytes.fromhex(generator.removeprefix('0x'))
+        if len(apnonce) == 64:
+            gen_hash = sha384(gen).hexdigest()[:-32]
+        elif len(apnonce) == 40:
+            gen_hash = sha1(gen).hexdigest()
+
+        return gen_hash == apnonce
 
     # Miscellaneous data functions
     def censor_ecid(self, ecid: str) -> str:
@@ -147,11 +159,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                _
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                b
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-h',
         )
@@ -193,10 +205,14 @@ class UtilsCog(commands.Cog, name='Utilities'):
             scopes=('bot', 'applications.commands'),
         )
 
-    @cached(ttl=3600)
-    async def shsh_count(self) -> int:
+    def shsh_count(self) -> int:
         return len(
-            [_ async for _ in aiopath.AsyncPath('Data/Blobs').glob('**/*.shsh*')]
+            [
+                blob
+                for blob in glob.glob(
+                    str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
+                )
+            ]
         )
 
     async def update_device_count(self) -> None:
@@ -213,30 +229,21 @@ class UtilsCog(commands.Cog, name='Utilities'):
             )
         )
 
-    async def whitelist_check(self, ctx: discord.ApplicationContext) -> bool:
+    async def whitelist_check(self, ctx: discord.ApplicationContext) -> None:
         if (await ctx.bot.is_owner(ctx.author)) or (
             ctx.author.guild_permissions.manage_messages
         ):
-            return True
+            return
 
         whitelist = await self.get_whitelist(ctx.guild.id)
-        if (whitelist is not None) and (whitelist.id != ctx.channel.id):
-            embed = discord.Embed(
-                title='Hey!',
-                description=f'AutoTSS can only be used in {whitelist.mention}.',
-            )
-            embed.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
+        if whitelist is None:
+            return
 
-            return False
-
-        return True
+        if whitelist.id != ctx.channel.id:
+            raise NotWhitelisted
 
     # Help embed functions
-    async def cmd_help_embed(
+    def cmd_help_embed(
         self, ctx: discord.ApplicationContext, cmd: discord.SlashCommand
     ):
         embed = {
@@ -263,7 +270,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return discord.Embed.from_dict(embed)
 
-    async def cog_help_embed(
+    def cog_help_embed(
         self, ctx: discord.ApplicationContext, cog: str
     ) -> list[discord.Embed]:
         embed = {
@@ -297,7 +304,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
         embed['fields'] = sorted(embed['fields'], key=lambda field: field['name'])
         return discord.Embed.from_dict(embed)
 
-    async def group_help_embed(
+    def group_help_embed(
         self, ctx: discord.ApplicationContext, group: discord.SlashCommandGroup
     ) -> list[discord.Embed]:
         embed = {
@@ -374,13 +381,30 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return discord.Embed.from_dict(embed)
 
     # SHSH Blob functions
-    def _get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
+    async def _get_manifest(
+        self, url: str, path: str
+    ) -> Union[bool, aiopath.AsyncPath]:
+        async with self.bot.session.get(
+            f"{'/'.join(url.split('/')[:-1])}/BuildManifest.plist"
+        ) as resp:
+            if resp.status == 200:
+                manifest = await resp.read()
+            else:
+                return False
+
+        manifest_path = pathlib.Path(path) / 'manifest.plist'
+        with manifest_path.open('wb') as f:
+            f.write(manifest)
+
+        return aiopath.AsyncPath(manifest_path)
+
+    def _sync_get_manifest(self, url: str, path: str) -> Union[bool, aiopath.AsyncPath]:
         try:
             with remotezip.RemoteZip(url) as ipsw:
                 manifest = ipsw.read(
                     next(f for f in ipsw.namelist() if 'BuildManifest' in f)
                 )
-        except remotezip.RemoteIOError:
+        except (remotezip.RemoteIOError, StopIteration):
             return False
 
         manifest_path = pathlib.Path(path) / 'manifest.plist'
@@ -399,11 +423,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
             'tsschecker'
             if sys.platform != 'win32'
             else next(
-                str(_)
-                async for _ in aiopath.AsyncPath(__file__).parent.glob(
+                str(b)
+                async for b in aiopath.AsyncPath(__file__).parent.glob(
                     'tsschecker*.exe'
                 )
-                if await _.is_file()
+                if await b.is_file()
             ),
             '-d',
             device['identifier'],
@@ -432,7 +456,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         save_path = aiopath.AsyncPath('/'.join(save_path))
         if len(generators) == 0:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == 1:
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == 1:
                 return True
 
             cmd = await asyncio.create_subprocess_exec(
@@ -444,10 +468,12 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 return False
 
         else:
-            if len([_ async for _ in save_path.glob('*.shsh*')]) == len(generators):
+            if len([blob async for blob in save_path.glob('*.shsh*')]) == len(
+                generators
+            ):
                 return True
 
-            elif len([_ async for _ in save_path.glob('*.shsh*')]) > 0:
+            elif len([blob async for blob in save_path.glob('*.shsh*')]) > 0:
                 async for blob in save_path.glob('*.shsh*'):
                     await blob.unlink()
 
@@ -498,7 +524,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 except FileNotFoundError:
                     pass
 
-        if len([_ async for _ in tmpdir.glob('*/') if await _.is_dir()]) == 0:
+        if len([blob async for blob in tmpdir.glob('*/') if await blob.is_dir()]) == 0:
             return
 
         await asyncio.to_thread(
@@ -565,8 +591,10 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 continue
 
             async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-                manifest = await asyncio.to_thread(
-                    self._get_manifest, firm['url'], tmpdir
+                manifest = await self._get_manifest(
+                    firm['url'], tmpdir
+                ) or await asyncio.to_thread(
+                    self._sync_get_manifest, firm['url'], tmpdir
                 )
                 saved_blob = (
                     await self._save_blob(device, firm, str(manifest), manifest.parent)
@@ -612,5 +640,5 @@ class UtilsCog(commands.Cog, name='Utilities'):
             return await func(*args)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(UtilsCog(bot))

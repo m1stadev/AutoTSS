@@ -1,3 +1,4 @@
+from .utils import UtilsCog
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord import Option
@@ -14,13 +15,13 @@ import time
 async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:
     modules = sorted([cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')])
 
-    return [_ for _ in modules if _.startswith(ctx.value.lower())]
+    return [m for m in modules if m.startswith(ctx.value.lower())]
 
 
 class AdminCog(commands.Cog, name='Administrator'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.utils = bot.get_cog('Utilities')
+        self.utils: UtilsCog = self.bot.get_cog('Utilities')
 
     admin = discord.SlashCommandGroup(
         'admin',
@@ -36,7 +37,7 @@ class AdminCog(commands.Cog, name='Administrator'):
     @admin.command(name='help', description='View all administrator commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
         cmd_embeds = [
-            await self.utils.cmd_help_embed(ctx, _) for _ in self.admin.subcommands
+            self.utils.cmd_help_embed(ctx, sc) for sc in self.admin.subcommands
         ]
 
         paginator = PaginatorView(cmd_embeds, ctx, timeout=180)
@@ -327,8 +328,8 @@ class AdminCog(commands.Cog, name='Administrator'):
     async def transfer_devices(
         self,
         ctx: discord.ApplicationContext,
-        old: Option(discord.User, description='User to transfer devices from'),
-        new: Option(discord.User, description='User to transfer devices to'),
+        old: Option(int, description='ID of user to transfer devices from'),
+        new: Option(commands.UserConverter, description='User to transfer devices to'),
     ) -> None:
         cancelled_embed = discord.Embed(
             title='Transfer Devices', description='Cancelled.'
@@ -428,5 +429,5 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.edit(embed=embed)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(AdminCog(bot))

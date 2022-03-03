@@ -72,7 +72,7 @@ class DeviceCog(commands.Cog, name='Device'):
             ),
             InputText(label="Device Board Config", placeholder='ex. d221ap'),
             InputText(
-                label="Nonce Generator (Optional)",
+                label="Nonce Generator (Optional, required on A12+)",
                 placeholder='ex. 0x1111111111111111',
                 required=False,
             ),
@@ -147,6 +147,11 @@ class DeviceCog(commands.Cog, name='Device'):
             device['apnonce'] = None
 
         if 0x8020 <= cpid < 0x8900:
+            if device['generator'] is None:
+                raise commands.BadArgument(
+                    'A nonce generator is required for saving SHSH blobs on A12+ devices. An explanation on why can be found [here](https://gist.github.com/5464ea557c2b999cb9324639c777cd09#whats-nonce-entanglement).'
+                )
+
             if device['apnonce'] is None:
                 raise commands.BadArgument(
                     'An ApNonce is required for saving SHSH blobs on A12+ devices. An explanation on why can be found [here](https://gist.github.com/5464ea557c2b999cb9324639c777cd09#whats-nonce-entanglement).'

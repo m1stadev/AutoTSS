@@ -126,6 +126,7 @@ class TSSCog(commands.Cog, name='TSS'):
             title='Download Blobs', description='Download your SHSH Blobs:'
         )
         await ctx.edit(embed=embed, view=view)
+        self.bot.logger.info(f"User: {ctx.author.mention} has downloaded SHSH blobs.")
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
     async def list_blobs(
@@ -226,6 +227,9 @@ class TSSCog(commands.Cog, name='TSS'):
                     f"for **{user['devices_saved']} device{'s' if user['devices_saved'] != 1 else ''}**",
                     f"in **{finish_time} second{'s' if finish_time != 1 else ''}**.",
                 )
+            )
+            self.bot.logger.info(
+                f"User: {ctx.author.mention} has saved {user['blobs_saved']} SHSH blob{'s' if user['blobs_saved'] != 1 else ''} SHSH blobs."
             )
         else:
             embed.description = 'All SHSH blobs have already been saved for your devices.\n\n*Tip: AutoTSS will automatically save SHSH blobs for you, no command necessary!*'

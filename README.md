@@ -5,7 +5,21 @@
 <h1 align="center">
 AutoTSS
 </h1>
-
+<p align="center">
+  <a href="https://github.com/m1stadev/AutoTSS/blob/master/LICENSE">
+    <image src="https://img.shields.io/github/license/m1stadev/AutoTSS">
+  </a>
+  <a href="https://github.com/m1stadev/AutoTSS/stargazers">
+    <image src="https://img.shields.io/github/stars/m1stadev/AutoTSS">
+  </a>
+  <a href="https://github.com/m1stadev/AutoTSS">
+    <image src="https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS">
+  </a>
+  <a href="https://m1sta.xyz/autotss">
+    <image src="https://img.shields.io/badge/Discord-Invite%20AutoTSS-%237289DA">
+  </a>
+    <br>
+</p>
 [![License](https://img.shields.io/github/license/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/blob/master/LICENSE)
 [![Stars](https://img.shields.io/github/stars/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS/stargazers)
 [![LoC](https://img.shields.io/tokei/lines/github/m1stadev/AutoTSS)](https://github.com/m1stadev/AutoTSS)

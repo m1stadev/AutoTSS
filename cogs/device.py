@@ -13,6 +13,7 @@ import asyncio
 import discord
 import ujson
 import shutil
+import textwrap
 
 
 class DeviceCog(commands.Cog, name='Device'):
@@ -380,7 +381,14 @@ class DeviceCog(commands.Cog, name='Device'):
 
         device_embeds = list()
         for device in devices:
-            num_blobs = len(device['saved_blobs'])
+            num_blobs = ','.join(
+                textwrap.wrap(
+                    str(await asyncio.to_thread(self.utils.shsh_count, device['ecid']))[
+                        ::-1
+                    ],
+                    3,
+                )
+            )[::-1]
             device_embed = {
                 'title': f"*{device['name']}*{f'  ({devices.index(device) + 1}/{len(devices)})' if len(devices) > 1 else ''}",
                 'description': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",

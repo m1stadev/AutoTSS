@@ -203,15 +203,28 @@ class UtilsCog(commands.Cog, name='Utilities'):
             scopes=('bot', 'applications.commands'),
         )
 
-    def shsh_count(self) -> int:
-        return len(
-            [
-                blob
-                for blob in glob.glob(
-                    str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
-                )
-            ]
-        )
+    def shsh_count(self, ecid: str = None) -> int:
+        if ecid:
+            shsh_count = len(
+                [
+                    blob
+                    for blob in glob.glob(
+                        str(pathlib.Path(f'Data/Blobs/{ecid}/**/*.shsh*')),
+                        recursive=True,
+                    )
+                ]
+            )
+        else:
+            shsh_count = len(
+                [
+                    blob
+                    for blob in glob.glob(
+                        str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
+                    )
+                ]
+            )
+
+        return shsh_count
 
     async def update_device_count(self) -> None:
         async with self.bot.db.execute(

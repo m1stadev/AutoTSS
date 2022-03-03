@@ -32,16 +32,23 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
         if isinstance(exc, discord.ApplicationCommandInvokeError):
             exc = exc.__cause__
 
-        if isinstance(exc, StopCommand):
-            embed = discord.Embed(title='Cancelled', color=discord.Color.gold())
-        else:
-            embed = discord.Embed(title='Error', color=discord.Color.red())
-
+        embed = discord.Embed(title='Error', color=discord.Color.red())
         embed.timestamp = await asyncio.to_thread(datetime.now)
         embed.set_footer(
             text=self.bot.user.name,
             icon_url=self.bot.user.avatar.with_static_format('png').url,
         )
+
+        if isinstance(exc, StopCommand):
+            embed.title = 'Cancelled'
+            embed.color = discord.Color.gold()
+
+            if ctx.interaction.response.is_done():
+                await ctx.edit(embed=embed)
+            else:
+                await ctx.respond(embed=embed, ephemeral=True)
+
+            return
 
         if isinstance(exc, commands.NoPrivateMessage):
             embed.description = 'This command can only be used in a server.'

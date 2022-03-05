@@ -80,8 +80,7 @@ class EventsCog(commands.Cog, name='Events'):
                             f"{firm_type} {firm['version']} ({firm['buildid']}) has been resigned for {device}, saving SHSH blobs."
                         )
 
-                    else:
-                        self.bot.logger.debug('Saving SHSH Blobs.')
+                    self.bot.logger.debug('Saving SHSH Blobs.')
 
                     async with self.bot.db.execute(
                         'SELECT * from autotss WHERE enabled = ?', (True,)

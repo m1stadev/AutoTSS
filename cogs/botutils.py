@@ -347,7 +347,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     def info_embed(self, member: discord.Member) -> discord.Embed:
         notes = (
-            'There is a limit of **10 devices per user**.',
+            f"There is a limit of **{self.bot.max_devices} device{'s' if self.bot.max_devices != 1 else ''} per user**.",
             "You **must** share a server with AutoTSS, or else **AutoTSS won't automatically save SHSH blobs for you**.",
             'AutoTSS checks for new versions to save SHSH blobs for **every 5 minutes**.',
         )

@@ -130,15 +130,6 @@ async def startup():
         )
         await db.commit()
 
-        async with db.execute('SELECT start_time FROM uptime') as cursor:
-            if await cursor.fetchone() is None:
-                sql = 'INSERT INTO uptime(start_time) VALUES(?)'
-            else:
-                sql = 'UPDATE uptime SET start_time = ?'
-
-        await db.execute(sql, (await asyncio.to_thread(time.time),))
-        await db.commit()
-
         async with db.execute(
             'SELECT devices from autotss WHERE enabled = ?', (True,)
         ) as cursor:

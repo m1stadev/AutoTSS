@@ -241,8 +241,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
         )
 
     async def whitelist_check(self, ctx: discord.ApplicationContext) -> None:
-        if (await ctx.bot.is_owner(ctx.author)) or (
-            ctx.author.guild_permissions.manage_messages
+        if await self.bot.is_owner(ctx.author) or (
+            isinstance(ctx.author, discord.Member)
+            and ctx.author.guild_permissions.manage_messages
         ):
             return
 

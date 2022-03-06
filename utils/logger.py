@@ -3,7 +3,6 @@ from datetime import datetime
 import asyncio
 import discord
 import logging
-import sys
 
 
 class WebhookLogger(logging.Handler):

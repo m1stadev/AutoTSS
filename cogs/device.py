@@ -1,7 +1,7 @@
 from .botutils import UtilsCog
+from discord.commands import permissions, Option
 from discord.ext import commands
 from discord.ui import InputText
-from discord import Option
 from utils.errors import *
 from views.buttons import SelectView, PaginatorView
 from views.modals import QuestionModal
@@ -449,6 +449,117 @@ class DeviceCog(commands.Cog, name='Device'):
         paginator = PaginatorView(device_embeds, ctx)
         await ctx.respond(
             embed=device_embeds[paginator.embed_num], view=paginator, ephemeral=True
+        )
+
+    @permissions.is_owner()
+    @device.command(
+        name='transfer', description="Transfer a user's devices to another user."
+    )
+    async def transfer_devices(
+        self,
+        ctx: discord.ApplicationContext,
+        old: Option(int, description='ID of user to transfer devices from'),
+        new: Option(commands.UserConverter, description='User to transfer devices to'),
+    ) -> None:
+        cancelled_embed = discord.Embed(
+            title='Transfer Devices', description='Cancelled.'
+        )
+        invalid_embed = discord.Embed(title='Error')
+        timeout_embed = discord.Embed(
+            title='Transfer Devices',
+            description='No response given in 1 minute, cancelling.',
+        )
+
+        for x in (cancelled_embed, invalid_embed, timeout_embed):
+            x.set_footer(
+                text=ctx.author.display_name,
+                icon_url=ctx.author.display_avatar.with_static_format('png').url,
+            )
+
+        await ctx.defer()
+
+        if (
+            self.utils.saving_blobs == True
+        ):  # Avoid any potential conflict with transferring devices while blobs are being saved
+            invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if old == new:
+            invalid_embed.description = (
+                "Silly goose, you can't transfer devices between the same user!"
+            )
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if new.bot == True:
+            invalid_embed.description = 'You cannot transfer devices to a bot account.'
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        async with self.bot.db.execute(
+            'SELECT devices from autotss WHERE user = ?', (old.id,)
+        ) as cursor:
+            try:
+                old_devices = ujson.loads((await cursor.fetchone())[0])
+            except TypeError:
+                old_devices = list()
+
+        async with self.bot.db.execute(
+            'SELECT devices from autotss WHERE user = ?', (new.id,)
+        ) as cursor:
+            try:
+                new_devices = ujson.loads((await cursor.fetchone())[0])
+            except TypeError:
+                new_devices = list()
+
+        if len(old_devices) == 0:
+            invalid_embed.description = (
+                f'{old.mention} has no devices added to AutoTSS.'
+            )
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        if len(new_devices) > 0:
+            invalid_embed.description = (
+                f'{new.mention} has devices added to AutoTSS already.'
+            )
+            await ctx.respond(embed=invalid_embed)
+            return
+
+        embed = discord.Embed(title='Transfer Devices')
+        embed.description = f"Are you sure you'd like to transfer {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}?"
+        embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.with_static_format('png').url,
+        )
+
+        buttons = [
+            {'label': 'Yes', 'style': discord.ButtonStyle.success},
+            {'label': 'Cancel', 'style': discord.ButtonStyle.danger},
+        ]
+
+        view = SelectView(buttons, ctx)
+        await ctx.respond(embed=embed, view=view)
+        await view.wait()
+        if view.answer is None:
+            await ctx.edit(embed=timeout_embed)
+            return
+
+        if view.answer == 'Cancel':
+            await ctx.edit(embed=cancelled_embed)
+            return
+
+        await self.bot.db.execute(
+            'UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id)
+        )
+        await self.bot.db.commit()
+
+        embed.description = f"Successfully transferred {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}."
+        await ctx.edit(embed=embed)
+
+        self.bot.logger.info(
+            f"{old.mention}'s devices have been transferred to {new.mention}."
         )
 
 

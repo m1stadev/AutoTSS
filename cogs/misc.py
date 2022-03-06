@@ -52,8 +52,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
         current_time = await asyncio.to_thread(datetime.utcnow)
         await ctx.respond(embed=embed, ephemeral=True)
 
-        shard_ping = [_[1] for _ in self.bot.latencies]
-        embed.description = f'API ping: `{round(sum(shard_ping) / len(shard_ping) * 1000)}ms`\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
+        embed.description = f'API ping: `{round(self.bot.latency * 1000)}ms`\nMessage Ping: `{round((await asyncio.to_thread(datetime.utcnow) - current_time).total_seconds() * 1000)}ms`'
 
         await ctx.edit(embed=embed)
 

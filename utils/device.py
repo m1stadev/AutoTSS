@@ -1,12 +1,10 @@
 from bot import DB_PATH
 from hashlib import sha1, sha384
-from .errors import *
+from .errors import DeviceError
 from . import api
 
-import aiosqlite
 import asyncio
 import discord
-import ujson
 
 
 class Device:
@@ -53,18 +51,7 @@ class Device:
     # Data verification functions
     async def verify_name(self, name: str, user: int) -> str:
         if len(name) > 20:  # Length check
-            raise InvalidNameError("A device's name cannot be over 20 characters long.")
-
-        async with aiosqlite.connect(DB_PATH) as db, db.execute(
-            'SELECT devices from autotss WHERE user = ?', (user,)
-        ) as cursor:  # Make sure the user doesn't have any other devices with the same name added
-            try:
-                devices = ujson.loads((await cursor.fetchone())[0])
-            except:
-                return name
-
-        if any(x['name'] == name.casefold() for x in devices):
-            raise InvalidNameError("The same name cannot be used for multiple devices.")
+            raise DeviceError("A device's name cannot be over 20 characters long.")
 
         return name
 
@@ -74,7 +61,7 @@ class Device:
         if identifier.casefold() not in [
             device['identifier'].casefold() for device in devices
         ]:
-            raise InvalidIdentifierError()
+            raise DeviceError('Invalid device identifier provided.')
 
         return identifier
 
@@ -82,45 +69,45 @@ class Device:
         try:
             int(ecid, 16)  # Make sure the ECID provided is hexadecimal, not decimal
         except (ValueError, TypeError):
-            raise InvalidECIDError()
+            raise DeviceError('Invalid ECID provided.')
 
         ecid = hex(int(ecid, 16)).removeprefix('0x')
         if ecid == 'abcdef0123456':  # This ECID is provided as an example in the modal
-            raise InvalidECIDError()
+            raise DeviceError('Invalid ECID provided.')
 
         if (
             not 11 <= len(ecid) <= 13
         ):  # All hex ECIDs without zero-padding are between 11-13 characters
-            raise InvalidECIDError()
+            raise DeviceError('Invalid ECID provided.')
 
         return ecid
 
     async def verify_boardconfig(self, identifier: str, boardconfig: str) -> str:
         if boardconfig[-2:] != 'ap':
-            raise InvalidBoardConfigError()
+            raise DeviceError('Invalid board config provided.')
 
         device = await api.get_device(identifier)
         if not any(
             b['boardconfig'].casefold() == boardconfig.casefold()
             for b in device['boards']
         ):  # If no boardconfigs for the given device identifier match the boardconfig, then return False
-            raise InvalidBoardConfigError()
+            raise DeviceError('Invalid board config provided.')
 
         return boardconfig
 
     def verify_generator(self, generator: str) -> str:
         if not generator.startswith('0x'):  # Generator must start wth '0x'
-            raise InvalidGeneratorError()
+            raise DeviceError('Invalid nonce generator provided.')
 
         if (
             len(generator) != 18
         ):  # Generator must be 18 characters long, including '0x' prefix
-            raise InvalidGeneratorError()
+            raise DeviceError('Invalid nonce generator provided.')
 
         try:
             int(generator, 16)  # Generator must be hexadecimal
         except:
-            raise InvalidGeneratorError()
+            raise DeviceError('Invalid nonce generator provided.')
 
         return generator.lower()
 
@@ -128,7 +115,7 @@ class Device:
         try:
             int(nonce, 16)
         except ValueError or TypeError:
-            raise InvalidApNonceError()
+            raise DeviceError('Invalid ApNonce provided.')
 
         if 0x8010 <= cpid < 0x8900:  # A10+ device ApNonces are 64 characters long
             apnonce_len = 64
@@ -136,7 +123,7 @@ class Device:
             apnonce_len = 40
 
         if len(nonce) != apnonce_len:
-            raise InvalidApNonceError()
+            raise DeviceError('Invalid ApNonce provided.')
 
         return nonce
 
@@ -155,13 +142,13 @@ class Device:
     @property
     def censored_ecid(self) -> str:
         if getattr(self, 'ecid', None) is None:
-            raise NotFound('No ECID for this device is set.')
+            raise DeviceError('No ECID for this device is set.')
 
         return ('*' * len(self.ecid))[:-4] + self.ecid[-4:]
 
     async def get_boardconfig(self) -> str:
         if getattr(self, 'identifier', None) is None:
-            raise NotFound('No identifier for this device is set.')
+            raise DeviceError('No identifier for this device is set.')
 
         device = await api.get_device_info(self.identifier)
 
@@ -174,7 +161,7 @@ class Device:
         ]
 
         if len(valid_boards) != 1:
-            raise NotFound(
+            raise DeviceError(
                 'Multiple board configs for this device were found, one must be manually specified.'
             )
 
@@ -183,7 +170,7 @@ class Device:
     async def get_cpid(self) -> str:
         for attr in ('boardconfig', 'identifier'):
             if getattr(self, attr, None) is None:
-                raise NotFound(f'No {attr} for this device is set.')
+                raise DeviceError(f'No {attr} for this device is set.')
 
         device = await api.get_device_info(self.identifier)
 
@@ -198,7 +185,7 @@ class Device:
 
     async def fetch_signed_firmwares(self) -> list:
         if getattr(self, 'identifier', None) is None:
-            raise NotFound('No identifier for this device is set.')
+            raise DeviceError('No identifier for this device is set.')
 
         data = await api.get_device_firmwares(self.identifier)
 

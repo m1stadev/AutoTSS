@@ -9,6 +9,14 @@ class DeviceError(AutoTSSError):
     pass
 
 
+class StopCommand(AutoTSSError):
+    pass
+
+
+class SavingSHSHError(AutoTSSError):
+    pass
+
+
 class NoDevicesFound(AutoTSSError):
     def __init__(self, user: discord.User) -> None:
         super().__init__()

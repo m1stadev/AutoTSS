@@ -9,6 +9,30 @@ class DeviceError(AutoTSSError):
     pass
 
 
+class InvalidNameError(DeviceError):
+    pass
+
+
+class InvalidIdentifierError(DeviceError):
+    pass
+
+
+class InvalidECIDError(DeviceError):
+    pass
+
+
+class InvalidBoardConfigError(DeviceError):
+    pass
+
+
+class InvalidGeneratorError(DeviceError):
+    pass
+
+
+class InvalidApNonceError(DeviceError):
+    pass
+
+
 class StopCommand(AutoTSSError):
     pass
 
@@ -17,19 +41,17 @@ class SavingSHSHError(AutoTSSError):
     pass
 
 
-class NoDevicesFound(AutoTSSError):
+class NotFound(AutoTSSError):
+    pass
+
+
+class NoDevicesFound(NotFound):
     def __init__(self, user: discord.User) -> None:
         super().__init__()
         self.user = user
 
 
-class NoDevicesFound(AutoTSSError):
-    def __init__(self, user: discord.User) -> None:
-        super().__init__()
-        self.user = user
-
-
-class NoSHSHFound(AutoTSSError):
+class NoSHSHFound(NotFound):
     def __init__(self, user: discord.User) -> None:
         super().__init__()
         self.user = user

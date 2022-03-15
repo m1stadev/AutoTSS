@@ -16,6 +16,9 @@ import sys
 import time
 
 
+DB_PATH = aiopath.AsyncPath('Data/autotss.db')
+
+
 async def startup():
     if sys.version_info[:2] < (3, 9):
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
@@ -105,9 +108,8 @@ async def startup():
     cpu_count = min(32, (await asyncio.to_thread(os.cpu_count) or 1) + 4)
     bot.get_cog('Utilities').sem = asyncio.Semaphore(cpu_count)
 
-    db_path = aiopath.AsyncPath('Data/autotss.db')
-    await db_path.parent.mkdir(exist_ok=True)
-    async with aiosqlite.connect(db_path) as db, aiohttp.ClientSession() as session:
+    await DB_PATH.parent.mkdir(exist_ok=True)
+    async with aiosqlite.connect(DB_PATH) as db, aiohttp.ClientSession() as session:
         await db.execute(
             '''
             CREATE TABLE IF NOT EXISTS autotss(

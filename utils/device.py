@@ -1,8 +1,8 @@
 from bot import DB_PATH
 from hashlib import sha1, sha384
+from . import api
 
 import aiosqlite
-import api
 import asyncio
 import discord
 import ujson
@@ -24,23 +24,28 @@ class Device:
 
         if name is not None:
             self.name = self.verify_name(name, self.user.id)
+
         if identifier is not None:
             self.identifier = self.verify_identifier(identifier)
+
         if ecid is not None:
             self.ecid = self.verify_ecid(ecid)
+
         if boardconfig is not None:
             if getattr(self, 'identifier', None) is None:
                 pass  # raise error
 
-            self.boardconfig = self.verify_boardconfig(identifier, boardconfig)
-            self.cpid = loop.run_until_complete(self.fetch_cpid())
+            self.boardconfig = self.verify_boardconfig(self.identifier, boardconfig)
+        else:
+            self.boardconfig = loop.run_until_complete(self.get_boardconfig())
+
+        self.cpid = loop.run_until_complete(self.fetch_cpid())
 
         if generator is not None:
             self.generator = self.verify_generator(generator)
+
         if apnonce is not None:
             self.apnonce = self.verify_apnonce(self.identifier, apnonce)
-
-        pass
 
     # Data verification functions
     async def verify_name(self, name: str, user: int) -> str:
@@ -61,25 +66,28 @@ class Device:
         return name
 
     async def verify_identifier(self, identifier: str) -> str:
-        devices = api.get_all_devices()
+        devices = await api.get_all_devices()
 
-        if identifier not in [device['identifier'] for device in devices]:
+        if identifier.casefold() not in [
+            device['identifier'].casefold() for device in devices
+        ]:
             pass  # raise error
 
         return identifier
 
     async def verify_ecid(self, ecid: str) -> str:
-        if (
-            ecid == 'abcdef0123456789'
-        ):  # This ECID is provided as an example in the modal
-            pass  # raise error
-
-        if not 7 <= len(ecid) <= 20:  # All ECIDs are between 7-20 characters
-            pass  # raise error
-
         try:
             int(ecid, 16)  # Make sure the ECID provided is hexadecimal, not decimal
         except (ValueError, TypeError):
+            pass  # raise error
+
+        ecid = hex(int(ecid, 16)).removeprefix('0x')
+        if ecid == 'abcdef0123456':  # This ECID is provided as an example in the modal
+            pass  # raise error
+
+        if (
+            not 11 <= len(ecid) <= 13
+        ):  # All hex ECIDs without zero-padding are between 11-13 characters
             pass  # raise error
 
         async with aiosqlite.connect(DB_PATH) as db, db.execute(
@@ -124,7 +132,7 @@ class Device:
         except:
             pass  # raise error
 
-        return generator
+        return generator.lower()
 
     def verify_apnonce(self, cpid: int, nonce: str) -> str:
         try:
@@ -158,7 +166,26 @@ class Device:
 
         return ('*' * len(self.ecid))[:-4] + self.ecid[-4:]
 
-    async def fetch_cpid(self) -> str:
+    async def get_boardconfig(self) -> str:
+        if getattr(self, 'identifier', None) is None:
+            pass  # raise error
+
+        device = await api.get_device_info(self.identifier)
+
+        valid_boards = [
+            board['boardconfig']
+            for board in device['boards']
+            if board['boardconfig']
+            .lower()
+            .endswith('ap')  # Exclude development boards that may pop up
+        ]
+
+        if len(valid_boards) != 1:
+            pass  # raise error
+
+        return valid_boards[0].lower()
+
+    async def get_cpid(self) -> str:
         if any(
             getattr(self, attr, None) is None for attr in ('boardconfig', 'identifier')
         ):

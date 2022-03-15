@@ -5,6 +5,10 @@ class AutoTSSError(Exception):
     pass
 
 
+class DeviceError(AutoTSSError):
+    pass
+
+
 class StopCommand(AutoTSSError):
     pass
 

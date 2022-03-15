@@ -2,14 +2,10 @@ from .botutils import UtilsCog
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord.commands import permissions, Option
-from views.buttons import PaginatorView, SelectView
+from utils.views.buttons import PaginatorView
 
-import aiofiles
 import aiopath
-import asyncio
 import discord
-import ujson
-import time
 
 
 async def mod_autocomplete(ctx: discord.AutocompleteContext) -> list:

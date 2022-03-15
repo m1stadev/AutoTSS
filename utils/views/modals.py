@@ -18,7 +18,7 @@ class QuestionModal(discord.ui.Modal):
             self.add_item(i)
 
     async def callback(self, interaction: discord.Interaction):
-        self.answers = [x.value for x in self.children]
+        self.answers = [x.value or None for x in self.children]
 
         self.ctx.interaction = await interaction.response.send_message(
             embed=self.embed, ephemeral=True

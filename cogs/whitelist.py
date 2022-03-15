@@ -2,7 +2,7 @@ from .botutils import UtilsCog
 from collections import namedtuple
 from discord.ext import commands
 from discord import Option
-from views.buttons import PaginatorView
+from utils.views.buttons import PaginatorView
 
 import discord
 

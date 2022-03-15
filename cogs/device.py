@@ -3,9 +3,9 @@ from discord.commands import permissions, Option
 from discord.ext import commands
 from discord.ui import InputText
 from utils.errors import *
-from views.buttons import SelectView, PaginatorView
-from views.modals import QuestionModal
-from views.selects import DropdownView
+from utils.views.buttons import SelectView, PaginatorView
+from utils.views.modals import QuestionModal
+from utils.views.selects import DropdownView
 
 import aiofiles
 import aiopath

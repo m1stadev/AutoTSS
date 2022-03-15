@@ -2,8 +2,8 @@ from .botutils import UtilsCog
 from discord.commands import permissions, Option
 from discord.ext import commands
 from utils.errors import *
-from views.buttons import SelectView, PaginatorView
-from views.selects import DropdownView
+from utils.views.buttons import SelectView, PaginatorView
+from utils.views.selects import DropdownView
 
 import aiofiles
 import aiopath

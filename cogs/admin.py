@@ -344,7 +344,7 @@ class AdminCog(commands.Cog, name='Administrator'):
         self,
         ctx: discord.ApplicationContext,
         old: Option(
-            commands.UserConverter, description='ID of user to transfer devices from'
+            commands.UserConverter, description='User to transfer devices from'
         ),
         new: Option(commands.UserConverter, description='User to transfer devices to'),
     ) -> None:

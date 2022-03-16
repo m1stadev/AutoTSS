@@ -21,11 +21,12 @@ AutoTSS
     <br>
 </p>
 
-<h4 align="center">
+<p align="center">
 Automatically save <a href="https://www.theiphonewiki.com/wiki/SHSH">SHSH blobs</a> for all of your iOS devices through Discord.
-
-*Want an automatic CLI blob saver? Check out [AutoTSS-cli](https://github.com/m1stadev/autotss-cli)!*
-</h4>
+</p>
+<p align="center">
+  <em>Want an automatic CLI blob saver? Check out <a href="https://github.com/m1stadev/autotss-cli">AutoTSS-cli</a>!</em>
+</p>
 
 ### Comparison with similar tools
 

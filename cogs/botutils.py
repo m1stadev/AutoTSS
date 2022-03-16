@@ -1,7 +1,7 @@
 from datetime import datetime
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
-from hashlib import sha1, sha384
+from utils.device import Device
 from utils.errors import *
 from typing import Optional, Union
 
@@ -305,10 +305,10 @@ class UtilsCog(commands.Cog, name='Utilities'):
         return aiopath.AsyncPath(manifest_path)
 
     async def _save_blob(
-        self, device: dict, firm: dict, manifest: str, tmpdir: aiopath.AsyncPath
+        self, device: Device, firm: dict, manifest: str, tmpdir: aiopath.AsyncPath
     ) -> bool:
         generators = list()
-        save_path = ['Data', 'Blobs', device['ecid'], firm['version'], firm['buildid']]
+        save_path = ['Data', 'Blobs', device.ecid, firm['version'], firm['buildid']]
 
         args = [
             'tsschecker'
@@ -321,11 +321,11 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 if await b.is_file()
             ),
             '-d',
-            device['identifier'],
+            device.identifier,
             '-B',
-            device['boardconfig'],
+            device.board,
             '-e',
-            f"0x{device['ecid']}",
+            f"0x{device.ecid}",
             '-m',
             str(manifest),
             '--save-path',
@@ -333,17 +333,17 @@ class UtilsCog(commands.Cog, name='Utilities'):
             '-s',
         ]
 
-        if device['apnonce'] is not None:
+        if device.apnonce is not None:
             args.append('--apnonce')
-            args.append(device['apnonce'])
-            save_path.append(device['apnonce'])
+            args.append(device.apnonce)
+            save_path.append(device.apnonce)
         else:
             generators.append('0x1111111111111111')
             generators.append('0xbd34a880be0b53f3')
             save_path.append('no-apnonce')
 
-        if device['generator'] is not None and device['generator'] not in generators:
-            generators.append(device['generator'])
+        if device.generator is not None and device.generator not in generators:
+            generators.append(device.generator)
 
         save_path = aiopath.AsyncPath('/'.join(save_path))
         if len(generators) == 0:
@@ -423,59 +423,17 @@ class UtilsCog(commands.Cog, name='Utilities'):
         )
         return await self._upload_file(tmpdir.parent / 'Blobs.zip')
 
-    async def fetch_ipswme_api(self, identifier: str) -> dict:
-        async with self.bot.session.get(f'{API_URL}/device/{identifier}') as resp:
-            return await resp.json()
-
-    async def get_firms(self, identifier: str) -> list:
-        api = await self.fetch_ipswme_api(identifier)
-
-        buildids = list()
-        for firm in api['firmwares']:
-            buildids.append(
-                {
-                    'version': firm['version'],
-                    'buildid': firm['buildid'],
-                    'url': firm['url'],
-                    'signed': firm['signed'],
-                }
-            )
-
-        async with self.bot.session.get(f'{BETA_API_URL}/{identifier}') as resp:
-            if resp.status != 200:
-                return buildids
-            else:
-                beta_api = await resp.json()
-
-        for firm in beta_api:
-            if any(firm['buildid'] == f['buildid'] for f in buildids):
-                continue
-
-            if 'signed' not in firm.keys():
-                continue
-
-            buildids.append(
-                {
-                    'version': firm['version'],
-                    'buildid': firm['buildid'],
-                    'url': firm['url'],
-                    'signed': firm['signed'],
-                }
-            )
-
-        return buildids
-
     async def save_device_blobs(self, device: dict) -> None:
         stats = {
             'saved_blobs': list(),
             'failed_blobs': list(),
         }
 
-        firms = await self.get_firms(device['identifier'])
+        firms = await self.get_firms(device.identifier)
         for firm in [f for f in firms if f['signed'] == True]:
             if any(
                 firm['buildid'] == saved_firm['buildid']
-                for saved_firm in device['saved_blobs']
+                for saved_firm in device.saved_blobs
             ):  # If we've already saved blobs for this version, skip
                 continue
 
@@ -492,7 +450,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 )
 
             if saved_blob is True:
-                device['saved_blobs'].append(
+                device.saved_blobs.append(
                     {x: y for x, y in firm.items() if x not in ('url', 'signed')}
                 )
                 stats['saved_blobs'].append(firm)

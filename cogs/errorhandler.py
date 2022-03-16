@@ -100,7 +100,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
                 f'You cannot add over {exc.max_devices} devices to AutoTSS.'
             )
 
-        elif isinstance(exc, commands.BadArgument):
+        elif isinstance(exc, (commands.BadArgument, DeviceError)):
             embed.description = str(exc)
 
         else:

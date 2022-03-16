@@ -2,6 +2,7 @@ from .botutils import UtilsCog
 from discord.commands import permissions, Option
 from discord.ext import commands
 from discord.ui import InputText
+from utils.device import Device
 from utils.errors import *
 from utils.views.buttons import SelectView, PaginatorView
 from utils.views.modals import QuestionModal
@@ -65,21 +66,23 @@ class DeviceCog(commands.Cog, name='Device'):
             ctx,
             'Add Device',
             embed,
+            InputText(label='Device Identifier', placeholder='ex. iPhone10,6'),
             InputText(
-                label="Device board config (Optional, required on A9)", placeholder='ex. d221ap', required=False
+                label='ECID (hex)',
+                placeholder='ex. abcdef0123456',
             ),
             InputText(
-                label="Device ECID (hex)",
-                placeholder='ex. abcdef0123456789',
-            ),
-            InputText(label="Device Board Config", placeholder='ex. d221ap'),
-            InputText(
-                label="Nonce Generator (Optional, required on A12+)",
-                placeholder='ex. 0x1111111111111111',
+                label='Board config (Optional, required on A9)',
+                placeholder='ex. d221ap',
                 required=False,
             ),
             InputText(
-                label="ApNonce (Optional, required on A12+)",
+                label='Nonce generator (Optional, required on A12+)',
+                placeholder='ex. 0xabcdef0123456789',
+                required=False,
+            ),
+            InputText(
+                label='ApNonce (Optional, required on A12+)',
                 placeholder='ex. abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
                 required=False,
             ),
@@ -88,84 +91,55 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.interaction.response.send_modal(modal)
         await modal.wait()
 
-        device = dict()
-
-        name_check = await self.utils.check_name(name, ctx.author.id)
-        if name_check == -1:
-            raise commands.BadArgument(
-                "A device's name cannot be over 20 characters long."
-            )
-        elif name_check == -2:
-            raise commands.BadArgument(
-                "You cannot use the same name for multiple devices."
-            )
-        device['name'] = name
-
-        identifier = (
-            modal.answers[0].replace(' ', '').lower().replace('devicestring:', '')
+        device = await Device().init(
+            user=ctx.author,
+            name=name,
+            identifier=modal.answers[0]
+            .lower()
+            .replace(' ', '')
+            .replace('devicestring:', ''),
+            ecid=modal.answers[1],
+            boardconfig=modal.answers[2]
+            .lower()
+            .replace(' ', '')
+            .replace('deviceid:', '')
+            if modal.answers[2] is not None
+            else None,
+            generator=modal.answers[3],
+            apnonce=modal.answers[4],
         )
-        if 'appletv' in identifier:
-            identifier = 'TV'.join(identifier.capitalize().split('tv'))
-        else:
-            identifier = 'P'.join(identifier.split('p'))
 
-        if await self.utils.check_identifier(identifier) is False:
-            raise commands.BadArgument('Invalid device identifier provided.')
-        device['identifier'] = identifier
+        async with self.bot.db.execute(
+            'SELECT devices from autotss'
+        ) as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
+            try:
+                if any(
+                    device.ecid in d
+                    for d in [device[0] for device in (await cursor.fetchall())]
+                ):  # There's no need to convert the json string to a dict here
+                    raise DeviceError('This ECID has already been added to AutoTSS.')
 
-        ecid = modal.answers[1].lower().removeprefix('0x')
-        ecid_check = await self.utils.check_ecid(ecid)
-        if ecid_check < 0:
-            error = 'Invalid device ECID provided.'
-            if ecid_check == -2:
-                error += ' This ECID has already been added to AutoTSS.'
+            except TypeError:  # No devices in database
+                pass
 
-            raise commands.BadArgument(error)
-        device['ecid'] = ecid
-
-        boardconfig = modal.answers[2].replace(' ', '').lower().replace('deviceid:', '')
-        if (
-            await self.utils.check_boardconfig(device['identifier'], boardconfig)
-            is False
-        ):
-            raise commands.BadArgument('Invalid device boardconfig provided.')
-        device['boardconfig'] = boardconfig
-
-        if len(modal.answers[3]) > 0:
-            generator = modal.answers[3].lower()
-            if self.utils.check_generator(generator) is False:
-                raise commands.BadArgument('Invalid nonce generator provided.')
-            device['generator'] = generator
-        else:
-            device['generator'] = None
-
-        cpid = await self.utils.get_cpid(device['identifier'], device['boardconfig'])
-        if len(modal.answers[4]) > 0:
-            apnonce = modal.answers[4].lower()
-            if self.utils.check_apnonce(cpid, apnonce) is False:
-                raise commands.BadArgument('Invalid ApNonce provided.')
-            device['apnonce'] = apnonce
-        else:
-            device['apnonce'] = None
-
-        if 0x8020 <= cpid < 0x8900:
-            if device['generator'] is None:
+        if 0x8020 <= device.cpid < 0x8900:
+            if device.generator is None:
                 raise commands.BadArgument(
                     'A nonce generator is required for saving SHSH blobs on A12+ devices. An explanation on why can be found [here](https://gist.github.com/5464ea557c2b999cb9324639c777cd09#whats-nonce-entanglement).'
                 )
 
-            if device['apnonce'] is None:
+            if device.apnonce is None:
                 raise commands.BadArgument(
                     'An ApNonce is required for saving SHSH blobs on A12+ devices. An explanation on why can be found [here](https://gist.github.com/5464ea557c2b999cb9324639c777cd09#whats-nonce-entanglement).'
                 )
 
-        if device['apnonce'] and device['generator']:
+        if device.apnonce and device.generator:
             buttons = [
                 {'label': 'Yes', 'style': discord.ButtonStyle.primary},
                 {'label': 'No', 'style': discord.ButtonStyle.secondary},
                 {'label': 'Cancel', 'style': discord.ButtonStyle.danger},
             ]
-            embed.description = f"Nonce generator: `{device['generator']}`\nApNonce: `{device['apnonce']}`\n\nAre you **absolutely sure** this is a valid generator-ApNonce pair for your device?"
+            embed.description = f"Nonce generator: `{device.generator}`\nApNonce: `{device.apnonce}`\n\nAre you **absolutely sure** this is a valid generator-ApNonce pair for your device?"
 
             view = SelectView(buttons, ctx)
             await ctx.edit(embed=embed, view=view)
@@ -176,27 +150,19 @@ class DeviceCog(commands.Cog, name='Device'):
             elif view.answer == 'Cancel':
                 raise StopCommand
 
-            if (
-                not 0x8020
-                <= cpid
-                < 0x8900  # Verify generator-apnonce pair on A11 and below
-                and await asyncio.to_thread(
-                    self.utils.check_apnonce_pair,
-                    device['generator'],
-                    device['apnonce'],
-                )
-                == False
-            ) or view.answer == 'No':
-                error = 'Invalid generator-ApNonce pair provided.'
-                if 0x8020 <= cpid < 0x8900:
-                    error += ' Guides for a getting a valid generator-ApNonce pair on A12+ devices can be found below:\n\n[Getting a generator-Apnonce pair (jailbroken)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-jailbroken]\n\n[Getting a generator-Apnonce pair (no jailbreak)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-non-jailbroken]'
-
-                raise commands.BadArgument(error)
-
-        device['saved_blobs'] = list()
+            if not 0x8020 <= device.cpid < 0x8900:
+                if await device.verify_apnonce_pair() == False:
+                    raise commands.BadArgument(
+                        'Invalid generator-ApNonce pair provided.'
+                    )
+            else:
+                if view.answer == 'No':
+                    raise commands.BadArgument(
+                        'Invalid generator-ApNonce pair provided. Guides for a getting a valid generator-ApNonce pair on A12+ devices can be found below:\n\n[Getting a generator-Apnonce pair (jailbroken)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-jailbroken]\n\n[Getting a generator-Apnonce pair (no jailbreak)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-non-jailbroken]'
+                    )
 
         # Add device information into the database
-        devices.append(device)
+        devices.append(device.to_dict())
 
         async with self.bot.db.execute(
             'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
@@ -211,7 +177,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
         embed = discord.Embed(
             title='Add Device',
-            description=f"Device `{device['name']}` added successfully!",
+            description=f'Device `{device.name}` added successfully!',
         )
         embed.set_footer(
             text=ctx.author.display_name,
@@ -220,7 +186,7 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed)
 
         self.bot.logger.info(
-            f"User: {ctx.author.mention} (`@{ctx.author}`) has added device: `{device['name']}`"
+            f'User: {ctx.author.mention} (`@{ctx.author}`) has added device: `{device.name}`'
         )
 
         await self.utils.update_device_count()
@@ -233,7 +199,10 @@ class DeviceCog(commands.Cog, name='Device'):
             'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
         ) as cursor:
             try:
-                devices = ujson.loads((await cursor.fetchone())[0])
+                devices = [
+                    await Device().init(ctx.author, **d)
+                    for d in ujson.loads((await cursor.fetchone())[0])
+                ]
             except TypeError:
                 devices = list()
 
@@ -257,8 +226,8 @@ class DeviceCog(commands.Cog, name='Device'):
             for device in devices:
                 device_options.append(
                     discord.SelectOption(
-                        label=device['name'],
-                        description=f"ECID: {device['ecid']} | SHSH blob{'s' if len(device['saved_blobs']) != 1 else ''} saved: {len(device['saved_blobs'])}",
+                        label=device.name,
+                        description=f"ECID: {device.ecid} | SHSH blob{'s' if len(device.blobs) != 1 else ''} saved: {len(device.blobs)}",
                         emoji='📱',
                     )
                 )
@@ -283,15 +252,19 @@ class DeviceCog(commands.Cog, name='Device'):
             if dropdown.answer == 'Cancel':
                 raise StopCommand
 
-            num = next(
-                devices.index(x) for x in devices if x['name'] == dropdown.answer
+            device = next(
+                device for device in devices if device.name == dropdown.answer
             )
-            confirm_embed.description = f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?"
+            confirm_embed.description = (
+                f'Are you **absolutely sure** you want to remove `{device.name}`?'
+            )
             await ctx.edit(embed=confirm_embed, view=view)
 
         else:
-            num = 0
-            confirm_embed.description = f"Are you **absolutely sure** you want to delete `{devices[num]['name']}`?"
+            device = devices[0]
+            confirm_embed.description = (
+                f'Are you **absolutely sure** you want to remove `{device.name}`?'
+            )
             await ctx.respond(embed=confirm_embed, view=view)
 
         await view.wait()
@@ -308,14 +281,12 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            url = await self.utils.backup_blobs(
-                aiopath.AsyncPath(tmpdir), devices[num]['ecid']
-            )
+            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), device.ecid)
 
         if url is not None:
             await asyncio.to_thread(
                 shutil.rmtree,
-                aiopath.AsyncPath(f"Data/Blobs/{devices[num]['ecid']}"),
+                aiopath.AsyncPath(f"Data/Blobs/{device.ecid}"),
             )
 
             buttons = [
@@ -325,14 +296,14 @@ class DeviceCog(commands.Cog, name='Device'):
             view = SelectView(buttons, ctx, timeout=None)
             embed = discord.Embed(
                 title='Remove Device',
-                description=f"Device `{devices[num]['name']}` removed.\nSHSH Blobs:",
+                description=f"Device `{device.name}` removed.\nSHSH Blobs:",
             )
             await ctx.edit(embed=embed, view=view)
 
         else:
             embed = discord.Embed(
                 title='Remove Device',
-                description=f"Device `{devices[num]['name']}` removed.",
+                description=f"Device `{device.name}` removed.",
             )
             embed.set_footer(
                 text=ctx.author.display_name,
@@ -341,23 +312,17 @@ class DeviceCog(commands.Cog, name='Device'):
             await ctx.edit(embed=embed)
 
         self.bot.logger.info(
-            f"User: {ctx.author.mention} (`@{ctx.author}`) has removed device: `{devices[num]['name']}`"
+            f"User: {ctx.author.mention} (`@{ctx.author}`) has removed device: `{device.name}`"
         )
-
-        devices.pop(num)
 
         if len(devices) == 0:
             await self.bot.db.execute(
                 'DELETE FROM autotss WHERE user = ?', (ctx.author.id,)
             )
         else:
-            await self.bot.db.execute(
-                'UPDATE autotss SET devices = ? WHERE user = ?',
-                (ujson.dumps(devices), ctx.author.id),
-            )
+            await device.remove()
 
         await self.bot.db.commit()
-
         await self.utils.update_device_count()
 
     @device.command(name='list', description='List your added devices.')
@@ -379,7 +344,10 @@ class DeviceCog(commands.Cog, name='Device'):
             'SELECT devices from autotss WHERE user = ?', (user.id,)
         ) as cursor:
             try:
-                devices = ujson.loads((await cursor.fetchone())[0])
+                devices = [
+                    await Device().init(ctx.author, **d)
+                    for d in ujson.loads((await cursor.fetchone())[0])
+                ]
             except TypeError:
                 devices = list()
 
@@ -390,29 +358,29 @@ class DeviceCog(commands.Cog, name='Device'):
         for device in devices:
             num_blobs = ','.join(
                 textwrap.wrap(
-                    str(await asyncio.to_thread(self.utils.shsh_count, device['ecid']))[
+                    str(await asyncio.to_thread(self.utils.shsh_count, device.ecid))[
                         ::-1
                     ],
                     3,
                 )
             )[::-1]
             device_embed = {
-                'title': f"*{device['name']}*{f'  ({devices.index(device) + 1}/{len(devices)})' if len(devices) > 1 else ''}",
+                'title': f"*{device.name}*{f'  ({devices.index(device) + 1}/{len(devices)})' if len(devices) > 1 else ''}",
                 'description': f"**{num_blobs}** SHSH blob{'s' if num_blobs != 1 else ''} saved",
                 'fields': [
                     {
                         'name': 'Device Identifier',
-                        'value': f"`{device['identifier']}`",
+                        'value': f'`{device.identifier}`',
                         'inline': False,
                     },
                     {
                         'name': 'ECID',
-                        'value': f"`{device['ecid'] if user == ctx.author else self.utils.censor_ecid(device['ecid'])}`",
+                        'value': f'`{device.ecid if user == ctx.author else device.censored_ecid}`',
                         'inline': False,
                     },
                     {
                         'name': 'Board Config',
-                        'value': f"`{device['boardconfig']}`",
+                        'value': f'`{device.board}`',
                         'inline': False,
                     },
                 ],
@@ -424,20 +392,20 @@ class DeviceCog(commands.Cog, name='Device'):
                 },
             }
 
-            if device['generator'] is not None:
+            if device.generator is not None:
                 device_embed['fields'].append(
                     {
                         'name': 'Nonce Generator',
-                        'value': f"`{device['generator']}`",
+                        'value': f'`{device.generator}`',
                         'inline': False,
                     }
                 )
 
-            if device['apnonce'] is not None:
+            if device.apnonce is not None:
                 device_embed['fields'].append(
                     {
                         'name': 'ApNonce',
-                        'value': f"`{device['apnonce']}`",
+                        'value': f'`{device.apnonce}`',
                         'inline': False,
                     }
                 )
@@ -463,41 +431,20 @@ class DeviceCog(commands.Cog, name='Device'):
         old: Option(int, description='ID of user to transfer devices from'),
         new: Option(commands.UserConverter, description='User to transfer devices to'),
     ) -> None:
-        cancelled_embed = discord.Embed(
-            title='Transfer Devices', description='Cancelled.'
-        )
-        invalid_embed = discord.Embed(title='Error')
-        timeout_embed = discord.Embed(
-            title='Transfer Devices',
-            description='No response given in 1 minute, cancelling.',
-        )
-
-        for x in (cancelled_embed, invalid_embed, timeout_embed):
-            x.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
-
         await ctx.defer()
 
         if (
             self.utils.saving_blobs == True
         ):  # Avoid any potential conflict with transferring devices while blobs are being saved
-            invalid_embed.description = "I'm currently automatically saving SHSH blobs, please wait until I'm finished to transfer devices."
-            await ctx.respond(embed=invalid_embed)
-            return
+            raise SavingSHSHError()
 
         if old == new:
-            invalid_embed.description = (
-                "Silly goose, you can't transfer devices between the same user!"
+            raise commands.BadArgument(
+                'You cannot transfer devices between the same user.'
             )
-            await ctx.respond(embed=invalid_embed)
-            return
 
         if new.bot == True:
-            invalid_embed.description = 'You cannot transfer devices to a bot account.'
-            await ctx.respond(embed=invalid_embed)
-            return
+            raise commands.BadArgument('You cannot transfer devices to a bot account.')
 
         async with self.bot.db.execute(
             'SELECT devices from autotss WHERE user = ?', (old.id,)
@@ -516,18 +463,12 @@ class DeviceCog(commands.Cog, name='Device'):
                 new_devices = list()
 
         if len(old_devices) == 0:
-            invalid_embed.description = (
-                f'{old.mention} has no devices added to AutoTSS.'
-            )
-            await ctx.respond(embed=invalid_embed)
-            return
+            raise NoDevicesFound(old)
 
         if len(new_devices) > 0:
-            invalid_embed.description = (
-                f'{new.mention} has devices added to AutoTSS already.'
+            raise commands.BadArgument(
+                f'{new.mention} current has devices added to AutoTSS.'  # TODO: Combine devices
             )
-            await ctx.respond(embed=invalid_embed)
-            return
 
         embed = discord.Embed(title='Transfer Devices')
         embed.description = f"Are you sure you'd like to transfer {old.mention}'s **{len(old_devices)} device{'s' if len(old_devices) != 1 else ''}** to {new.mention}?"
@@ -544,13 +485,12 @@ class DeviceCog(commands.Cog, name='Device'):
         view = SelectView(buttons, ctx)
         await ctx.respond(embed=embed, view=view)
         await view.wait()
+
         if view.answer is None:
-            await ctx.edit(embed=timeout_embed)
-            return
+            raise ViewTimeoutException(view.timeout)
 
         if view.answer == 'Cancel':
-            await ctx.edit(embed=cancelled_embed)
-            return
+            raise StopCommand
 
         await self.bot.db.execute(
             'UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id)

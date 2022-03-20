@@ -1,4 +1,5 @@
 from aiocache import cached
+from utils.errors import *
 
 import aiohttp
 
@@ -15,20 +16,18 @@ async def get_all_devices() -> list:
         if resp.status == 200:
             return await resp.json()
         else:
-            return list()
+            raise APIError('Failed to fetch device info from IPSW.me API.')
 
 
 async def get_device_info(identifier: str) -> dict:
     data = await get_all_devices()
-    if len(data) == 0:
-        pass  # raise error
 
     try:
         return next(
             d for d in data if d['identifier'].casefold() == identifier.casefold()
         )
     except StopIteration:
-        pass  # raise error
+        raise DeviceError('Invalid identifier provided.')
 
 
 async def fetch_device_firmwares(identifier: str) -> dict:
@@ -37,14 +36,14 @@ async def fetch_device_firmwares(identifier: str) -> dict:
             if resp.status == 200:
                 release_data = (await resp.json())['firmwares']
             else:
-                release_data = list()
+                raise APIError('Failed to fetch device firmwares from IPSW.me API.')
 
         async with session.get(f'{BETA_API}/{identifier}') as resp:
             if resp.status == 200:
                 beta_data = [
                     firm for firm in await resp.json() if 'signed' in firm.keys()
                 ]
-            else:
+            else:  # Not a critical error
                 beta_data = list()
 
         for firm in list(

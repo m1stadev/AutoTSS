@@ -100,6 +100,17 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
                 f'You cannot add over {exc.max_devices} devices to AutoTSS.'
             )
 
+        elif isinstance(exc, APIError):
+            embed.description = (
+                f'{exc} Please try again later.\nError code: `{exc.status}`.'
+            )
+
+            if self.webhook is not None:
+                try:
+                    await self.webhook.send(embed=embed)
+                except:
+                    pass
+
         elif isinstance(exc, (commands.BadArgument, DeviceError)):
             embed.description = str(exc)
 

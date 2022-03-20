@@ -59,14 +59,6 @@ class TSSCog(commands.Cog, name='TSS'):
         if total_blobs == 0:
             raise NoSHSHFound(user)
 
-        upload_embed = discord.Embed(
-            title='Download Blobs', description='Uploading SHSH blobs...'
-        )
-        upload_embed.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.display_avatar.with_static_format('png').url,
-        )
-
         if len(devices) > 1:
             device_options = [
                 discord.SelectOption(
@@ -110,11 +102,12 @@ class TSSCog(commands.Cog, name='TSS'):
                 device = next(d for d in devices if d['name'] == dropdown.answer)
                 ecids = [device['ecid']]
 
-            await ctx.edit(embed=upload_embed)
+            embed.description = 'Uploading SHSH blobs...'
+            await ctx.edit(embed=embed)
 
         else:
             ecids = [devices[0]['ecid']]
-            await ctx.respond(embed=upload_embed, ephemeral=True)
+            await ctx.respond(embed=embed, ephemeral=True)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
             url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
@@ -122,10 +115,9 @@ class TSSCog(commands.Cog, name='TSS'):
         buttons = [{'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}]
 
         view = SelectView(buttons, ctx, timeout=None)
-        embed = discord.Embed(
-            title='Download Blobs', description='Download your SHSH Blobs:'
-        )
+        embed.description = 'Download your SHSH Blobs:'
         await ctx.edit(embed=embed, view=view)
+
         self.bot.logger.info(
             f"User: {ctx.author.mention} (`@{ctx.author}`) has downloaded SHSH blobs."
         )

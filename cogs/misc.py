@@ -72,7 +72,7 @@ class MiscCog(commands.Cog, name='Miscellaneous'):
             'fields': [
                 {
                     'name': 'Bot Started',
-                    'value': await self.utils.get_uptime(self.bot.start_time),
+                    'value': self.utils.get_uptime(self.bot.start_time),
                     'inline': True,
                 },
                 {

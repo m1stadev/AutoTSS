@@ -133,7 +133,7 @@ async def startup():
         await db.commit()
 
         async with db.execute(
-            'SELECT devices from autotss WHERE enabled = ?', (True,)
+            'SELECT devices FROM autotss WHERE enabled = ?', (True,)
         ) as cursor:
             num_devices = sum(
                 len(ujson.loads(devices[0])) for devices in await cursor.fetchall()

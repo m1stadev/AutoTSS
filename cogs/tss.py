@@ -45,7 +45,7 @@ class TSSCog(commands.Cog, name='TSS'):
             raise commands.NotOwner()
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (user.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (user.id,)
         ) as cursor:
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
@@ -144,7 +144,7 @@ class TSSCog(commands.Cog, name='TSS'):
             user = ctx.author
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (user.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (user.id,)
         ) as cursor:
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
@@ -201,7 +201,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
         ) as cursor:
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
@@ -246,7 +246,7 @@ class TSSCog(commands.Cog, name='TSS'):
     async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
 
-        async with self.bot.db.execute('SELECT devices from autotss') as cursor:
+        async with self.bot.db.execute('SELECT devices FROM autotss') as cursor:
             num_devices = sum(
                 len(ujson.loads(devices[0])) for devices in await cursor.fetchall()
             )
@@ -296,7 +296,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute(
-            'SELECT * from autotss WHERE enabled = ?', (True,)
+            'SELECT * FROM autotss WHERE enabled = ?', (True,)
         ) as cursor:
             data = await cursor.fetchall()
 

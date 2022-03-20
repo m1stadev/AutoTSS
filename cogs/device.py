@@ -42,7 +42,7 @@ class DeviceCog(commands.Cog, name='Device'):
         name: Option(str, description='Name for device'),
     ) -> None:
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
         ) as cursor:
             try:
                 devices = ujson.loads((await cursor.fetchone())[0])
@@ -110,7 +110,7 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss'
+            'SELECT devices FROM autotss'
         ) as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
             try:
                 if any(
@@ -196,7 +196,7 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.defer(ephemeral=True)
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (ctx.author.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
         ) as cursor:
             try:
                 devices = [
@@ -341,7 +341,7 @@ class DeviceCog(commands.Cog, name='Device'):
             user = ctx.author
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (user.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (user.id,)
         ) as cursor:
             try:
                 devices = [
@@ -447,7 +447,7 @@ class DeviceCog(commands.Cog, name='Device'):
             raise commands.BadArgument('You cannot transfer devices to a bot account.')
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (old.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (old.id,)
         ) as cursor:
             try:
                 old_devices = ujson.loads((await cursor.fetchone())[0])
@@ -455,7 +455,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 old_devices = list()
 
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE user = ?', (new.id,)
+            'SELECT devices FROM autotss WHERE user = ?', (new.id,)
         ) as cursor:
             try:
                 new_devices = ujson.loads((await cursor.fetchone())[0])

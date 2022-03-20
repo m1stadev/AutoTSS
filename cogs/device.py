@@ -109,17 +109,11 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
         async with self.bot.db.execute(
-            'SELECT devices FROM autotss'
-        ) as cursor:  # Make sure the ECID the user provided isn't already a device added to AutoTSS.
-            try:
-                if any(
-                    device.ecid in d
-                    for d in [device[0] for device in (await cursor.fetchall())]
-                ):  # There's no need to convert the json string to a dict here
-                    raise DeviceError('This ECID has already been added to AutoTSS.')
-
-            except TypeError:  # No devices in database
-                pass
+            'SELECT user FROM autotss WHERE devices like ?',
+            (f'%"{device.ecid}"%',),
+        ) as cursor:  # Make sure the provided ECID hasn't already been added to AutoTSS
+            if await cursor.fetchone() is not None:
+                raise DeviceError('This device has already been added to AutoTSS.')
 
         if 0x8020 <= device.cpid < 0x8900:
             if device.generator is None:

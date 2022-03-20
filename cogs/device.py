@@ -109,6 +109,23 @@ class DeviceCog(commands.Cog, name='Device'):
         )
 
         async with self.bot.db.execute(
+            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
+        ) as cursor:
+            try:
+                devices = [
+                    await Device().init(**d)
+                    for d in ujson.loads((await cursor.fetchone())[0])
+                ]
+
+                if any(device.name.casefold() == d.name.casefold() for d in devices):
+                    raise DeviceError(
+                        'You cannot have multiple devices with the same name.'
+                    )
+
+            except TypeError:
+                pass
+
+        async with self.bot.db.execute(
             'SELECT user FROM autotss WHERE devices like ?',
             (f'%"{device.ecid}"%',),
         ) as cursor:  # Make sure the provided ECID hasn't already been added to AutoTSS
@@ -141,7 +158,7 @@ class DeviceCog(commands.Cog, name='Device'):
             if view.answer is None:
                 raise ViewTimeoutException(view.timeout)
             elif view.answer == 'Cancel':
-                raise StopCommand
+                raise StopCommand()
 
             if not 0x8020 <= device.cpid < 0x8900:
                 if await device.verify_apnonce_pair() == False:
@@ -237,7 +254,7 @@ class DeviceCog(commands.Cog, name='Device'):
                 raise ViewTimeoutException(dropdown.timeout)
 
             if dropdown.answer == 'Cancel':
-                raise StopCommand
+                raise StopCommand()
 
             device = next(
                 device for device in devices if device.name == dropdown.answer
@@ -260,7 +277,7 @@ class DeviceCog(commands.Cog, name='Device'):
             raise ViewTimeoutException(view.timeout)
 
         elif view.answer == 'Cancel':
-            raise StopCommand
+            raise StopCommand()
 
         embed.description = 'Removing device...'
         await ctx.edit(embed=embed)
@@ -458,7 +475,7 @@ class DeviceCog(commands.Cog, name='Device'):
             raise ViewTimeoutException(view.timeout)
 
         if view.answer == 'Cancel':
-            raise StopCommand
+            raise StopCommand()
 
         await self.bot.db.execute(
             'UPDATE autotss SET user = ? WHERE user = ?', (new.id, old.id)

@@ -1,5 +1,6 @@
 from .utils import UtilsCog
 from discord.ext import commands, tasks
+from utils import api
 
 import asyncio
 import discord
@@ -19,30 +20,28 @@ class EventsCog(commands.Cog, name='Events'):
         await self.bot.wait_until_ready()
 
         self.bot.logger.info('Auto blob saver started.')
-        async with self.bot.session.get('https://api.ipsw.me/v4/devices') as resp:
-            self.bot.logger.debug('Fetched device identifiers from IPSW.me.')
-            devices = [
-                d
-                for d in await resp.json()
-                if any(
-                    d['identifier'].startswith(x)
-                    for x in ('iPhone', 'AppleTV', 'iPod', 'iPad')
-                )
-            ]
+        data = await api.get_all_devices()
+
+        devices = [
+            device['identifier']
+            for device in data
+            if any(
+                id in device['identifier'].lower()
+                for id in ('iphone', 'ipod', 'ipad', 'appletv')
+            )
+        ]
 
         self.bot.logger.debug('Fetching all signed firmwares.')
 
-        api = dict()
-        for device in [d['identifier'] for d in devices]:
-            api[device] = await self.utils.get_firms(device)
+        firmwares = dict()
+        for device in devices:
+            firmwares[device] = await api.fetch_device_firmwares(device)
 
-        try:
-            self._api
-        except AttributeError:
+        if getattr(self, '_firmwares', None) is None:
             self.bot.logger.warn(
                 'No firmware cache found, storing current firmwares as cache and restarting.',
             )
-            self._api = api
+            self._firmwares = firmwares
             return
 
         if self.utils.saving_blobs:
@@ -57,23 +56,27 @@ class EventsCog(commands.Cog, name='Events'):
         )
 
         description = None
-        for device in api.keys():
-            if device not in self._api.keys():  # If new device is added to the API
+        for device in firmwares.keys():
+            if (
+                device not in self._firmwares.keys()
+            ):  # If new device is added to the API
                 self.bot.logger.debug(f'New device has been detected: {device}.')
-                self._api[device] = api[device]
+                self._firmwares[device] = firmwares[device]
                 continue
 
             firm_type = 'iOS' if 'AppleTV' not in device else 'tvOS'
-            for firm in api[device]:
+            for firm in firmwares[device]:
                 if firm['signed'] == True:
-                    if firm not in self._api[device]:  # If firmware was just released
+                    if (
+                        firm not in self._firmwares[device]
+                    ):  # If firmware was just released
                         self.bot.logger.debug(
                             f"{firm_type} {firm['version']} ({firm['buildid']}) has been released, saving SHSH blobs."
                         )
 
                     elif any(
                         oldfirm['signed'] == False
-                        for oldfirm in self._api[device]
+                        for oldfirm in self._firmwares[device]
                         if oldfirm['buildid'] == firm['buildid']
                     ):  # If firmware has been resigned
                         self.bot.logger.debug(
@@ -83,7 +86,7 @@ class EventsCog(commands.Cog, name='Events'):
                     self.bot.logger.debug('Saving SHSH Blobs.')
 
                     async with self.bot.db.execute(
-                        'SELECT * from autotss WHERE enabled = ?', (True,)
+                        'SELECT * FROM autotss WHERE enabled = ?', (True,)
                     ) as cursor:
                         data = await cursor.fetchall()
 
@@ -118,7 +121,7 @@ class EventsCog(commands.Cog, name='Events'):
                     break
 
             else:
-                self._api[device] = api[device]
+                self._firmwares[device] = firmwares[device]
 
             if description is not None:
                 self.bot.logger.info(description)
@@ -155,7 +158,7 @@ class EventsCog(commands.Cog, name='Events'):
         await self.bot.wait_until_ready()
 
         async with self.bot.db.execute(
-            'SELECT * from autotss WHERE user = ?', (member.id,)
+            'SELECT * FROM autotss WHERE user = ?', (member.id,)
         ) as cursor:
             if await cursor.fetchone() is None:
                 return
@@ -176,7 +179,7 @@ class EventsCog(commands.Cog, name='Events'):
         await self.bot.wait_until_ready()
 
         async with self.bot.db.execute(
-            'SELECT * from autotss WHERE user = ?', (member.id,)
+            'SELECT * FROM autotss WHERE user = ?', (member.id,)
         ) as cursor:
             if await cursor.fetchone() is None:
                 return

@@ -467,7 +467,7 @@ class DeviceCog(commands.Cog, name='Device'):
 
         if len(new_devices) > 0:
             raise commands.BadArgument(
-                f'{new.mention} current has devices added to AutoTSS.'  # TODO: Combine devices
+                f'{new.mention} currently has devices added to AutoTSS.'  # TODO: Combine devices
             )
 
         embed = discord.Embed(title='Transfer Devices')

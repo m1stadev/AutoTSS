@@ -1,4 +1,4 @@
-from .botutils import UtilsCog
+from .utils import UtilsCog
 from discord.errors import ExtensionAlreadyLoaded, ExtensionFailed, ExtensionNotLoaded
 from discord.ext import commands
 from discord.commands import permissions, Option

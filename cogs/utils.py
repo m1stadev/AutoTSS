@@ -54,7 +54,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return stdout.decode().splitlines()[0].split(': ')[-1]
 
-    async def get_uptime(self, time: datetime) -> str:
+    def get_uptime(self, time: datetime) -> str:
         return discord.utils.format_dt(time, style='R')
 
     async def get_whitelist(
@@ -84,30 +84,15 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
     def shsh_count(self, ecid: str = None) -> int:
         if ecid:
-            shsh_count = len(
-                [
-                    blob
-                    for blob in glob.glob(
-                        str(pathlib.Path(f'Data/Blobs/{ecid}/**/*.shsh*')),
-                        recursive=True,
-                    )
-                ]
-            )
+            path = pathlib.Path(f'Data/Blobs/{ecid}/**/*.shsh*')
         else:
-            shsh_count = len(
-                [
-                    blob
-                    for blob in glob.glob(
-                        str(pathlib.Path('Data/Blobs/**/*.shsh*')), recursive=True
-                    )
-                ]
-            )
+            path = pathlib.Path('Data/Blobs/**/*.shsh*')
 
-        return shsh_count
+        return len([blob for blob in glob.glob(str(path), recursive=True)])
 
     async def update_device_count(self) -> None:
         async with self.bot.db.execute(
-            'SELECT devices from autotss WHERE enabled = ?', (True,)
+            'SELECT devices FROM autotss WHERE enabled = ?', (True,)
         ) as cursor:
             num_devices = sum(
                 len(ujson.loads(devices[0])) for devices in await cursor.fetchall()
@@ -391,6 +376,9 @@ class UtilsCog(commands.Cog, name='Utilities'):
         async with file.open('rb') as f, self.bot.session.put(
             f'https://up.psty.io/{file.name}', data=f
         ) as resp:
+            if resp.status != 200:
+                raise APIError(resp.status, 'Failed to upload SHSH blobs.')
+
             data = await resp.text()
 
         return data.splitlines()[-1].split(':', 1)[1][1:]

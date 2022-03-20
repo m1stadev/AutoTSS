@@ -1,4 +1,4 @@
-from .botutils import UtilsCog
+from .utils import UtilsCog
 from discord.ext import commands, tasks
 
 import asyncio

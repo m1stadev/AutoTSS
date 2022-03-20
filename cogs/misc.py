@@ -1,4 +1,4 @@
-from .botutils import UtilsCog
+from .utils import UtilsCog
 from datetime import datetime
 from discord.commands import slash_command
 from discord.ext import commands

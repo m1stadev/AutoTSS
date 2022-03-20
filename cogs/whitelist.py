@@ -1,4 +1,4 @@
-from .botutils import UtilsCog
+from .utils import UtilsCog
 from collections import namedtuple
 from discord.ext import commands
 from discord import Option

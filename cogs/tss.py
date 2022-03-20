@@ -95,7 +95,7 @@ class TSSCog(commands.Cog, name='TSS'):
             if dropdown.answer is None:
                 raise ViewTimeoutException(dropdown.timeout)
             elif dropdown.answer == 'Cancel':
-                raise StopCommand
+                raise StopCommand()
             elif dropdown.answer == 'All':
                 ecids = [device['ecid'] for device in devices]
             else:

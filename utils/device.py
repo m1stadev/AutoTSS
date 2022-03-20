@@ -6,14 +6,12 @@ from . import api
 
 import aiosqlite
 import asyncio
-import discord
 import ujson
 
 
 class Device:
     async def init(  # A little hacky but it works ¯\_(ツ)_/¯
         self,
-        user: discord.User,
         name: str = None,
         identifier: str = None,
         ecid: str = None,
@@ -22,7 +20,8 @@ class Device:
         apnonce: str = None,
         saved_blobs: list = None,
     ):
-        self.user = user
+        self.blobs = saved_blobs
+
         self.name = self.verify_name(name)
         self.identifier = await self.verify_identifier(identifier)
         self.ecid = self.verify_ecid(ecid)
@@ -49,34 +48,37 @@ class Device:
             'boardconfig': self.board,
             'generator': self.generator,
             'apnonce': self.apnonce,
-            'saved_blobs': list(),  # TODO: Handle saved blobs
+            'saved_blobs': self.blobs,  # TODO: Build class for firmwares/blobs
         }
 
     async def remove(self) -> None:
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute(
-                'SELECT devices from autotss WHERE user = ?',
-                (
-                    self.user.id,
-                ),  # TODO: Change so that it finds user via the ECID rather than checking with user ID
+                'SELECT user, devices FROM autotss WHERE devices like ?',
+                (f'%"{self.ecid}"%',),
             ) as cursor:
-                try:
-                    devices = ujson.loads((await cursor.fetchone())[0])
-                except TypeError:
-                    pass  # raise error
+                data = await cursor.fetchone()
+
+            try:
+                user, devices = [data[0], ujson.loads(data[1])]
+            except TypeError:
+                raise DeviceError('Device not found in database.')
 
             try:
                 device = next(d for d in devices if d['ecid'] == self.ecid)
             except StopIteration:
-                raise DeviceError('Device not found in db???')
+                raise DeviceError(
+                    'Device has disappeared from database???'
+                )  # This shouldn't happen...
 
             devices.remove(device)
+
             if len(devices) == 0:
-                await db.execute('DELETE FROM autotss WHERE user = ?', (self.user.id,))
+                await db.execute('DELETE FROM autotss WHERE user = ?', (user,))
             else:
                 await db.execute(
                     'UPDATE autotss SET devices = ? WHERE user = ?',
-                    (ujson.dumps(devices), self.user.id),
+                    (ujson.dumps(devices), user),
                 )
 
             await db.commit()
@@ -102,7 +104,14 @@ class Device:
         if identifier.casefold() not in [
             device['identifier'].casefold() for device in devices
         ]:
-            raise DeviceError('Invalid device identifier provided.')
+            raise DeviceError(
+                'Invalid device identifier provided. This can be found with [AIDA64](https://apps.apple.com/app/apple-store/id979579523) under the `Device` section (as `Device String`).'
+            )
+
+        if not any(
+            id in identifier.lower() for id in ('iphone', 'ipod', 'ipad', 'appletv')
+        ):
+            raise DeviceError('Unsupported device.')
 
         return identifier
 
@@ -113,17 +122,24 @@ class Device:
         try:
             int(ecid, 16)  # Make sure the ECID provided is hexadecimal, not decimal
         except (ValueError, TypeError):
-            raise DeviceError('Invalid ECID provided.')
+            raise DeviceError(
+                'Invalid ECID provided. This can be found using one of the methods listed [here](https://www.theiphonewiki.com/wiki/ECID), under **Getting the ECID**.'
+            )
 
         ecid = hex(int(ecid, 16)).removeprefix('0x')
         if ecid == 'abcdef0123456':  # This ECID is provided as an example in the modal
-            raise DeviceError('Invalid ECID provided.')
+            raise DeviceError(
+                'Invalid ECID provided. This can be found using one of the methods listed [here](https://www.theiphonewiki.com/wiki/ECID), under **Getting the ECID**.'
+            )
 
         if len(ecid) not in (
             11,
             13,
-        ):  # All hex ECIDs without zero-padding are between 11-13 characters
-            raise DeviceError('Invalid ECID provided.')
+            14,
+        ):  # All hex ECIDs without zero-padding are between 11-14 characters
+            raise DeviceError(
+                'Invalid ECID provided. This can be found using one of the methods listed [here](https://www.theiphonewiki.com/wiki/ECID), under **Getting the ECID**.'
+            )
 
         return ecid
 
@@ -132,13 +148,17 @@ class Device:
             return
 
         if board[-2:] != 'ap':
-            raise DeviceError('Invalid board config provided.')
+            raise DeviceError(
+                "Invalid board config provided. This value ends in `ap`, and can be found using one of the following:\n\n• [AIDA64](https://apps.apple.com/app/apple-store/id979579523) (under the `Device` section, as `Device Id`).\n• [System Info](https://arx8x.github.io/depictions/systeminfo.html) (under `System->General->About->Platform`).\n• Running `gssc | grep HWModelStr` in a terminal on your iOS device."
+            )
 
         device = await api.get_device_info(identifier)
         if not any(
             b['boardconfig'].casefold() == board.casefold() for b in device['boards']
         ):  # If no boards for the given device identifier match the board, then return False
-            raise DeviceError('Invalid board config provided.')
+            raise DeviceError(
+                "Invalid board config provided. This value ends in `ap`, and can be found using one of the following:\n\n• [AIDA64](https://apps.apple.com/app/apple-store/id979579523) (under the `Device` section, as `Device Id`).\n• [System Info](https://arx8x.github.io/depictions/systeminfo.html) (under `System->General->About->Platform`).\n• Running `gssc | grep HWModelStr` in a terminal on your iOS device."
+            )
 
         return board
 

@@ -92,7 +92,6 @@ class DeviceCog(commands.Cog, name='Device'):
         await modal.wait()
 
         device = await Device().init(
-            user=ctx.author,
             name=name,
             identifier=modal.answers[0]
             .lower()
@@ -200,7 +199,7 @@ class DeviceCog(commands.Cog, name='Device'):
         ) as cursor:
             try:
                 devices = [
-                    await Device().init(ctx.author, **d)
+                    await Device().init(**d)
                     for d in ujson.loads((await cursor.fetchone())[0])
                 ]
             except TypeError:
@@ -209,12 +208,6 @@ class DeviceCog(commands.Cog, name='Device'):
         if len(devices) == 0:
             raise NoDevicesFound(ctx.author)
 
-        confirm_embed = discord.Embed(title='Remove Device')
-        confirm_embed.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.display_avatar.with_static_format('png').url,
-        )
-
         buttons = [
             {'label': 'Confirm', 'style': discord.ButtonStyle.danger},
             {'label': 'Cancel', 'style': discord.ButtonStyle.secondary},
@@ -222,15 +215,14 @@ class DeviceCog(commands.Cog, name='Device'):
 
         view = SelectView(buttons, ctx)
         if len(devices) > 1:
-            device_options = list()
-            for device in devices:
-                device_options.append(
-                    discord.SelectOption(
-                        label=device.name,
-                        description=f"ECID: {device.ecid} | SHSH blob{'s' if len(device.blobs) != 1 else ''} saved: {len(device.blobs)}",
-                        emoji='📱',
-                    )
+            device_options = [
+                discord.SelectOption(
+                    label=device.name,
+                    description=f"ECID: {device.ecid} | SHSH blob{'s' if len(device.blobs) != 1 else ''} saved: {len(device.blobs)}",
+                    emoji='📱',
                 )
+                for device in devices
+            ]
 
             device_options.append(discord.SelectOption(label='Cancel', emoji='❌'))
 
@@ -246,6 +238,7 @@ class DeviceCog(commands.Cog, name='Device'):
             dropdown = DropdownView(device_options, ctx, 'Device to remove...')
             await ctx.respond(embed=embed, view=dropdown)
             await dropdown.wait()
+
             if dropdown.answer is None:
                 raise ViewTimeoutException(dropdown.timeout)
 
@@ -255,29 +248,27 @@ class DeviceCog(commands.Cog, name='Device'):
             device = next(
                 device for device in devices if device.name == dropdown.answer
             )
-            confirm_embed.description = (
+            embed.description = (
                 f'Are you **absolutely sure** you want to remove `{device.name}`?'
             )
-            await ctx.edit(embed=confirm_embed, view=view)
+            await ctx.edit(embed=embed, view=view)
 
         else:
             device = devices[0]
-            confirm_embed.description = (
+            embed.description = (
                 f'Are you **absolutely sure** you want to remove `{device.name}`?'
             )
-            await ctx.respond(embed=confirm_embed, view=view)
+            await ctx.respond(embed=embed, view=view)
 
         await view.wait()
+
         if view.answer is None:
             raise ViewTimeoutException(view.timeout)
+
         elif view.answer == 'Cancel':
             raise StopCommand
 
-        embed = discord.Embed(title='Remove Device', description='Removing device...')
-        embed.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.display_avatar.with_static_format('png').url,
-        )
+        embed.description = 'Removing device...'
         await ctx.edit(embed=embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
@@ -294,35 +285,18 @@ class DeviceCog(commands.Cog, name='Device'):
             ]
 
             view = SelectView(buttons, ctx, timeout=None)
-            embed = discord.Embed(
-                title='Remove Device',
-                description=f"Device `{device.name}` removed.\nSHSH Blobs:",
-            )
+            embed.description = f"Device `{device.name}` removed.\nSHSH Blobs:"
             await ctx.edit(embed=embed, view=view)
 
         else:
-            embed = discord.Embed(
-                title='Remove Device',
-                description=f"Device `{device.name}` removed.",
-            )
-            embed.set_footer(
-                text=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.with_static_format('png').url,
-            )
+            embed.description = f"Device `{device.name}` removed."
             await ctx.edit(embed=embed)
 
         self.bot.logger.info(
             f"User: {ctx.author.mention} (`@{ctx.author}`) has removed device: `{device.name}`"
         )
 
-        if len(devices) == 0:
-            await self.bot.db.execute(
-                'DELETE FROM autotss WHERE user = ?', (ctx.author.id,)
-            )
-        else:
-            await device.remove()
-
-        await self.bot.db.commit()
+        await device.remove()
         await self.utils.update_device_count()
 
     @device.command(name='list', description='List your added devices.')
@@ -345,7 +319,7 @@ class DeviceCog(commands.Cog, name='Device'):
         ) as cursor:
             try:
                 devices = [
-                    await Device().init(ctx.author, **d)
+                    await Device().init(**d)
                     for d in ujson.loads((await cursor.fetchone())[0])
                 ]
             except TypeError:

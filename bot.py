@@ -19,7 +19,7 @@ import time
 DB_PATH = aiopath.AsyncPath('Data/autotss.db')
 
 
-async def startup():
+async def main():
     if sys.version_info[:2] < (3, 9):
         sys.exit('[ERROR] AutoTSS requires Python 3.9 or higher. Exiting.')
 
@@ -171,6 +171,6 @@ async def startup():
 
 if __name__ == '__main__':
     try:
-        asyncio.run(startup())
+        asyncio.run(main())
     except KeyboardInterrupt:
         pass

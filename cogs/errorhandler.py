@@ -1,3 +1,4 @@
+from bot import MAX_USER_DEVICES
 from datetime import datetime
 from discord.ext import commands
 from utils.errors import *
@@ -96,9 +97,7 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
             embed.description = f"No response given in {exc.timeout} second{'s' if exc.timeout != 1 else ''}, cancelling."
 
         elif isinstance(exc, TooManyDevices):
-            embed.description = (
-                f'You cannot add over {exc.max_devices} devices to AutoTSS.'
-            )
+            embed.description = f"You cannot add over {MAX_USER_DEVICES} device{'s' if MAX_USER_DEVICES != 1 else ''} to AutoTSS."
 
         elif isinstance(exc, APIError):
             embed.description = (

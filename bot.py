@@ -13,10 +13,16 @@ import ujson
 import os
 import shutil
 import sys
-import time
 
 
 DB_PATH = aiopath.AsyncPath('Data/autotss.db')
+
+load_dotenv()
+
+try:
+    MAX_USER_DEVICES = int(os.environ.get('AUTOTSS_MAX_DEVICES'))
+except TypeError:
+    MAX_USER_DEVICES = 10
 
 
 async def main():
@@ -42,23 +48,10 @@ async def main():
     if not tsschecker:
         sys.exit('[ERROR] tsschecker is not installed on your system. Exiting.')
 
-    load_dotenv()
-    if 'AUTOTSS_MAX_DEVICES' not in os.environ.keys():
+    if MAX_USER_DEVICES <= 0:
         sys.exit(
-            "[ERROR] Maximum device count not set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
+            "[ERROR] Invalid maximum device count set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
         )
-    else:
-        try:
-            max_devices = int(os.environ['AUTOTSS_MAX_DEVICES'])
-        except TypeError:
-            sys.exit(
-                "[ERROR] Invalid maximum device count set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
-            )
-
-        if max_devices <= 0:
-            sys.exit(
-                "[ERROR] Invalid maximum device count set in 'AUTOTSS_MAX_DEVICES' environment variable. Exiting."
-            )
 
     if 'AUTOTSS_TOKEN' not in os.environ.keys():
         sys.exit(
@@ -148,7 +141,6 @@ async def main():
 
         # Setup bot attributes
         bot.db = db
-        bot.max_devices = max_devices
         bot.session = session
         bot.start_time = await asyncio.to_thread(datetime.now)
 

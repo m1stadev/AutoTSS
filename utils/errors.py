@@ -23,6 +23,10 @@ class SavingSHSHError(AutoTSSError):
     pass
 
 
+class TooManyDevices(AutoTSSError):
+    pass
+
+
 class NoDevicesFound(AutoTSSError):
     def __init__(self, user: discord.User, *args) -> None:
         super().__init__(*args)
@@ -33,12 +37,6 @@ class NoSHSHFound(AutoTSSError):
     def __init__(self, user: discord.User, *args) -> None:
         super().__init__(*args)
         self.user = user
-
-
-class TooManyDevices(AutoTSSError):
-    def __init__(self, max_devices: int, *args) -> None:
-        super().__init__(*args)
-        self.max_devices = max_devices
 
 
 class ViewTimeoutException(AutoTSSError):

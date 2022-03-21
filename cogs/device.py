@@ -1,4 +1,5 @@
 from .utils import UtilsCog
+from bot import MAX_USER_DEVICES
 from discord.commands import permissions, Option
 from discord.ext import commands
 from discord.ui import InputText
@@ -49,10 +50,10 @@ class DeviceCog(commands.Cog, name='Device'):
             except TypeError:
                 devices = list()
 
-        if (len(devices) >= self.bot.max_devices) and (
+        if (len(devices) >= MAX_USER_DEVICES) and (
             await self.bot.is_owner(ctx.author) == False
         ):  # Error out if you attempt to add more devices than allowed and if you're not the owner of the bot
-            raise TooManyDevices(self.bot.max_devices)
+            raise TooManyDevices()
 
         embed = discord.Embed(
             title='Add Device', description='Verifying device information...'

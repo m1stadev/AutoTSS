@@ -1,5 +1,4 @@
 from .utils import UtilsCog
-from bot import MAX_USER_DEVICES
 from discord.commands import permissions, Option
 from discord.ext import commands
 from discord.ui import InputText
@@ -42,19 +41,6 @@ class DeviceCog(commands.Cog, name='Device'):
         ctx: discord.ApplicationContext,
         name: Option(str, description='Name for device'),
     ) -> None:
-        async with self.bot.db.execute(
-            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
-        ) as cursor:
-            try:
-                devices = ujson.loads((await cursor.fetchone())[0])
-            except TypeError:
-                devices = list()
-
-        if (len(devices) >= MAX_USER_DEVICES) and (
-            await self.bot.is_owner(ctx.author) == False
-        ):  # Error out if you attempt to add more devices than allowed and if you're not the owner of the bot
-            raise TooManyDevices()
-
         embed = discord.Embed(
             title='Add Device', description='Verifying device information...'
         )
@@ -109,30 +95,6 @@ class DeviceCog(commands.Cog, name='Device'):
             apnonce=modal.answers[4],
         )
 
-        async with self.bot.db.execute(
-            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
-        ) as cursor:
-            try:
-                devices = [
-                    await Device().init(**d)
-                    for d in ujson.loads((await cursor.fetchone())[0])
-                ]
-
-                if any(device.name.casefold() == d.name.casefold() for d in devices):
-                    raise DeviceError(
-                        'You cannot have multiple devices with the same name.'
-                    )
-
-            except TypeError:
-                pass
-
-        async with self.bot.db.execute(
-            'SELECT user FROM autotss WHERE devices like ?',
-            (f'%"{device.ecid}"%',),
-        ) as cursor:  # Make sure the provided ECID hasn't already been added to AutoTSS
-            if await cursor.fetchone() is not None:
-                raise DeviceError('This device has already been added to AutoTSS.')
-
         if 0x8020 <= device.cpid < 0x8900:
             if device.generator is None:
                 raise commands.BadArgument(
@@ -161,30 +123,16 @@ class DeviceCog(commands.Cog, name='Device'):
             elif view.answer == 'Cancel':
                 raise StopCommand()
 
-            if not 0x8020 <= device.cpid < 0x8900:
-                if await device.verify_apnonce_pair() == False:
-                    raise commands.BadArgument(
-                        'Invalid generator-ApNonce pair provided.'
-                    )
-            else:
+            if 0x8020 <= device.cpid < 0x8900:
                 if view.answer == 'No':
                     raise commands.BadArgument(
                         'Invalid generator-ApNonce pair provided. Guides for a getting a valid generator-ApNonce pair on A12+ devices can be found below:\n\n[Getting a generator-Apnonce pair (jailbroken)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-jailbroken]\n\n[Getting a generator-Apnonce pair (no jailbreak)[https://gist.github.com/5464ea557c2b999cb9324639c777cd09#getting-a-generator-apnonce-pair-non-jailbroken]'
                     )
-
-        # Add device information into the database
-        devices.append(device.to_dict())
-
-        async with self.bot.db.execute(
-            'SELECT devices FROM autotss WHERE user = ?', (ctx.author.id,)
-        ) as cursor:
-            if await cursor.fetchone() is None:
-                sql = 'INSERT INTO autotss(devices, enabled, user) VALUES(?,?,?)'
             else:
-                sql = 'UPDATE autotss SET devices = ?, enabled = ? WHERE user = ?'
+                await device.verify_apnonce_pair()
 
-        await self.bot.db.execute(sql, (ujson.dumps(devices), True, ctx.author.id))
-        await self.bot.db.commit()
+        # Add device to the database
+        await device.add(ctx.author)
 
         embed = discord.Embed(
             title='Add Device',

@@ -1,11 +1,12 @@
-from bot import DB_PATH
+from bot import DB_PATH, MAX_USER_DEVICES, OWNER_ID
 from hashlib import sha1, sha384
 from typing import Optional
-from .errors import DeviceError
+from .errors import DeviceError, TooManyDevices
 from . import api
 
 import aiosqlite
 import asyncio
+import discord
 import ujson
 
 
@@ -50,6 +51,49 @@ class Device:
             'apnonce': self.apnonce,
             'saved_blobs': self.blobs,  # TODO: Build class for firmwares/blobs
         }
+
+    async def add(self, user: discord.User, enabled: bool = True) -> None:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute(
+                'SELECT user FROM autotss WHERE devices like ?',
+                (f'%"{self.ecid}"%',),
+            ) as cursor:
+                if await cursor.fetchone() is not None:
+                    raise DeviceError('Device already exists in database.')
+
+            async with db.execute(
+                'SELECT devices FROM autotss WHERE user = ?', (user.id,)
+            ) as cursor:
+                data = await cursor.fetchone()
+
+            if data is None:
+                await db.execute(
+                    'INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)',
+                    (user.id, ujson.dumps([self.to_dict()]), enabled),
+                )
+
+            else:
+                try:
+                    devices = ujson.loads(data[0])
+                except TypeError:
+                    devices = list()
+
+                if any(self.name.casefold() == d['name'].casefold() for d in devices):
+                    raise DeviceError(
+                        'Multiple devices with the same name are not allowed.'
+                    )
+
+                devices.append(self.to_dict())
+
+                if len(devices) > MAX_USER_DEVICES and user.id == OWNER_ID:
+                    raise TooManyDevices()
+
+                await db.execute(
+                    'UPDATE autotss SET devices = ? WHERE user = ?',
+                    (ujson.dumps(devices), user.id),
+                )
+
+            await db.commit()
 
     async def remove(self) -> None:
         async with aiosqlite.connect(DB_PATH) as db:
@@ -207,13 +251,14 @@ class Device:
         elif len(self.apnonce) == 40:
             gen_hash = sha1(gen).hexdigest()
 
-        return gen_hash == self.apnonce
+        if gen_hash != self.apnonce:
+            raise DeviceError('Invalid generator-ApNonce pair provided.')
 
     async def verify_apnonce_pair(self) -> Optional[bool]:
         if any(arg is None for arg in (self.apnonce, self.generator)):
             return
 
-        return await asyncio.to_thread(self._verify_apnonce_pair)
+        await asyncio.to_thread(self._verify_apnonce_pair)
 
     @property
     def censored_ecid(self) -> str:

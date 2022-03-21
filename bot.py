@@ -24,6 +24,11 @@ try:
 except TypeError:
     MAX_USER_DEVICES = 10
 
+try:
+    OWNER_ID = int(os.environ['AUTOTSS_OWNER'])
+except TypeError:
+    OWNER_ID = None
+
 
 async def main():
     if sys.version_info[:2] < (3, 9):
@@ -68,23 +73,21 @@ async def main():
     else:
         debug_guild = None
 
-    if 'AUTOTSS_OWNER' not in os.environ.keys():
-        sys.exit(
-            "[ERROR] Owner ID(s) not set in 'AUTOTSS_OWNER' environment variable. Exiting."
-        )
-
-    try:
-        owner = int(os.environ['AUTOTSS_OWNER'])
-    except TypeError:
+    if OWNER_ID is None or not 17 <= len(str(OWNER_ID)) <= 18:
         sys.exit(
             "[ERROR] Invalid owner ID set in 'AUTOTSS_OWNER' environment variable. Exiting."
+        )
+
+    if 'AUTOTSS_OWNER' not in os.environ.keys():
+        sys.exit(
+            "[ERROR] Owner ID not set in 'AUTOTSS_OWNER' environment variable. Exiting."
         )
 
     mentions = discord.AllowedMentions(everyone=False, roles=False)
     (intents := discord.Intents.default()).members = True
 
     bot = discord.AutoShardedBot(
-        help_command=None, intents=intents, allowed_mentions=mentions, owner_id=owner
+        help_command=None, intents=intents, allowed_mentions=mentions, owner_id=OWNER_ID
     )
 
     if debug_guild is not None:

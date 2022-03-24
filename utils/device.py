@@ -52,7 +52,7 @@ class Device:
             'saved_blobs': self.blobs,  # TODO: Build class for firmwares/blobs
         }
 
-    async def add(self, user: discord.User, enabled: bool = True) -> None:
+    async def add(self, user: discord.User) -> None:
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute(
                 'SELECT user FROM autotss WHERE devices like ?',
@@ -69,7 +69,7 @@ class Device:
             if data is None:
                 await db.execute(
                     'INSERT INTO autotss(user, devices, enabled) VALUES(?,?,?)',
-                    (user.id, ujson.dumps([self.to_dict()]), enabled),
+                    (user.id, ujson.dumps([self.to_dict()]), True),
                 )
 
             else:

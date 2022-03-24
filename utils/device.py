@@ -177,10 +177,11 @@ class Device:
             )
 
         if len(ecid) not in (
+            10,
             11,
             13,
             14,
-        ):  # All hex ECIDs without zero-padding are between 11-14 characters
+        ):  # All hex ECIDs without zero-padding are either 10, 11, 13, or 14 characters long
             raise DeviceError(
                 'Invalid ECID provided. This can be found using one of the methods listed [here](https://www.theiphonewiki.com/wiki/ECID), under **Getting the ECID**.'
             )

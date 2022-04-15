@@ -30,9 +30,11 @@ class AdminCog(commands.Cog, name='Administrator'):
             [cog.stem async for cog in aiopath.AsyncPath('cogs').glob('*.py')]
         )
 
-    @permissions.is_owner()
     @admin.command(name='help', description='View all administrator commands.')
     async def _help(self, ctx: discord.ApplicationContext) -> None:
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
+
         cmd_embeds = [
             self.utils.cmd_help_embed(ctx, sc) for sc in self.admin.subcommands
         ]
@@ -42,9 +44,11 @@ class AdminCog(commands.Cog, name='Administrator'):
             embed=cmd_embeds[paginator.embed_num], view=paginator, ephemeral=True
         )
 
-    @permissions.is_owner()
     @admin.command(name='modlist', description='List all modules.')
     async def list_modules(self, ctx: discord.ApplicationContext) -> None:
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
+
         embed = discord.Embed(
             title='All Modules',
             description=f"`{'`, `'.join(await self.get_modules())}`",
@@ -56,7 +60,6 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         await ctx.respond(embed=embed, ephemeral=True)
 
-    @permissions.is_owner()
     @admin.command(name='modload', description='Load a module.')
     async def load_module(
         self,
@@ -66,6 +69,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         ),
     ) -> None:
         await ctx.defer(ephemeral=True)
+
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
 
         if not any(module == x for x in await self.get_modules()):
             embed = discord.Embed(title='Unload Module')
@@ -107,7 +113,6 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         self.bot.logger.info(f'Loaded `{module}` module.')
 
-    @permissions.is_owner()
     @admin.command(name='modunload', description='Unload a module.')
     async def unload_module(
         self,
@@ -117,6 +122,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         ),
     ) -> None:
         await ctx.defer(ephemeral=True)
+
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
 
         if module not in (await self.get_modules()):
             embed = discord.Embed(title='Unload Module')
@@ -154,7 +162,6 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         self.bot.logger.info(f'Unloaded `{module}` module.')
 
-    @permissions.is_owner()
     @admin.command(name='modreload', description='Reload a module.')
     async def reload_module(
         self,
@@ -164,6 +171,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         ),
     ) -> None:
         await ctx.defer(ephemeral=True)
+
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
 
         if module not in (await self.get_modules()):
             embed = discord.Embed(title='Reload Module')
@@ -211,13 +221,15 @@ class AdminCog(commands.Cog, name='Administrator'):
         await ctx.respond(embed=embed)
         self.bot.logger.info(f'Reloaded `{module}` module.')
 
-    @permissions.is_owner()
     @admin.command(
         name='downloadall',
         description='Download SHSH blobs for all devices in AutoTSS.',
     )
     async def download_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
+
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
 
         async with self.bot.db.execute('SELECT devices from autotss') as cursor:
             num_devices = sum(
@@ -258,13 +270,15 @@ class AdminCog(commands.Cog, name='Administrator'):
 
         self.bot.logger.info(f"Owner: `@{ctx.author}` has downloaded all SHSH blobs.")
 
-    @permissions.is_owner()
     @admin.command(
         name='saveall',
         description='Manually save SHSH blobs for all devices in AutoTSS.',
     )
     async def save_all_blobs(self, ctx: discord.ApplicationContext) -> None:
         await ctx.defer(ephemeral=True)
+
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
 
         async with self.bot.db.execute(
             'SELECT * from autotss WHERE enabled = ?', (True,)
@@ -336,7 +350,6 @@ class AdminCog(commands.Cog, name='Administrator'):
         await self.utils.update_device_count()
         await ctx.edit(embed=embed)
 
-    @permissions.is_owner()
     @admin.command(
         name='dtransfer', description="Transfer a user's devices to another user."
     )
@@ -348,6 +361,9 @@ class AdminCog(commands.Cog, name='Administrator'):
         ),
         new: Option(commands.UserConverter, description='User to transfer devices to'),
     ) -> None:
+        if await self.bot.is_owner(ctx.author) == False:
+            raise commands.NotOwner()
+
         cancelled_embed = discord.Embed(
             title='Transfer Devices', description='Cancelled.'
         )

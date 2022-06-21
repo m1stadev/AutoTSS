@@ -249,24 +249,21 @@ class AdminCog(commands.Cog, name='Administrator'):
             if ecid.is_dir()
         ]
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
+            tar = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
-        if url is None:
+        if tar is None:
             embed = discord.Embed(
                 title='Error', description='There are no SHSH blobs saved in AutoTSS.'
             )
             await ctx.respond(embed=embed)
 
         else:
-            buttons = [
-                {'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}
-            ]
-
-            view = SelectView(buttons, ctx, timeout=None)
             embed = discord.Embed(
                 title='Download Blobs', description='Download all SHSH Blobs:'
             )
-            await ctx.respond(embed=embed, view=view)
+            await ctx.respond(
+                embed=embed, file=discord.File(fp=tar, filename='SHSH Blobs.tar.xz')
+            )
 
         self.bot.logger.info(f"Owner: `@{ctx.author}` has downloaded all SHSH blobs.")
 

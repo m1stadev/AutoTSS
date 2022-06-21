@@ -117,15 +117,14 @@ class TSSCog(commands.Cog, name='TSS'):
             await ctx.respond(embed=upload_embed, ephemeral=True)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            url = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
+            tar = await self.utils.backup_blobs(aiopath.AsyncPath(tmpdir), *ecids)
 
-        buttons = [{'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}]
-
-        view = SelectView(buttons, ctx, timeout=None)
         embed = discord.Embed(
             title='Download Blobs', description='Download your SHSH Blobs:'
         )
-        await ctx.edit(embed=embed, view=view)
+        await ctx.edit(
+            embed=embed, file=discord.File(fp=tar, filename='SHSH Blobs.tar.xz')
+        )
         self.bot.logger.info(f"User: `@{ctx.author}` has downloaded SHSH blobs.")
 
     @tss.command(name='list', description='List your saved SHSH blobs.')

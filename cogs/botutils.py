@@ -1,4 +1,5 @@
 from datetime import datetime
+from io import BytesIO
 from discord.enums import SlashCommandOptionType
 from discord.ext import commands
 from hashlib import sha1, sha384
@@ -15,6 +16,7 @@ import pathlib
 import remotezip
 import shutil
 import sys
+import tarfile
 
 
 API_URL = 'https://api.ipsw.me/v4'
@@ -507,17 +509,13 @@ class UtilsCog(commands.Cog, name='Utilities'):
 
         return True
 
-    async def _upload_file(self, file: aiopath.AsyncPath) -> str:
-        async with file.open('rb') as f, self.bot.session.put(
-            f'https://up.psty.io/{file.name}', data=f
-        ) as resp:
-            data = await resp.text()
-
-        return data.splitlines()[-1].split(':', 1)[1][1:]
+    def _create_tar(self, tmpdir: aiopath.AsyncPath) -> aiopath.AsyncPath:
+        with tarfile.open(tmpdir.parent / 'Blobs.tar.xz', 'w:xz') as tar:
+            tar.add(tmpdir, arcname=tmpdir.name)
 
     async def backup_blobs(
         self, tmpdir: aiopath.AsyncPath, *ecids: list[str]
-    ) -> Optional[str]:
+    ) -> Optional[BytesIO]:
         blobdir = aiopath.AsyncPath('Data/Blobs')
         tmpdir = tmpdir / 'SHSH Blobs'
         await tmpdir.mkdir()
@@ -538,10 +536,8 @@ class UtilsCog(commands.Cog, name='Utilities'):
         if len([blob async for blob in tmpdir.glob('*/') if await blob.is_dir()]) == 0:
             return
 
-        await asyncio.to_thread(
-            shutil.make_archive, tmpdir.parent / 'Blobs', 'zip', tmpdir
-        )
-        return await self._upload_file(tmpdir.parent / 'Blobs.zip')
+        await asyncio.to_thread(self._create_tar, tmpdir)
+        return BytesIO(await (tmpdir.parent / 'Blobs.tar.xz').read_bytes())
 
     async def fetch_ipswme_api(self, identifier: str) -> dict:
         async with self.bot.session.get(f'{API_URL}/device/{identifier}') as resp:

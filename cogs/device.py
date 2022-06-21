@@ -306,26 +306,23 @@ class DeviceCog(commands.Cog, name='Device'):
         await ctx.edit(embed=embed)
 
         async with aiofiles.tempfile.TemporaryDirectory() as tmpdir:
-            url = await self.utils.backup_blobs(
+            tar = await self.utils.backup_blobs(
                 aiopath.AsyncPath(tmpdir), devices[num]['ecid']
             )
 
-        if url is not None:
+        if tar is not None:
             await asyncio.to_thread(
                 shutil.rmtree,
                 aiopath.AsyncPath(f"Data/Blobs/{devices[num]['ecid']}"),
             )
 
-            buttons = [
-                {'label': 'Download', 'style': discord.ButtonStyle.link, 'url': url}
-            ]
-
-            view = SelectView(buttons, ctx, timeout=None)
             embed = discord.Embed(
                 title='Remove Device',
                 description=f"Device `{devices[num]['name']}` removed.\nSHSH Blobs:",
             )
-            await ctx.edit(embed=embed, view=view)
+            await ctx.edit(
+                embed=embed, file=discord.File(fp=tar, filename='SHSH Blobs.tar.xz')
+            )
 
         else:
             embed = discord.Embed(

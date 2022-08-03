@@ -125,7 +125,7 @@ class TSSCog(commands.Cog, name='TSS'):
         await ctx.edit(
             embed=embed, file=discord.File(fp=tar, filename='SHSH Blobs.tar.xz')
         )
-        self.bot.logger.info(f"User: `@{ctx.author}` has downloaded SHSH blobs.")
+        self.bot.logger.info(f'User: `@{ctx.author}` has downloaded SHSH blobs.')
 
     @tss.command(name='list', description='List your saved SHSH blobs.')
     async def list_blobs(

@@ -302,7 +302,7 @@ class UtilsCog(commands.Cog, name='Utilities'):
                 continue
 
             cmd_field = {
-                'name': f"/{cmd.name} ",
+                'name': f'/{cmd.name} ',
                 'value': cmd.description,
                 'inline': False,
             }

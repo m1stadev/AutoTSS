@@ -65,19 +65,19 @@ class DeviceCog(commands.Cog, name='Device'):
             ctx,
             'Add Device',
             embed,
-            InputText(label="Device Identifier", placeholder='ex. iPhone10,6'),
+            InputText(label='Device Identifier', placeholder='ex. iPhone10,6'),
             InputText(
-                label="Device ECID (hex)",
+                label='Device ECID (hex)',
                 placeholder='ex. abcdef0123456789',
             ),
-            InputText(label="Device Board Config", placeholder='ex. d221ap'),
+            InputText(label='Device Board Config', placeholder='ex. d221ap'),
             InputText(
-                label="Nonce Generator (Optional, required on A12+)",
+                label='Nonce Generator (Optional, required on A12+)',
                 placeholder='ex. 0x1111111111111111',
                 required=False,
             ),
             InputText(
-                label="ApNonce (Optional, required on A12+)",
+                label='ApNonce (Optional, required on A12+)',
                 placeholder='ex. abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
                 required=False,
             ),
@@ -95,7 +95,7 @@ class DeviceCog(commands.Cog, name='Device'):
             )
         elif name_check == -2:
             raise commands.BadArgument(
-                "You cannot use the same name for multiple devices."
+                'You cannot use the same name for multiple devices.'
             )
         device['name'] = name
 

@@ -265,7 +265,7 @@ class AdminCog(commands.Cog, name='Administrator'):
                 embed=embed, file=discord.File(fp=tar, filename='SHSH Blobs.tar.xz')
             )
 
-        self.bot.logger.info(f"Owner: `@{ctx.author}` has downloaded all SHSH blobs.")
+        self.bot.logger.info(f'Owner: `@{ctx.author}` has downloaded all SHSH blobs.')
 
     @admin.command(
         name='saveall',

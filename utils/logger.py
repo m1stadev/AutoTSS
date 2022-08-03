@@ -57,7 +57,7 @@ class Logger:
         )
 
         discord_log = logging.getLogger('discord')
-        discord_log.setLevel(logging.WARN)
+        discord_log.setLevel(logging.DEBUG)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 

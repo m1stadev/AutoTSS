@@ -10,7 +10,7 @@ __pycache__/
 Data/
 bot.log
 *.db
-
+Blobs/
 # Visual Studio Code files
 .vscode/
 
